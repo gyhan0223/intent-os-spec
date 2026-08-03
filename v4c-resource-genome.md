@@ -276,21 +276,21 @@ graph TD
 
 ---
 
-## Appendix A — 향후 문서 제안 (v2.0)
+## Appendix A — 후속 문서
 
-> 아래는 **확정 명세가 아닌 로드맵 제안**이다.
+> 아래 세 문서는 제안 단계를 거쳐 **실제로 작성되었다.**
 >
 > 현재 Intent OS는 "어떤 AI를 선택할 것인가"에는 강하다. 하지만 경쟁 우위를 만들려면 선택을 넘어 **AI를 발견하고, 실험하고, 검증하는 자동 연구 시스템**이 필요하다.
 
-### Volume 4-D — Autonomous Benchmarking Engine
+### [Volume 4-D — Autonomous Benchmarking Engine](v4d-autonomous-benchmarking.md)
 
 Intent OS가 스스로 새로운 모델을 발견하고, 대표 태스크를 자동 생성해 성능을 측정하며, 결과를 Resource Intelligence에 반영하는 시스템.
 
-### Volume 4-E — Strategy Graph Engine
+### [Volume 4-E — Strategy Graph Engine](v4e-strategy-graph.md)
 
 "Claude 사용"이 아니라 "검색 → 추론 → 작성 → 검토" 같은 **워크플로우 자체**를 학습하고 재사용하는 엔진. 장기적으로 개별 모델보다 더 큰 경쟁력이 될 수 있다.
 
-### Volume 4-F — World Model
+### [Volume 4-F — World Model Engine](v4f-world-model.md)
 
 사용자의 목표 / 비즈니스 도메인 / 시장 상황 / 사용 가능한 도구 / AI의 특성을 하나의 지식 그래프로 연결하는 상위 추론 계층.
 

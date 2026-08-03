@@ -49,6 +49,9 @@ Answer                      Resource → Execution → Outcome
 | 4-A | ↳ Decision Engine 상세 — 7개 모듈, Utility 공식 | [v4a-decision-engine-detail.md](v4a-decision-engine-detail.md) |
 | 4-B | ↳ Resource Intelligence — Capability DNA, Drift 감지 | [v4b-resource-intelligence.md](v4b-resource-intelligence.md) |
 | 4-C | ↳ Resource Genome — 행동 기반 AI 표현, Meta Prediction | [v4c-resource-genome.md](v4c-resource-genome.md) |
+| 4-D | ↳ Autonomous Benchmarking — AI를 자동으로 연구·평가 | [v4d-autonomous-benchmarking.md](v4d-autonomous-benchmarking.md) |
+| 4-E | ↳ Strategy Graph — 전략 자체를 학습·재사용 ⚠️연구 | [v4e-strategy-graph.md](v4e-strategy-graph.md) |
+| 4-F | ↳ World Model — 사용자의 현실을 모델링 ⚠️연구 | [v4f-world-model.md](v4f-world-model.md) |
 | 5 | Learning Engine — 경험 축적과 개선 | [v5-learning-engine.md](v5-learning-engine.md) |
 | 6 | Developer Platform — 외부 Resource 연결 | [v6-developer-platform.md](v6-developer-platform.md) |
 | 7 | Reference Implementation — MVP 및 로드맵 | [v7-reference-implementation.md](v7-reference-implementation.md) |
@@ -74,6 +77,9 @@ graph TD
     V4 --> V4A[4-A Detail]
     V4A --> V4B[4-B Resource Intelligence]
     V4B --> V4C[4-C Resource Genome]
+    V4C --> V4D[4-D Autonomous Benchmarking]
+    V4D --> V4E[4-E Strategy Graph]
+    V4E --> V4F[4-F World Model]
     V4 --> V5[Volume 5<br/>Learning Engine]
     V5 --> V6[Volume 6<br/>Developer Platform]
     V6 --> V7[Volume 7<br/>Reference Implementation]

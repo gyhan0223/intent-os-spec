@@ -9,6 +9,9 @@
 > - [Volume 4-A — Decision Engine Detailed Specification](v4a-decision-engine-detail.md)
 > - [Volume 4-B — Resource Intelligence Specification](v4b-resource-intelligence.md)
 > - [Volume 4-C — Resource Genome & Meta Prediction Engine](v4c-resource-genome.md)
+> - [Volume 4-D — Autonomous Benchmarking Engine](v4d-autonomous-benchmarking.md)
+> - [Volume 4-E — Strategy Graph Engine](v4e-strategy-graph.md) ⚠️ 장기 연구
+> - [Volume 4-F — World Model Engine](v4f-world-model.md) ⚠️ 장기 연구
 
 ---
 
