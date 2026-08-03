@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/goal.schema.json",
+  "title": "Goal",
+  "description": "사용자가 달성하고자 하는 최종 상태. 방법을 포함하지 않는다.",
+  "type": "object",
+  "required": ["id", "objective"],
+  "properties": {
+    "id": { "type": "string" },
+    "objective": {
+      "type": "string",
+      "description": "원하는 결과. 예: '3개월 안에 신규 고객 100명 확보'"
+    },
+    "constraints": {
+      "type": "array",
+      "description": "제약조건 (예산, 시간, 법적 제한, 사용 가능 자원)",
+      "items": { "type": "string" }
+    },
+    "success_metrics": {
+      "type": "array",
+      "description": "성공 판단 기준 (매출, 사용자 수, 점수, 시간 절약)",
+      "items": { "type": "string" }
+    },
+    "deadline": { "type": "string", "format": "date-time" },
+    "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+    "context": { "type": "object" },
+    "state": {
+      "type": "string",
+      "enum": ["Created", "Understanding", "Confirmed", "Executing", "Completed"]
+    }
+  }
+}

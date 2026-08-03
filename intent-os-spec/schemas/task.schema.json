@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/task.schema.json",
+  "title": "Task",
+  "description": "Goal 달성을 위해 수행해야 하는 작업 단위. 독립적으로 실행 가능해야 한다.",
+  "type": "object",
+  "required": ["id", "objective", "required_capabilities"],
+  "properties": {
+    "id": { "type": "string" },
+    "goal_id": { "type": "string" },
+    "objective": { "type": "string" },
+    "required_capabilities": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "dependencies": {
+      "type": "array",
+      "description": "선행되어야 하는 Task id 목록 (Task Graph 구성)",
+      "items": { "type": "string" }
+    },
+    "expected_output": { "type": "string" },
+    "execution_mode": {
+      "type": "string",
+      "enum": ["sequential", "parallel", "conditional"]
+    },
+    "state": {
+      "type": "string",
+      "enum": ["Pending", "Assigned", "Running", "Completed", "Evaluated", "Failed"]
+    }
+  }
+}

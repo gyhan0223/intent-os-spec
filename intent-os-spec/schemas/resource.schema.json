@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/resource.schema.json",
+  "title": "Resource",
+  "description": "Capability를 제공하는 실행 주체. AI, Tool, Human을 동일하게 취급한다.",
+  "type": "object",
+  "required": ["id", "name", "type", "capabilities"],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "type": {
+      "type": "string",
+      "enum": ["llm", "image_model", "video_model", "api", "database", "tool", "agent", "human"]
+    },
+    "provider": { "type": "string" },
+    "version": { "type": "string" },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "declared_score": { "type": "number", "minimum": 0, "maximum": 100 },
+          "observed_score": { "type": "number", "minimum": 0, "maximum": 100 }
+        }
+      }
+    },
+    "cost_model": { "type": "object" },
+    "performance": {
+      "type": "object",
+      "properties": {
+        "reliability": { "type": "number", "minimum": 0, "maximum": 1 },
+        "latency_ms": { "type": "number" }
+      }
+    },
+    "limitations": { "type": "array", "items": { "type": "string" } },
+    "availability": { "type": "string" },
+    "lifecycle": {
+      "type": "string",
+      "enum": ["Registered", "Evaluating", "Active", "Optimized", "Deprecated", "Removed"]
+    }
+  }
+}

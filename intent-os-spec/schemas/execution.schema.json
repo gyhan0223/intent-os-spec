@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/execution.schema.json",
+  "title": "Execution Instance",
+  "description": "하나의 Goal이 처리되는 전체 실행 단위.",
+  "type": "object",
+  "required": ["execution_id", "goal_id", "status"],
+  "properties": {
+    "execution_id": { "type": "string" },
+    "goal_id": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["IDLE", "UNDERSTANDING", "PLANNING", "DECIDING", "EXECUTING", "EVALUATING", "LEARNING", "COMPLETED", "FAILED"]
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "tasks": { "type": "array", "items": { "type": "string" } },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "task_id": { "type": "string" },
+          "candidates": { "type": "array", "items": { "type": "string" } },
+          "selected_resource": { "type": "string" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "reason": {
+            "type": "array",
+            "description": "Explainability 필수 항목",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "resources": { "type": "array", "items": { "type": "string" } },
+    "outcomes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "quality_score": { "type": "number", "minimum": 0, "maximum": 1 },
+          "goal_alignment": { "type": "number", "minimum": 0, "maximum": 1 },
+          "cost_efficiency": { "type": "number", "minimum": 0, "maximum": 1 },
+          "user_feedback": { "type": "string" }
+        }
+      }
+    }
+  }
+}
