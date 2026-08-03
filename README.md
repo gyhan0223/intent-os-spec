@@ -46,6 +46,9 @@ Answer                      Resource → Execution → Outcome
 | 2 | Architecture — 8개 Layer 구조 | [v2-architecture.md](v2-architecture.md) |
 | 3 | Runtime — 실행 생명주기 7단계 | [v3-runtime.md](v3-runtime.md) |
 | 4 | Decision Engine — Resource 선택 알고리즘 | [v4-decision-engine.md](v4-decision-engine.md) |
+| 4-A | ↳ Decision Engine 상세 — 7개 모듈, Utility 공식 | [v4a-decision-engine-detail.md](v4a-decision-engine-detail.md) |
+| 4-B | ↳ Resource Intelligence — Capability DNA, Drift 감지 | [v4b-resource-intelligence.md](v4b-resource-intelligence.md) |
+| 4-C | ↳ Resource Genome — 행동 기반 AI 표현, Meta Prediction | [v4c-resource-genome.md](v4c-resource-genome.md) |
 | 5 | Learning Engine — 경험 축적과 개선 | [v5-learning-engine.md](v5-learning-engine.md) |
 | 6 | Developer Platform — 외부 Resource 연결 | [v6-developer-platform.md](v6-developer-platform.md) |
 | 7 | Reference Implementation — MVP 및 로드맵 | [v7-reference-implementation.md](v7-reference-implementation.md) |
@@ -68,6 +71,9 @@ graph TD
     V1[Volume 1<br/>Core Concepts] --> V2[Volume 2<br/>Architecture]
     V2 --> V3[Volume 3<br/>Runtime]
     V3 --> V4[Volume 4<br/>Decision Engine]
+    V4 --> V4A[4-A Detail]
+    V4A --> V4B[4-B Resource Intelligence]
+    V4B --> V4C[4-C Resource Genome]
     V4 --> V5[Volume 5<br/>Learning Engine]
     V5 --> V6[Volume 6<br/>Developer Platform]
     V6 --> V7[Volume 7<br/>Reference Implementation]

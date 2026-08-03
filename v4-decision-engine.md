@@ -4,6 +4,12 @@
 - **Status:** Core Intelligence Specification
 - **Depends on:** [Volume 1](v1-core-concepts.md), [Volume 2](v2-architecture.md), [Volume 3](v3-runtime.md)
 
+> **본 문서는 개요다.** 구현 수준의 상세 명세는 아래 세 문서를 참조한다.
+>
+> - [Volume 4-A — Decision Engine Detailed Specification](v4a-decision-engine-detail.md)
+> - [Volume 4-B — Resource Intelligence Specification](v4b-resource-intelligence.md)
+> - [Volume 4-C — Resource Genome & Meta Prediction Engine](v4c-resource-genome.md)
+
 ---
 
 ## 1. Introduction
