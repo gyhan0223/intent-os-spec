@@ -56,14 +56,25 @@ Answer                      Resource → Execution → Outcome
 | 6 | Developer Platform — 외부 Resource 연결 | [v6-developer-platform.md](v6-developer-platform.md) |
 | 7 | Reference Implementation — MVP 및 로드맵 | [v7-reference-implementation.md](v7-reference-implementation.md) |
 
+## Entity Specification
+
+12개 Core Entity를 RFC/ISO 표준 수준으로 정의하는 명세. Entity 하나를 운영체제 수준으로 완성한 뒤 다음 Entity로 넘어간다.
+
+| Entity | 이름 | 문서 | 상태 |
+|---|---|---|---|
+| — | Entity 개요 — 12개 Core Entity, Entity/Process/Runtime State 구분 | [entities/README.md](entities/README.md) | v1.0 Draft |
+| 001 | Goal — 정의, 규칙, Formal Grammar, CGR, 검증 알고리즘 | [entities/e001-goal.md](entities/e001-goal.md) | v1.0 Draft |
+| 001-A | Goal Graph — 관계, 계층, Score, Propagation, Invariants | [entities/e001a-goal-graph.md](entities/e001a-goal-graph.md) | v1.0 Draft |
+
 ## 스키마
 
-기계가 읽을 수 있는 JSON Schema는 [`schemas/`](schemas/) 폴더에 있다.
+기계가 읽을 수 있는 JSON Schema는 [`schemas/`](intent-os-spec/schemas/) 폴더에 있다.
 
-- [`goal.schema.json`](schemas/goal.schema.json)
-- [`task.schema.json`](schemas/task.schema.json)
-- [`resource.schema.json`](schemas/resource.schema.json)
-- [`execution.schema.json`](schemas/execution.schema.json)
+- [`goal.schema.json`](intent-os-spec/schemas/goal.schema.json) — Canonical Goal Representation (Entity 001)
+- [`goal-graph.schema.json`](intent-os-spec/schemas/goal-graph.schema.json) — Goal Graph (Entity 001-A)
+- [`task.schema.json`](intent-os-spec/schemas/task.schema.json)
+- [`resource.schema.json`](intent-os-spec/schemas/resource.schema.json)
+- [`execution.schema.json`](intent-os-spec/schemas/execution.schema.json)
 
 ---
 
