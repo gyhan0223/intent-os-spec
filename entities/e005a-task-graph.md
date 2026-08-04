@@ -21,7 +21,7 @@
 
 목록은 이 네 질문에 하나도 답하지 못한다. [Goal Graph](e001a-goal-graph.md)가 Goal에 대해 했던 일을 Task에 대해 하는 것이 이 문서다.
 
-> [e005 §13 Open Issue](e005-task.md)가 제기한 "Task Graph는 별도 명세가 필요한가"에 대한 답이다.
+> [e005 §12 Open Issues](e005-task.md)가 제기한 "Task Graph는 별도 명세가 필요한가"에 대한 답이다.
 
 ---
 
@@ -265,7 +265,7 @@ Constructed → Validated → Active ──▶ Superseded
 
 ### 6.1 Dynamic Planning — 그래프 재구성
 
-**이 절이 이 문서의 핵심이다.** [e005 §13](e005-task.md)이 미해결로 남긴 문제에 답한다.
+**이 절이 이 문서의 핵심이다.** [e005 §12](e005-task.md)이 미해결로 남긴 문제에 답한다.
 
 #### 6.1.1 문제
 
@@ -604,5 +604,5 @@ plan_015 Active
 
 - 임계 경로 추정의 Resource 독립적 방법
 - 국소 재계획 알고리즘
-- Task 우선순위 계산식 (Goal Score 연동, [e005 §13](e005-task.md))
+- Task 우선순위 계산식 (Goal Score 연동, [e005 §12](e005-task.md))
 - 실제 예시 30~50개

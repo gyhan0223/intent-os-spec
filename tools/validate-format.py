@@ -92,6 +92,8 @@ RE_PREFIX_ROW = re.compile(r"(\d{3}(?:-[A-Z])?)\s+[^|]*?\|\s*`([A-Z]{1,4})`")
 RE_DOC_ID = re.compile(r"^e(\d{3})([a-z])?-")
 # 코드 블록 안에서 쓰는 출처 표기: `e015 Rule EVA-004` / `e022 INV-WFL-03`
 RE_DOC_CITE = re.compile(r"\be\d{3}[a-z]?\s")
+# 상호 참조: [e007 §6](e007-resource.md) / [Goal Graph §14](e001a-goal-graph.md)
+RE_CROSS_REF = re.compile(r"\[[^\[\]]*?\b(e\d{3}[a-z]?)\b[^\[\]]*?§\s*([\d.]+)[^\[\]]*?\]")
 
 
 def fail(report, doc, message):
@@ -239,6 +241,29 @@ def check_global_invariant_defs(text, doc, report):
     return ok
 
 
+def check_cross_refs(text, doc, docs_by_id, report):
+    """`[e007 §6](...)` 같은 상호 참조가 실재하는 섹션을 가리키는지 본다.
+
+    섹션을 재배치하면 링크는 멀쩡한데 번호만 어긋난다. 링크 검사기로는
+    잡히지 않는 종류의 깨짐이다.
+    """
+    ok = True
+    for target_id, section in RE_CROSS_REF.findall(text):
+        path = docs_by_id.get(target_id)
+        if path is None:
+            continue  # 문서 자체가 없으면 링크 검사기가 잡는다
+        body = open(path).read()
+        top = section.split(".")[0]
+        if f"\n## {top}." not in body:
+            fail(report, doc, f"`{target_id} §{section}` — 대상 문서에 §{top} 이 없다")
+            ok = False
+        elif "." in section and f"\n### {section} " not in body \
+                and f"\n#### {section} " not in body:
+            fail(report, doc, f"`{target_id} §{section}` — 대상 문서에 §{section} 하위 절이 없다")
+            ok = False
+    return ok
+
+
 def check_schema_link(text, doc, report):
     """§8이 가리키는 스키마 파일이 실제로 있는지 본다."""
     names = set(RE_SCHEMA_LINK.findall(text))
@@ -257,6 +282,11 @@ def check_schema_link(text, doc, report):
 def check_docs(report):
     prefixes = load_prefix_table(report)
     registered = set(prefixes.values())
+    docs_by_id = {}
+    for path in glob.glob(f"{ENTITY_DIR}/e*.md"):
+        m = RE_DOC_ID.match(os.path.basename(path))
+        if m:
+            docs_by_id[f"e{m.group(1)}{m.group(2) or ''}"] = path
     total = passed = failed = annex = 0
 
     for path in sorted(glob.glob(f"{ENTITY_DIR}/e*.md")):
@@ -274,12 +304,14 @@ def check_docs(report):
             # Annex도 헤더와 스키마 링크는 지킨다. 섹션 규격만 면제된다.
             ok &= check_schema_link(text, doc, report)
             ok &= check_global_invariant_defs(text, doc, report)
+            ok &= check_cross_refs(text, doc, docs_by_id, report)
         else:
             ok &= check_sections(text, doc, report)
             ok &= check_numbering(
                 text, doc, prefixes.get(doc_entity_id(doc)), registered, report)
             ok &= check_global_invariant_defs(text, doc, report)
             ok &= check_schema_link(text, doc, report)
+            ok &= check_cross_refs(text, doc, docs_by_id, report)
 
         passed, failed = (passed + 1, failed) if ok else (passed, failed + 1)
 

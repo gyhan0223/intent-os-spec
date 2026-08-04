@@ -59,7 +59,7 @@ Goal Confirmation → Canonical Goal 확정
 
 ### 3.2 Semantic Rules (의미 수준)
 
-[e001-goal.md §10](e001-goal.md)에 정의된 규칙을 실행한다.
+[e001-goal.md §3](e001-goal.md)에 정의된 규칙(Rule G-001~G-005)을 실행한다.
 
 | Rule | 내용 | 위반 시 |
 |---|---|---|
