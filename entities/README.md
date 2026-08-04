@@ -83,8 +83,11 @@ Entity 명세는 PRD 수준이 아니라 **RFC / ISO 표준** 수준으로 작�
 
 | Entity | 이름 | 문서 | 상태 |
 |---|---|---|---|
-| 001 | Goal | [e001-goal.md](e001-goal.md) | v1.0 Draft |
+| 001 | Goal — Definition | [e001-goal.md](e001-goal.md) | v2.0 Draft |
 | 001-A | Goal Graph | [e001a-goal-graph.md](e001a-goal-graph.md) | v1.0 Draft |
+| 001-B | Goal JSON Schema (CGR v2) | [e001b-goal-schema.md](e001b-goal-schema.md) | v2.0 Draft |
+| 001-C | Goal State Machine | [e001c-goal-state-machine.md](e001c-goal-state-machine.md) | v2.0 Draft |
+| 001-D | Goal Validation Rules | [e001d-goal-validation.md](e001d-goal-validation.md) | v2.0 Draft |
 | 002 | Intent | — | 예정 |
 | 003 | Context | — | 예정 |
 | 004 | Constraint | — | 예정 |

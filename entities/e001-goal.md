@@ -1,8 +1,28 @@
-# Entity 001: Goal
+# Entity 001: Goal — Definition
 
-- **Version:** v1.0 Draft
+- **Version:** v2.0 Draft
 - **Status:** Core Entity
-- **Last Updated:** 2026-08-03
+- **Last Updated:** 2026-08-04
+
+---
+
+## 0. 문서 구조
+
+Goal은 Intent OS 전체가 의존하는 가장 중요한 기반 객체다. 그래서 Goal Entity 하나를 네 개의 문서로 분리한다.
+
+| # | 문서 | 내용 | 파일 |
+|---|---|---|---|
+| 1 | **Goal Definition** | Goal이 무엇인가 (이 문서) | `e001-goal.md` |
+| 2 | **Goal JSON Schema** | 데이터 구조 (CGR v2) | [e001b-goal-schema.md](e001b-goal-schema.md) |
+| 3 | **Goal State Machine** | Goal의 생명주기 | [e001c-goal-state-machine.md](e001c-goal-state-machine.md) |
+| 4 | **Goal Validation Rules** | 검증과 점수화 | [e001d-goal-validation.md](e001d-goal-validation.md) |
+
+Goal 간의 관계는 별도 문서로 정의한다 → [Entity 001-A: Goal Graph](e001a-goal-graph.md)
+
+기계가 읽을 수 있는 명세:
+
+- [`goal.schema.json`](../intent-os-spec/schemas/goal.schema.json) — Canonical Goal Representation v2
+- [`goal-state-machine.json`](../intent-os-spec/schemas/goal-state-machine.json) — State Machine Specification
 
 ---
 
@@ -17,6 +37,12 @@
 여기서 중요한 단어는 **Future State**이다.
 
 Goal은 현재가 아니라 **미래의 상태**를 의미한다.
+
+그리고 v2에서 하나가 더 추가된다.
+
+> **Goal is a living object, not a static record.**
+
+Goal은 정적인 데이터가 아니라 상태(State)를 가지고 살아가는 객체다. 각 상태에서 가능한 행동(Action)이 달라진다. → [Goal State Machine](e001c-goal-state-machine.md)
 
 ---
 
@@ -72,36 +98,26 @@ Goal은 반드시 아래 조건을 만족해야 한다.
 
 ---
 
-## 4. Goal Attributes
+## 4. Goal Attributes (v2)
 
-Goal은 최소한 아래 속성을 가진다.
+Goal은 아홉 개의 속성 그룹을 가진다. 각 필드의 정확한 정의는 [Goal JSON Schema](e001b-goal-schema.md)에 있다.
 
 ```
 Goal
-├── Objective
-├── Motivation
-├── Success Metric
-├── Constraints
-├── Priority
-├── Deadline
-├── Context
-├── Stakeholders
-├── Assumptions
-└── Status
+├── Identity        (goal_id, version, title, goal_type)
+├── Objective       (description, desired_state, secondary_metrics)
+├── Motivation      (왜 원하는가 — 전략이 달라진다)
+├── Constraints     (budget, deadline, location, legal, resource_limits)
+├── Priority        (level, weight, factors, computed_score)
+├── Context         (current_state, environment, assumptions)
+├── Stakeholders    (Owner 정확히 1명 + Sponsor/Approver/Contributor/Affected)
+├── Relationships   (parent_goal, child_goals, dependencies, related_goals)
+├── Status          (phase, progress — State Machine이 관리)
+├── Quality         (confidence, completeness, completeness_level)
+└── Metadata        (created_by, source, history — 출처와 변경 이력)
 ```
 
-| 속성 | 의미 | 예 |
-|---|---|---|
-| **Objective** | 무엇을 이루고 싶은가 | `학생 모집` |
-| **Motivation** | 왜? | `윈터캠프 정원 채우기 → 학원 매출 증가 → 신규 브랜드 인지도 확보` |
-| **Success Metric** | 성공 기준 | `100명`, `매출 2억`, `CTR 8%` |
-| **Constraints** | 제약조건 | 예산, 시간, 법률, 지역 |
-| **Priority** | 우선순위 | High / Medium / Low |
-| **Deadline** | 언제까지 | `2026-11-30` |
-| **Context** | 현재 상황 | 현재 등록자 20명, 예산 300만원, 지역 홍대 |
-| **Stakeholders** | 누가 영향을 받는가 | 대표, 학생, 학부모, 마케팅팀 |
-| **Assumptions** | 가정 | 광고 예산은 유지된다. 윈터캠프 일정은 변경되지 않는다 |
-| **Status** | Goal의 상태 | Draft / Confirmed / Planning / Executing / Completed / Failed |
+v1 대비 추가된 것: **계층 구조, 의존성, 소유자, 생성 출처, 변경 이력, 버전, 신뢰도, 충돌, 우선순위 계산 정보.** 이것들이 있어야 Goal이 운영체제 수준의 Entity가 된다.
 
 Motivation은 의외로 굉장히 중요하다. **Motivation에 따라 전략이 달라진다.**
 
@@ -109,11 +125,19 @@ Motivation은 의외로 굉장히 중요하다. **Motivation에 따라 전략이
 
 ## 5. Goal Lifecycle
 
-Goal도 생명주기가 있다.
+Goal은 살아있는 객체이며 다음 생명주기를 가진다.
 
 ```
-Created → Clarified → Confirmed → Planning → Executing → Monitoring → Completed → Archived
+Created → Clarified → Structured → Executable
+   → Planning → Executing → Monitoring
+   → Completed → Archived
 ```
+
+예외 경로로 `Failed`, `Suspended`, `Abandoned`가 있다.
+
+각 상태의 정의, 상태별 허용 행동, 전이 조건(Guard)은 일반 JSON Schema가 아니라 **State Machine Specification**으로 별도 정의한다.
+
+→ **[Entity 001-C: Goal State Machine](e001c-goal-state-machine.md)** / [`goal-state-machine.json`](../intent-os-spec/schemas/goal-state-machine.json)
 
 ---
 
@@ -137,6 +161,10 @@ Goal Engine은 Goal을 받으면 검증한다.
 
 즉, **Goal이 불완전하면 바로 실행하지 않는다.**
 
+검증 알고리즘, Completeness Score, Confidence 산출은 별도 문서에 정의한다.
+
+→ **[Entity 001-D: Goal Validation Rules](e001d-goal-validation.md)**
+
 ---
 
 ## 7. Goal ≠ User Request
@@ -156,6 +184,8 @@ Goal
    ↓
 Planning
 ```
+
+추론으로 생성된 Goal은 `metadata.source = "inference"`로 기록되며, 사용자의 실제 의도와 일치하는지에 대한 `quality.confidence`가 특히 중요하다.
 
 ---
 
@@ -248,7 +278,7 @@ Context
 
 ## 10. Semantic Rules
 
-문법적으로 올바르다고 Goal이 되는 것은 아니다. Intent OS는 의미 규칙(Semantic Rules)도 검사한다.
+문법적으로 올바르다고 Goal이 되는 것은 아니다. Intent OS는 의미 규칙(Semantic Rules)도 검사한다. 이 규칙들은 [Goal Validation Rules](e001d-goal-validation.md)의 Semantic Validation 단계에서 실행된다.
 
 ### Rule G-001 — 미래 상태(Future State)를 표현해야 한다
 
@@ -313,145 +343,60 @@ Goal은 자연어에서 다음 형태로 표현될 수 있다.
 
 ---
 
-## 12. Canonical Goal Representation (CGR)
+## 12. Canonical Goal Representation (CGR v2)
 
-모든 Goal은 내부적으로 동일한 구조를 가진다.
+모든 Goal은 내부적으로 동일한 구조를 가진다. **이 구조만 Runtime으로 전달된다.**
+
+최소 형태의 예:
 
 ```json
 {
-  "goal_id": "goal_001",
+  "goal_id": "goal_01HZX9M4Y4QF2X",
+  "version": 1,
+  "title": "2027 윈터스쿨 학생 모집",
   "goal_type": "Outcome",
-  "objective": "학생 모집",
-  "target_state": {
-    "value": 100,
-    "unit": "명"
+  "objective": {
+    "description": "학생 100명 모집",
+    "desired_state": {
+      "metric": "registered_students",
+      "operator": ">=",
+      "target": 100,
+      "unit": "students"
+    }
   },
-  "deadline": "2026-11-30",
-  "constraints": [],
-  "priority": "High",
-  "status": "Draft"
+  "status": { "phase": "Created" },
+  "metadata": {
+    "created_by": "user",
+    "created_at": "2026-08-04T12:00:00Z",
+    "source": "conversation"
+  }
 }
 ```
 
-**이 구조만 Runtime으로 전달된다.**
+전체 필드 정의와 완전한 예시는 → **[Entity 001-B: Goal JSON Schema](e001b-goal-schema.md)**
 
 기계가 읽을 수 있는 스키마: [`goal.schema.json`](../intent-os-spec/schemas/goal.schema.json)
 
 ---
 
-## 13. Goal Completeness
+## 13. Open Issues (v2.0)
 
-Goal은 세 단계로 분류된다.
+v1.0의 Open Issue 중 다음은 v2에서 반영되었다.
 
-### Level 1 — Raw Goal
+- ~~Goal 계층 구조~~ → `parent_goal` / `child_goals` + Entity 001-A
+- ~~Goal 간 의존성~~ → `dependencies` / `related_goals`
+- ~~Goal 소유자~~ → `stakeholders` (Owner 정확히 1명)
+- ~~Goal 생성 출처~~ → `metadata.source` / `origin_ref`
+- ~~Goal 변경 이력~~ → `metadata.history`
+- ~~Goal 버전~~ → `version`
+- ~~Goal 신뢰도~~ → `quality.confidence`
+- ~~Goal 충돌~~ → `related_goals[].relationship = CONFLICTS_WITH` + resolution
+- ~~Goal 우선순위 계산 정보~~ → `priority.factors` / `computed_score`
+- ~~Goal 변경 시 시스템 반응~~ → State Machine (e001c) + Goal Propagation (e001a §14)
 
-```
-학생 모집
-```
+앞으로 보강해야 할 항목:
 
-정보 부족.
-
-### Level 2 — Structured Goal
-
-```
-학생 100명 모집 / 11월까지 / 홍대 / 예산 300만원
-```
-
-Planner 실행 가능.
-
-### Level 3 — Executable Goal
-
-모든 제약조건과 성공 기준이 포함되어 즉시 Planning을 시작할 수 있는 상태.
-
----
-
-## 14. Goal Validation Algorithm
-
-```
-Input
-  ↓
-Goal Detection
-  ↓
-Goal Type Classification
-  ↓
-Method Detection
-  ↓
-Task Detection
-  ↓
-Metric Detection
-  ↓
-Constraint Detection
-  ↓
-Missing Information
-  ↓
-Question Generation
-  ↓
-Goal Confirmation
-  ↓
-Canonical Goal 생성
-```
-
----
-
-## 15. Goal Completeness Score
-
-Intent OS는 Goal의 완성도를 점수화한다.
-
-| 항목 | 가중치 |
-|---|--:|
-| Objective | 25% |
-| Success Metric | 20% |
-| Deadline | 15% |
-| Constraints | 15% |
-| Context | 10% |
-| Stakeholders | 10% |
-| Priority | 5% |
-
-예)
-
-- `학생 모집` → 약 **25/100점**
-- `2026년 11월까지 홍대 지역 예비 고3 학생 100명 모집. 예산은 300만원 이하.` → **80~90점** 수준
-
----
-
-## 16. Open Issues (v1.0)
-
-### Goal은 독립 객체로 충분하지 않다
-
-현재 Goal을 **하나의 객체(Object)** 로 정의하고 있는데, 장기적으로는 이것만으로 부족하다.
-
-```
-회사 성장
-├── 매출 증가
-│     ├── 학생 모집
-│     ├── 객단가 상승
-│     └── 재등록률 향상
-│
-└── 브랜드 강화
-      ├── 유튜브 운영
-      ├── SNS 활성화
-      └── 후기 확보
-```
-
-이건 Goal이 아니라 **Goal Tree**다.
-
-Intent OS가 실제 기업이나 장기 프로젝트를 관리하려면 Goal은 독립적인 객체가 아니라 **계층 구조(DAG, Directed Acyclic Graph)** 로 표현되어야 한다.
-
-모든 Planning, Decision, Learning은 결국 **Goal 간의 관계**를 이해하는 것에서 시작하기 때문에, **Goal Graph가 Intent OS 전체의 가장 중요한 데이터 구조**가 될 가능성이 크다. 이 부분이 다른 AI 오케스트레이션 시스템들과 가장 큰 차별점이 될 수 있다.
-
-→ **[Entity 001-A: Goal Graph Specification](e001a-goal-graph.md)** 에서 정의한다.
-
-### 앞으로 보강해야 할 항목
-
-운영체제 수준의 명세가 되려면 다음까지 포함해야 한다.
-
-- ~~Goal의 형식 문법(Formal Grammar)~~ → §9 반영
-- ~~Goal JSON Schema~~ → §12, `goal.schema.json` 반영
-- Goal 생성 규칙 (보강 필요)
-- ~~Goal 검증 알고리즘~~ → §14 반영 (상세화 필요)
-- Goal 추론 알고리즘
-- Goal 충돌 해결 (여러 Goal이 충돌할 때) → Goal Graph `CONFLICTS_WITH` 관계로 일부 반영
-- ~~Goal 계층 구조 (상위/하위 Goal)~~ → Entity 001-A 반영
-- Goal 우선순위 계산 → Goal Graph §10 Goal Score로 일부 반영
-- Goal 변경 시 시스템 반응 → Goal Graph §14 Goal Propagation으로 일부 반영
+- Goal 추론(Extraction/Inference) 알고리즘 — Request → Goal 변환의 상세 명세
+- Goal 충돌 해소(Conflict Resolution) 전략의 상세 정의 — 현재는 표현만 가능
+- Goal 병합(merge)/분할(split) 연산의 정확한 의미론
 - 실제 예시 30~50개

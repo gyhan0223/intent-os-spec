@@ -144,8 +144,10 @@ D는 B와 C 둘 다 영향을 준다.
 모든 Goal은 상태를 가진다.
 
 ```
-Draft → Clarifying → Confirmed → Planning → Executing → Monitoring → Completed → Archived
+Created → Clarified → Structured → Executable → Planning → Executing → Monitoring → Completed → Archived
 ```
+
+상태 정의와 전이 규칙은 → [Entity 001-C: Goal State Machine](e001c-goal-state-machine.md)
 
 ---
 
@@ -194,10 +196,10 @@ $$Score = w_p P + w_i I + w_u U - w_r R + w_c C$$
 Goal은 살아있는 객체다.
 
 ```
-Created → Clarified → Confirmed → Planning → Executing → Monitoring → Learning → Completed → Archived
+Created → Clarified → Structured → Executable → Planning → Executing → Monitoring → Completed → Archived
 ```
 
-**Learning이 끝나면 다음 Goal의 Planning 정확도가 올라간다.**
+Learning은 상태가 아니라 Completed/Failed에서 수행되는 행동(`extract_learnings`)이다 ([e001c §7](e001c-goal-state-machine.md) 참조). **Learning이 끝나면 다음 Goal의 Planning 정확도가 올라간다.**
 
 ---
 

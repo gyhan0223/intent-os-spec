@@ -1,12 +1,25 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/intent-os/goal.schema.json",
-  "title": "Goal (Canonical Goal Representation)",
-  "description": "사용자 또는 다른 지능형 주체가 원하는 미래 상태. 방법(Method), Resource, Task를 포함하지 않는다. Entity 001 명세(entities/e001-goal.md) 참조.",
+  "title": "Goal (Canonical Goal Representation v2)",
+  "description": "사용자 또는 다른 지능형 주체가 원하는 미래 상태. 방법(Method), Resource, Task를 포함하지 않는다. v2는 계층 구조, 의존성, 소유자, 생성 출처, 변경 이력, 버전, 신뢰도, 충돌, 우선순위 계산 정보를 포함한다. 문서: entities/e001-goal.md(정의), entities/e001b-goal-schema.md(스키마 해설), entities/e001c-goal-state-machine.md(생명주기), entities/e001d-goal-validation.md(검증 규칙).",
   "type": "object",
-  "required": ["goal_id", "goal_type", "objective"],
+  "required": ["goal_id", "version", "title", "goal_type", "objective", "status", "metadata"],
   "properties": {
-    "goal_id": { "type": "string" },
+    "goal_id": {
+      "type": "string",
+      "description": "시스템 전역에서 유일한 Goal 식별자. ULID 기반 권장. 예: goal_01HZX9M4Y4QF2X",
+      "pattern": "^goal_[0-9A-Za-z]{6,}$"
+    },
+    "version": {
+      "type": "integer",
+      "description": "Goal의 버전. 필드가 변경될 때마다 1씩 증가한다. 변경 내용은 metadata.history에 기록된다. Completed 상태의 Goal은 직접 수정하지 않고 새 버전 또는 후속 Goal을 생성한다 (Goal Graph Invariant 4).",
+      "minimum": 1
+    },
+    "title": {
+      "type": "string",
+      "description": "사람이 읽기 위한 Goal의 짧은 이름. 예: '2027 윈터스쿨 학생 모집'"
+    },
     "goal_type": {
       "type": "string",
       "description": "Goal의 타입. Planner와 Decision Engine의 동작 기준이 된다.",
@@ -22,73 +35,358 @@
       ]
     },
     "objective": {
-      "type": "string",
-      "description": "무엇을 이루고 싶은가. 방법/AI 이름/Tool 이름을 포함하면 안 된다. 예: '학생 모집'"
-    },
-    "motivation": {
-      "type": "string",
-      "description": "왜 이 Goal을 원하는가. Motivation에 따라 전략이 달라진다."
-    },
-    "target_state": {
       "type": "object",
-      "description": "원하는 미래 상태의 측정 가능한 표현. 예: { value: 100, unit: '명' }",
+      "description": "무엇을 이루고 싶은가. 방법/AI 이름/Tool 이름을 포함하면 안 된다 (Rule G-002~G-004).",
+      "required": ["description"],
       "properties": {
-        "value": { "type": ["number", "string"] },
-        "unit": { "type": "string" }
+        "description": {
+          "type": "string",
+          "description": "원하는 미래 상태의 서술. 예: '학생 100명 모집'"
+        },
+        "desired_state": {
+          "type": "object",
+          "description": "원하는 미래 상태의 측정 가능한 표현. Success Metric의 정본(canonical form).",
+          "required": ["metric"],
+          "properties": {
+            "metric": {
+              "type": "string",
+              "description": "측정 대상 지표. 예: 'registered_students'"
+            },
+            "operator": {
+              "type": "string",
+              "description": "목표 달성 판정 연산자.",
+              "enum": [">=", "<=", ">", "<", "==", "!=", "between", "exists", "maximize", "minimize"]
+            },
+            "target": {
+              "type": ["number", "string", "array"],
+              "description": "목표값. operator가 between이면 [min, max] 배열."
+            },
+            "unit": {
+              "type": "string",
+              "description": "단위. 예: 'students', 'KRW', '%'"
+            },
+            "baseline": {
+              "type": ["number", "string", "null"],
+              "description": "시작 시점의 값. 진행률(progress) 계산의 기준."
+            }
+          }
+        },
+        "secondary_metrics": {
+          "type": "array",
+          "description": "보조 성공 지표. desired_state와 동일한 구조.",
+          "items": {
+            "type": "object",
+            "required": ["metric"],
+            "properties": {
+              "metric": { "type": "string" },
+              "operator": {
+                "type": "string",
+                "enum": [">=", "<=", ">", "<", "==", "!=", "between", "exists", "maximize", "minimize"]
+              },
+              "target": { "type": ["number", "string", "array"] },
+              "unit": { "type": "string" },
+              "baseline": { "type": ["number", "string", "null"] }
+            }
+          }
+        }
       }
     },
-    "success_metrics": {
+    "motivation": {
       "type": "array",
-      "description": "성공 판단 기준. 예: '100명', '매출 2억', 'CTR 8%'",
+      "description": "왜 이 Goal을 원하는가. Motivation에 따라 전략이 달라진다. 예: ['매출 증가', '브랜드 인지도 향상']",
       "items": { "type": "string" }
     },
     "constraints": {
-      "type": "array",
-      "description": "제약조건 (예산, 시간, 법률, 지역)",
-      "items": { "type": "string" }
+      "type": "object",
+      "description": "제약조건. v1의 문자열 배열에서 구조화된 객체로 변경.",
+      "properties": {
+        "budget": {
+          "type": "object",
+          "properties": {
+            "max": { "type": "number" },
+            "min": { "type": "number" },
+            "currency": { "type": "string", "description": "ISO 4217 통화 코드. 예: 'KRW'" }
+          }
+        },
+        "deadline": {
+          "type": "string",
+          "format": "date",
+          "description": "언제까지 달성해야 하는가. 예: '2027-01-10'"
+        },
+        "location": {
+          "type": "array",
+          "description": "지역 제약. 예: ['서울']",
+          "items": { "type": "string" }
+        },
+        "legal": {
+          "type": "array",
+          "description": "법적/규제 제약.",
+          "items": { "type": "string" }
+        },
+        "resource_limits": {
+          "type": "array",
+          "description": "사용 가능한 Resource에 대한 제약. 예: 특정 인력/도구/API 사용량 한도.",
+          "items": {
+            "type": "object",
+            "required": ["resource"],
+            "properties": {
+              "resource": { "type": "string" },
+              "limit": { "type": ["number", "string"] },
+              "unit": { "type": "string" }
+            }
+          }
+        },
+        "other": {
+          "type": "array",
+          "description": "위 분류에 속하지 않는 제약.",
+          "items": { "type": "string" }
+        }
+      }
     },
-    "priority": { "type": "string", "enum": ["Low", "Medium", "High", "Critical"] },
-    "deadline": { "type": "string", "format": "date" },
+    "priority": {
+      "type": "object",
+      "description": "우선순위와 그 계산 정보. Goal Score = w_p*P + w_i*I + w_u*U - w_r*R + w_c*C (Goal Graph §10).",
+      "properties": {
+        "level": {
+          "type": "string",
+          "description": "사람이 지정하거나 시스템이 부여한 우선순위 등급.",
+          "enum": ["Low", "Medium", "High", "Critical"]
+        },
+        "weight": {
+          "type": "number",
+          "description": "정규화된 우선순위 가중치 (0~1). Planner의 스케줄링에 사용된다.",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "factors": {
+          "type": "object",
+          "description": "Goal Score 계산에 사용되는 요소값 (0~10 권장).",
+          "properties": {
+            "impact": { "type": "number" },
+            "urgency": { "type": "number" },
+            "risk": { "type": "number" },
+            "strategic_alignment": { "type": "number" }
+          }
+        },
+        "computed_score": {
+          "type": ["number", "null"],
+          "description": "Goal Score 계산 결과. Goal Graph의 weights와 factors로부터 산출된다."
+        },
+        "computed_at": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "description": "computed_score가 마지막으로 계산된 시각."
+        }
+      }
+    },
     "context": {
       "type": "object",
-      "description": "현재 상황. 예: 현재 등록자 20명, 예산 300만원, 지역 홍대"
+      "description": "현재 상황. Planner는 Goal만 보지 않고 Context를 반드시 고려한다 (Goal Graph §12).",
+      "properties": {
+        "current_state": {
+          "type": "object",
+          "description": "desired_state.metric에 대응하는 현재 값. 예: { registered_students: 42 }"
+        },
+        "environment": {
+          "type": "object",
+          "description": "시장, 경쟁, 계절 등 외부 환경 정보."
+        },
+        "assumptions": {
+          "type": "array",
+          "description": "가정. 가정이 깨지면 Goal 재검증이 필요하다. 예: ['겨울방학 일정 유지']",
+          "items": { "type": "string" }
+        }
+      }
     },
     "stakeholders": {
       "type": "array",
-      "description": "누가 영향을 받는가. 예: 대표, 학생, 학부모, 마케팅팀",
+      "description": "누가 이 Goal을 소유하고, 승인하고, 영향을 받는가. 정확히 하나의 Owner가 있어야 한다 (Rule V-OWNER, e001d 참조).",
+      "items": {
+        "type": "object",
+        "required": ["role", "name"],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["Owner", "Sponsor", "Approver", "Contributor", "Affected"]
+          },
+          "name": { "type": "string" },
+          "type": {
+            "type": "string",
+            "description": "주체의 종류. Goal은 사람뿐 아니라 다른 지능형 주체도 만들 수 있다.",
+            "enum": ["user", "organization", "agent", "system"]
+          }
+        }
+      },
+      "contains": {
+        "type": "object",
+        "properties": {
+          "role": { "const": "Owner" }
+        },
+        "required": ["role"]
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    "parent_goal": {
+      "type": ["string", "null"],
+      "description": "상위 Goal의 goal_id. Root Goal이면 null. 모든 Goal은 최소 하나의 상위 목적 또는 Root Goal과 연결되어야 한다 (Goal Graph Invariant 2)."
+    },
+    "child_goals": {
+      "type": "array",
+      "description": "하위 Goal의 goal_id 목록.",
       "items": { "type": "string" }
     },
-    "assumptions": {
+    "dependencies": {
       "type": "array",
-      "description": "가정. 예: '광고 예산은 유지된다'",
-      "items": { "type": "string" }
+      "description": "이 Goal이 의존하는 Goal들. 관계의 정본(source of truth)은 Goal Graph의 edges이며, 이 필드는 Goal 단독 조회 시를 위한 로컬 뷰다.",
+      "items": {
+        "type": "object",
+        "required": ["goal_id", "relationship"],
+        "properties": {
+          "goal_id": { "type": "string" },
+          "relationship": {
+            "type": "string",
+            "enum": ["DEPENDS_ON", "REQUIRES", "BLOCKS"]
+          },
+          "weight": { "type": "number" }
+        }
+      }
+    },
+    "related_goals": {
+      "type": "array",
+      "description": "의존은 아니지만 관계있는 Goal들. CONFLICTS_WITH로 Goal 충돌을 표현한다. 충돌이 해소되지 않으면 Executable 상태로 전이할 수 없다 (e001c Guard 참조).",
+      "items": {
+        "type": "object",
+        "required": ["goal_id", "relationship"],
+        "properties": {
+          "goal_id": { "type": "string" },
+          "relationship": {
+            "type": "string",
+            "enum": ["ENABLES", "SUPPORTS", "CONFLICTS_WITH"]
+          },
+          "weight": { "type": "number" },
+          "resolution": {
+            "type": ["string", "null"],
+            "description": "CONFLICTS_WITH인 경우 충돌 해소 방법/상태. 예: 'budget split 조정으로 해소', null이면 미해소."
+          }
+        }
+      }
     },
     "status": {
-      "type": "string",
-      "description": "Goal Lifecycle 상태",
-      "enum": [
-        "Draft",
-        "Clarifying",
-        "Confirmed",
-        "Planning",
-        "Executing",
-        "Monitoring",
-        "Learning",
-        "Completed",
-        "Failed",
-        "Archived"
-      ]
+      "type": "object",
+      "description": "Goal의 생명주기 상태. 상태와 전이 규칙은 goal-state-machine.json과 e001c에 정의된다.",
+      "required": ["phase"],
+      "properties": {
+        "phase": {
+          "type": "string",
+          "enum": [
+            "Created",
+            "Clarified",
+            "Structured",
+            "Executable",
+            "Planning",
+            "Executing",
+            "Monitoring",
+            "Completed",
+            "Failed",
+            "Suspended",
+            "Abandoned",
+            "Archived"
+          ]
+        },
+        "progress": {
+          "type": "number",
+          "description": "달성 진행률 (0~1). desired_state의 baseline→target 대비 current_state로 계산한다.",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "entered_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "현재 phase에 진입한 시각."
+        },
+        "blocked_reason": {
+          "type": ["string", "null"],
+          "description": "Suspended/Failed인 경우 그 사유."
+        }
+      }
     },
-    "completeness_score": {
-      "type": "number",
-      "description": "Goal Completeness Score (0-100). Objective 25% + Success Metric 20% + Deadline 15% + Constraints 15% + Context 10% + Stakeholders 10% + Priority 5%",
-      "minimum": 0,
-      "maximum": 100
+    "quality": {
+      "type": "object",
+      "description": "이 Goal 데이터 자체의 품질. 점수화 방법은 e001d에 정의된다.",
+      "properties": {
+        "confidence": {
+          "type": "number",
+          "description": "이 Goal이 사용자의 실제 의도를 정확히 반영한다는 시스템의 신뢰도 (0~1). Goal Extraction/추론 과정에서 산출된다.",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "completeness": {
+          "type": "number",
+          "description": "Goal Completeness Score (0~100). 가중치: Objective 25% + Success Metric 20% + Deadline 15% + Constraints 15% + Context 10% + Stakeholders 10% + Priority 5%.",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "completeness_level": {
+          "type": "integer",
+          "description": "1: Raw Goal, 2: Structured Goal, 3: Executable Goal",
+          "enum": [1, 2, 3]
+        }
+      }
     },
-    "completeness_level": {
-      "type": "integer",
-      "description": "1: Raw Goal, 2: Structured Goal, 3: Executable Goal",
-      "enum": [1, 2, 3]
+    "metadata": {
+      "type": "object",
+      "description": "생성 출처와 변경 이력.",
+      "required": ["created_by", "created_at", "source"],
+      "properties": {
+        "created_by": {
+          "type": "string",
+          "description": "이 Goal을 생성한 주체. 사용자 ID, agent ID, 또는 'system'."
+        },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" },
+        "source": {
+          "type": "string",
+          "description": "Goal이 어디에서 왔는가. 추론(inference)으로 생성된 Goal은 confidence가 특히 중요하다.",
+          "enum": ["conversation", "api", "inference", "decomposition", "import", "trigger", "system"]
+        },
+        "origin_ref": {
+          "type": ["string", "null"],
+          "description": "출처에 대한 참조. 예: 대화 ID, 상위 Goal ID(decomposition), 외부 시스템 ID(import)."
+        },
+        "history": {
+          "type": "array",
+          "description": "버전별 변경 이력. version이 증가할 때마다 항목이 추가된다.",
+          "items": {
+            "type": "object",
+            "required": ["version", "changed_at", "changed_by", "change_type"],
+            "properties": {
+              "version": { "type": "integer", "minimum": 1 },
+              "changed_at": { "type": "string", "format": "date-time" },
+              "changed_by": { "type": "string" },
+              "change_type": {
+                "type": "string",
+                "enum": [
+                  "created",
+                  "clarified",
+                  "field_updated",
+                  "status_changed",
+                  "priority_recalculated",
+                  "conflict_resolved",
+                  "merged",
+                  "split",
+                  "archived"
+                ]
+              },
+              "description": { "type": "string" },
+              "changes": {
+                "type": "object",
+                "description": "변경된 필드의 before/after. 예: { deadline: { from: '2027-01-10', to: '2027-02-01' } }"
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
