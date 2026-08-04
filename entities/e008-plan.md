@@ -296,7 +296,7 @@ Planner ──생성──→ Plan (e008)
 | Entity | 관계 | Cardinality |
 |---|---|---|
 | [Goal](e001-goal.md) / [Goal Graph](e001a-goal-graph.md) | Plan의 입력이자 존재 이유. Goal 변경 → Goal Propagation → Replanning | `Goal 1:0..N Plan` (Active는 1개, INV-P-01) |
-| [Task](e005-task.md) | Plan의 구성 단위. Task는 Plan 밖에서 독립적으로 실행되지 않는다 | `Plan 1:N Task` |
+| [Task](e005-task.md) | Plan의 구성 단위. Task는 Plan 밖에서 독립적으로 실행되지 않는다 | `Plan 1:1..N Task` |
 | [Task Graph](e005a-task-graph.md) | 실행 순서의 정본. Plan 하나가 그래프 하나를 갖는다 | `Plan 1:1 Task Graph` |
 | [Capability](e006-capability.md) | Task별 요구 능력. Decision Engine의 Candidate Filtering 기준 | `Plan N:M Capability` (Task 경유) |
 | [Constraint](e004-constraint.md) | 탐색 공간의 경계. Plan은 제약을 만들지 않고 지킨다 | `Constraint N:M Plan` |

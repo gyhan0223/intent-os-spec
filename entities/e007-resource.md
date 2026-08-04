@@ -274,12 +274,12 @@ Capability ◀──(제공)── Resource ──(수행)──▶ Execution �
 
 | Entity | 관계 | Cardinality |
 |---|---|---|
-| [Capability](e006-capability.md) | Resource는 Capability를 제공한다. 제공 수준은 계속 측정된다 | `Resource N:M Capability` |
+| [Capability](e006-capability.md) | Resource는 Capability를 제공한다. 제공 수준은 계속 측정된다 | `Capability N:M Resource` |
 | [Task](e005-task.md) | Resource는 Task에 **할당**된다. 소유하지 않는다 | `Task N:M Resource` (Decision 경유) |
 | [Goal](e001-goal.md) | Resource는 Goal을 모른다. Goal 정보는 Context로만 전달된다 | 직접 관계 없음 (INV-R-04) |
 | [Decision](e009-decision.md) | Decision의 출력이 Task-Resource 할당이다 | `Resource 1:0..N Decision` |
 | [Execution](e013-execution.md) | 실행 주체. 성능 이력의 귀속 대상이다 | `Resource 1:0..N Execution` |
-| [Resource Profile](e025-resource-profile.md) | 관측 데이터의 저장소. Resource 등록 정보와 분리된다 | `Resource 1:0..1 Resource Profile` |
+| [Resource Profile](e025-resource-profile.md) | 관측 데이터의 저장소. Resource 등록 정보와 분리된다 | `Resource 1:1 Resource Profile` |
 | [Feedback](e012-feedback.md) | Feedback이 observed_score와 Drift 감지의 입력이다 | `Resource 1:0..N Feedback` |
 
 **Resource는 아무것도 참조하지 않는다.** Task도 Decision도 Resource를 가리킬 뿐, Resource는 자신이 어디에 쓰이는지 모른다.

@@ -16,6 +16,9 @@ A. Entity 문서 (`entities/`)
    A5. Rule/INV의 Prefix가 e000 §3 표에 등록된 것과 일치
    A6. §8 Canonical Representation의 스키마 링크가 실재하는 파일을 가리킴
    A7. Entity 간 불변식(`INV-<NN>`)을 새로 정의하지 않음 (e000 §3)
+   A8. `[e007 §6]` 형태의 상호 참조가 실재하는 섹션을 가리킴
+   A9. §7의 Cardinality 표기가 e000a §3 전체표와 일치 — 같은 수치를 두 곳에
+       적으면 반드시 갈리므로, 표를 정본으로 두고 파생을 검사한다
 
    Prefix 표는 e000 §3에서 **직접 파싱한다.** 표를 고치면 검사도 따라 바뀐다.
 
@@ -45,6 +48,7 @@ import sys
 SCHEMA_DIR = "intent-os-spec/schemas"
 ENTITY_DIR = "entities"
 SPEC_FORMAT_DOC = "entities/e000-spec-format.md"
+RELATIONSHIPS_DOC = "entities/e000a-entity-relationships.md"
 
 # 12개 필수 섹션. 값은 제목에 반드시 들어가야 하는 표현이며,
 # 하나라도 맞으면 통과한다 (§2는 한국어로 쓰므로 대안을 둔다).
@@ -94,6 +98,11 @@ RE_DOC_ID = re.compile(r"^e(\d{3})([a-z])?-")
 RE_DOC_CITE = re.compile(r"\be\d{3}[a-z]?\s")
 # 상호 참조: [e007 §6](e007-resource.md) / [Goal Graph §14](e001a-goal-graph.md)
 RE_CROSS_REF = re.compile(r"\[[^\[\]]*?\b(e\d{3}[a-z]?)\b[^\[\]]*?§\s*([\d.]+)[^\[\]]*?\]")
+# e000a §3 표: | Task | 요구한다 | Capability | `N:M` | ... |
+RE_CARD_ROW = re.compile(r"^\| ([^|]+) \| ([^|]+) \| ([^|]+) \| `([^`]+)` \|", re.M)
+# Entity 문서 §7 표기: `Task 1:0..N Execution`
+RE_CARD_USE = re.compile(
+    r"`([A-Za-z][A-Za-z ]*?) (1:0\.\.N|1:1\.\.N|1:0\.\.1|1:1|1:N|N:M|N:1) ([A-Za-z][A-Za-z ]*?)`")
 
 
 def fail(report, doc, message):
@@ -241,6 +250,51 @@ def check_global_invariant_defs(text, doc, report):
     return ok
 
 
+def load_cardinality_table(report):
+    """e000a §3 전체표에서 (좌변, 우변) → Cardinality 를 읽는다.
+
+    이 표가 **단일 권위**다. Entity 문서 §7의 표기는 여기서 파생된다.
+    """
+    if not os.path.exists(RELATIONSHIPS_DOC):
+        return {}
+    text = open(RELATIONSHIPS_DOC).read()
+    section = re.search(r"^## 3\. .*?(?=^## 4\.)", text, re.S | re.M)
+    if not section:
+        fail(report, RELATIONSHIPS_DOC, "§3 Cardinality 전체표를 찾을 수 없다")
+        return {}
+    table = {}
+    for left, _, right, card in RE_CARD_ROW.findall(section.group(0)):
+        table[(left.strip(), right.strip())] = card
+    return table
+
+
+def check_cardinality(text, doc, table, report):
+    """§7의 `A 1:0..N B` 표기가 e000a §3 표와 어긋나지 않는지 본다.
+
+    같은 수치를 두 문서에 적으면 반드시 갈린다. 갈리는 순간 잡는다.
+    """
+    section = re.search(r"\n## 7\. Relationships\n(.*?)(?=\n## 8\.)", text, re.S)
+    if not section:
+        return True
+    ok = True
+    for left, card, right in RE_CARD_USE.findall(section.group(1)):
+        left, right = left.strip(), right.strip()
+        if not right or left == right:
+            continue
+        expected = table.get((left, right))
+        if expected is None:
+            if (right, left) in table:
+                fail(report, doc, f"`{left} {card} {right}` — e000a §3은 반대 방향으로 "
+                                  f"적는다: `{right} {table[(right, left)]} {left}`")
+                ok = False
+            continue  # 표에 없는 관계는 각 문서가 정의한다
+        if expected != card:
+            fail(report, doc, f"`{left} {card} {right}` — e000a §3의 값은 "
+                              f"`{expected}`다. 표가 정본이므로 한쪽을 고친다")
+            ok = False
+    return ok
+
+
 def check_cross_refs(text, doc, docs_by_id, report):
     """`[e007 §6](...)` 같은 상호 참조가 실재하는 섹션을 가리키는지 본다.
 
@@ -282,6 +336,7 @@ def check_schema_link(text, doc, report):
 def check_docs(report):
     prefixes = load_prefix_table(report)
     registered = set(prefixes.values())
+    cardinality = load_cardinality_table(report)
     docs_by_id = {}
     for path in glob.glob(f"{ENTITY_DIR}/e*.md"):
         m = RE_DOC_ID.match(os.path.basename(path))
@@ -312,6 +367,7 @@ def check_docs(report):
             ok &= check_global_invariant_defs(text, doc, report)
             ok &= check_schema_link(text, doc, report)
             ok &= check_cross_refs(text, doc, docs_by_id, report)
+            ok &= check_cardinality(text, doc, cardinality, report)
 
         passed, failed = (passed + 1, failed) if ok else (passed, failed + 1)
 

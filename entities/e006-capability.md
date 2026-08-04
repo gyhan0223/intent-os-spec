@@ -324,7 +324,7 @@ Task ──(required_capabilities)──▶ Capability ◀──(capabilities)�
 | Entity | 관계 | Cardinality |
 |---|---|---|
 | [Task](e005-task.md) | Task는 Capability를 요구한다. Capability 없는 Task는 라우팅 불가 | `Task N:M Capability` |
-| [Resource](e007-resource.md) | Resource는 Capability를 제공하고, 제공 수준이 측정된다 | `Resource N:M Capability` |
+| [Resource](e007-resource.md) | Resource는 Capability를 제공하고, 제공 수준이 측정된다 | `Capability N:M Resource` |
 | [Goal](e001-goal.md) | Goal은 Capability를 직접 참조하지 않는다 (Task를 거쳐서만) | 직접 관계 없음 ([Rule REL-004](e000a-entity-relationships.md)) |
 | [Capability Taxonomy](e006a-capability-taxonomy.md) | 계층과 관계의 정본. Capability 문서는 노드 하나를 정의한다 | `Capability Taxonomy 1:N Capability` |
 | [Decision](e009-decision.md) | Capability Matching 결과가 Decision의 입력이다 | `Capability N:M Decision` |

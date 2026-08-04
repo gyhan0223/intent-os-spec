@@ -296,7 +296,7 @@ Feedback (e012)
 | [Knowledge](e011-knowledge.md) | 집계된 Feedback이 Knowledge의 지지·반증 근거가 된다 | `Knowledge 1:0..N Feedback` |
 | [Resource Profile](e025-resource-profile.md) | 관측 점수와 Drift 감지의 입력이다 | `Feedback N:M Resource Profile` |
 | [Decision](e009-decision.md) | Feedback 반영의 최종 목적지는 다음 Decision의 개선이다 | `Decision 1:0..N Feedback` |
-| [Evaluation](e015-evaluation.md) | Evaluation은 시스템의 판정, Feedback은 외부의 반응이다. 둘은 별개로 기록된다 | `Evaluation N:M Feedback` |
+| [Evaluation](e015-evaluation.md) | Evaluation은 시스템의 판정, Feedback은 외부의 반응이다. 둘은 별개로 기록된다 | `Feedback N:M Evaluation` |
 
 **Feedback은 대상을 참조하고 대상은 Feedback을 모른다**([Rule REL-002](e000a-entity-relationships.md)).
 

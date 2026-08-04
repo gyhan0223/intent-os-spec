@@ -277,7 +277,7 @@ Goal ──(분해)──▶ Task ──(요구)──▶ Capability ──(제�
 | [Goal](e001-goal.md) | Task는 정확히 하나의 Goal에 기여한다. Goal 없는 Task는 없다 | `Goal 1:0..N Task` |
 | [Capability](e006-capability.md) | Task는 Capability를 **요구**한다 (`required_capabilities`) | `Task N:M Capability` |
 | [Resource](e007-resource.md) | Task는 Resource를 직접 지정하지 않는다. Decision Engine이 매칭한다 | `Task N:M Resource` (간접) |
-| [Plan](e008-plan.md) | Plan은 Task Graph + 실행 전략의 상위 개념이다 | `Plan 1:N Task` |
+| [Plan](e008-plan.md) | Plan은 Task Graph + 실행 전략의 상위 개념이다 | `Plan 1:1..N Task` |
 | [Task Graph](e005a-task-graph.md) | 실행 순서의 정본. Task는 자신이 어느 그래프에 속하는지 모른다 | `Task Graph 1:N Task` |
 | [Constraint](e004-constraint.md) | Goal의 Constraint는 Task로 상속·전파된다 | `Constraint N:M Task` |
 | [Execution](e013-execution.md) | Task는 여러 번 실행될 수 있다. 재시도마다 새 Execution이 생긴다 | `Task 1:0..N Execution` |
