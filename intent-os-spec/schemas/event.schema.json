@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/event.schema.json",
+  "title": "Event",
+  "description": "시스템에서 이미 일어난 일에 대한 불변·시각·순서를 가진 기록. 항상 과거형이며(Rule EVT-001) 명령을 담지 않는다(INV-EVT-05). 모든 상태 전이는 정확히 하나의 Event를 발생시키고(INV-12), Event 재생만으로 상태를 재구성할 수 있어야 한다. Entity 020 명세(entities/e020-event.md) 참조.",
+  "type": "object",
+  "required": ["event_id", "type", "sequence", "subject", "emitted_by", "emitted_at"],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "description": "멱등 키. At-least-once 배달이므로 소비자는 이 값으로 중복을 흡수한다 (Rule EVT-008)."
+    },
+    "type": {
+      "type": "string",
+      "description": "<entity>.<past_tense> 형식. 미래형·명령형은 Command를 Event로 위장한 것이다.",
+      "pattern": "^[a-z_]+\\.[a-z_]+$"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["lifecycle", "threshold", "governance", "external", "system"]
+    },
+    "sequence": {
+      "type": "integer",
+      "description": "subject별 순번. 빈틈이 있으면 Event 유실이며 상태 재구성이 불가능하다 (INV-EVT-02).",
+      "minimum": 1
+    },
+    "subject": {
+      "type": "object",
+      "description": "무엇에 대한 Event인가 (Rule EVT-003). 없으면 소비자가 아무것도 할 수 없다.",
+      "required": ["entity_type", "entity_id"],
+      "properties": {
+        "entity_type": { "type": "string" },
+        "entity_id": { "type": "string" }
+      }
+    },
+    "session_id": { "type": ["string", "null"] },
+    "goal_id": { "type": ["string", "null"] },
+    "correlation_id": {
+      "type": ["string", "null"],
+      "description": "인과 사슬 추적 ID. 하나의 원인에서 파생된 Event들을 한 번의 질의로 묶는다."
+    },
+    "previous_state": { "type": ["string", "null"] },
+    "new_state": { "type": ["string", "null"] },
+    "data": {
+      "type": "object",
+      "description": "변화에 관한 최소 데이터 (Rule EVT-005). Entity 전체를 복사해 넣지 않는다. 대용량은 참조로 전환한다."
+    },
+    "emitted_by": {
+      "type": "string",
+      "description": "발행 주체. 발행자는 구독자를 모른다 (Rule EVT-007) — 수신자 필드를 두지 않는다."
+    },
+    "emitted_at": { "type": "string", "format": "date-time" },
+    "severity": {
+      "type": "string",
+      "enum": ["info", "warning", "critical"],
+      "default": "info"
+    },
+    "schema_version": { "type": "string", "default": "1.0" },
+    "corrects": {
+      "type": ["string", "null"],
+      "description": "type이 event.correction_issued 일 때 보정 대상 Event ID. 원본은 수정하지 않는다 (INV-EVT-01)."
+    },
+    "delivery": {
+      "type": "object",
+      "description": "배달 상태. Event 자체가 아니라 배달의 상태다.",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["Emitted", "Published", "Consumed", "DeadLettered", "Replayed", "Archived"]
+        },
+        "attempts": { "type": "integer", "minimum": 0 },
+        "consumers_acked": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

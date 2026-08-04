@@ -1,47 +1,128 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/intent-os/execution.schema.json",
-  "title": "Execution Instance",
-  "description": "하나의 Goal이 처리되는 전체 실행 단위.",
+  "title": "Execution",
+  "description": "선택된 Resource로 하나의 Task를 수행하는 '한 번의 시도'에 대한 영속적 제어 기록. 재시도는 새 Execution을 만들며(Rule EXE-003), 종료된 Execution은 불변이고 반드시 Outcome 1개를 낳는다(INV-04). Entity 013 명세(entities/e013-execution.md) 참조. ⚠️ v0.1의 'Execution Instance'(Goal 단위)는 본 스키마가 아니라 session.schema.json이다.",
   "type": "object",
-  "required": ["execution_id", "goal_id", "status"],
+  "required": [
+    "execution_id",
+    "task_id",
+    "decision_id",
+    "resource_id",
+    "status",
+    "created_at"
+  ],
   "properties": {
     "execution_id": { "type": "string" },
-    "goal_id": { "type": "string" },
+    "task_id": { "type": "string" },
+    "decision_id": {
+      "type": "string",
+      "description": "이 실행을 낳은 Decision (Rule EXE-002, INV-03). 대안이 하나뿐이어도 Forced Action Decision이 선행해야 한다."
+    },
+    "session_id": { "type": ["string", "null"] },
+    "resource_id": {
+      "type": "string",
+      "description": "실행 주체. 예: 'anthropic:claude-5', 'human:copywriter_kim'"
+    },
+    "agent_id": {
+      "type": ["string", "null"],
+      "description": "Resource를 운용한 Agent (Entity 023). 없으면 null."
+    },
+    "mode": {
+      "type": "string",
+      "description": "실행 형태. shadow/rehearsal의 Outcome은 Goal Progress에 기여하지 않는다.",
+      "enum": ["single", "pipeline", "collaborative", "shadow", "rehearsal"],
+      "default": "single"
+    },
+    "attempt": {
+      "type": "integer",
+      "description": "몇 번째 시도인가. 1부터 시작한다.",
+      "minimum": 1,
+      "default": 1
+    },
+    "previous_execution_id": {
+      "type": ["string", "null"],
+      "description": "직전 시도. 체인을 따라가면 반드시 attempt=1에 도달해야 한다 (INV-EXE-05)."
+    },
+    "parent_execution_id": {
+      "type": ["string", "null"],
+      "description": "Pipeline/Composite 실행의 부모."
+    },
     "status": {
       "type": "string",
-      "enum": ["IDLE", "UNDERSTANDING", "PLANNING", "DECIDING", "EXECUTING", "EVALUATING", "LEARNING", "COMPLETED", "FAILED"]
+      "description": "Completed는 '실행이 끝났다'는 뜻이지 '잘 됐다'는 뜻이 아니다. 성공 판정은 Evaluation의 몫이다.",
+      "enum": ["Created", "Queued", "Running", "Waiting", "Completed", "Failed", "TimedOut", "Aborted"]
+    },
+    "progress": { "type": "number", "minimum": 0, "maximum": 1 },
+    "contributes_to_goal": {
+      "type": "boolean",
+      "description": "Goal 집계 포함 여부. shadow/rehearsal은 false.",
+      "default": true
     },
     "created_at": { "type": "string", "format": "date-time" },
-    "tasks": { "type": "array", "items": { "type": "string" } },
-    "decisions": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "task_id": { "type": "string" },
-          "candidates": { "type": "array", "items": { "type": "string" } },
-          "selected_resource": { "type": "string" },
-          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
-          "reason": {
-            "type": "array",
-            "description": "Explainability 필수 항목",
-            "items": { "type": "string" }
-          }
-        }
+    "started_at": { "type": ["string", "null"], "format": "date-time" },
+    "finished_at": { "type": ["string", "null"], "format": "date-time" },
+    "timeout_ms": { "type": "integer", "minimum": 0 },
+    "latency_ms": {
+      "type": ["integer", "null"],
+      "description": "실측 지연. finished_at − started_at 과 일치해야 한다 (INV-EXE-04).",
+      "minimum": 0
+    },
+    "cost": {
+      "type": ["object", "null"],
+      "description": "실측 비용 (Rule EXE-006). 추정치가 아니다. 측정 불가 Resource는 안분값 + estimated:true.",
+      "required": ["amount", "currency"],
+      "properties": {
+        "amount": { "type": "number", "minimum": 0 },
+        "currency": { "type": "string" },
+        "estimated": { "type": "boolean", "default": false }
       }
     },
-    "resources": { "type": "array", "items": { "type": "string" } },
-    "outcomes": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "quality_score": { "type": "number", "minimum": 0, "maximum": 1 },
-          "goal_alignment": { "type": "number", "minimum": 0, "maximum": 1 },
-          "cost_efficiency": { "type": "number", "minimum": 0, "maximum": 1 },
-          "user_feedback": { "type": "string" }
-        }
+    "usage": {
+      "type": "object",
+      "description": "자원 사용량. Resource 타입별로 키가 다르다. 예: input_tokens, output_tokens, api_calls, person_minutes"
+    },
+    "input_ref": { "type": ["string", "null"] },
+    "logs_ref": {
+      "type": ["string", "null"],
+      "description": "원시 로그 참조. 로그는 Execution의 하위 데이터이지 Event가 아니다."
+    },
+    "error": {
+      "type": ["object", "null"],
+      "properties": {
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "retryable": { "type": "boolean" }
+      }
+    },
+    "failure_class": {
+      "type": ["string", "null"],
+      "description": "실패 원인 분류. 재시도 전략을 결정한다.",
+      "enum": [
+        "resource_unavailable",
+        "resource_incapable",
+        "input_insufficient",
+        "timeout",
+        "constraint_violation",
+        "policy_violation",
+        "internal_error",
+        null
+      ]
+    },
+    "outcome_id": {
+      "type": ["string", "null"],
+      "description": "종료 시 생성된 Outcome. 종료 상태에서는 null일 수 없다 (INV-EXE-02)."
+    },
+    "policy_evaluation": {
+      "type": "object",
+      "description": "실행 전 Policy 판정 결과. 판정 시점의 Policy 버전을 함께 기록한다.",
+      "properties": {
+        "evaluated_at": { "type": "string", "format": "date-time" },
+        "point": { "type": "string" },
+        "matched_policies": { "type": "array", "items": { "type": "string" } },
+        "policy_versions": { "type": "object" },
+        "exceptions_used": { "type": "array", "items": { "type": "string" } },
+        "result": { "type": "string", "enum": ["allow", "deny", "require_approval"] }
       }
     }
   }

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/evaluation.schema.json",
+  "title": "Evaluation",
+  "description": "하나의 Outcome에 대한 판정. 결과의 품질(outcome quality)과 그 결과를 낳은 결정의 타당성(decision quality)을 분리해 평가한다(Rule EVA-004) — 이 분리가 없으면 결과론 편향이 학습을 오염시킨다. Entity 015 명세(entities/e015-evaluation.md) 참조.",
+  "type": "object",
+  "required": ["evaluation_id", "outcome_id", "evaluator", "evaluator_type", "scores", "verdict", "evaluated_at"],
+  "properties": {
+    "evaluation_id": { "type": "string" },
+    "outcome_id": { "type": "string" },
+    "task_id": { "type": "string" },
+    "evaluator": {
+      "type": "string",
+      "description": "평가 주체 (Rule EVA-003). 예: 'eval_engine:v3', 'human:대표'"
+    },
+    "evaluator_type": {
+      "type": "string",
+      "description": "deferred는 measurement_lag 경과 후의 사후 평가로, goal_alignment의 진짜 값을 확정한다.",
+      "enum": ["automatic", "human", "peer", "deferred", "consensus"]
+    },
+    "rubric_id": { "type": ["string", "null"] },
+    "rubric_version": { "type": ["string", "null"] },
+    "scores": {
+      "type": "object",
+      "description": "최소 4축 (Rule EVA-002). satisfaction만 null 허용 — Feedback 미도착과 불만족은 다르다.",
+      "required": ["quality", "goal_alignment", "efficiency"],
+      "properties": {
+        "quality": { "type": "number", "minimum": 0, "maximum": 1 },
+        "goal_alignment": { "type": "number", "minimum": 0, "maximum": 1 },
+        "efficiency": { "type": "number", "minimum": 0, "maximum": 1 },
+        "satisfaction": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "composite": { "type": "number", "minimum": 0, "maximum": 1 },
+        "weights": {
+          "type": "object",
+          "description": "composite 산출에 사용한 가중치. 반드시 함께 기록한다.",
+          "properties": {
+            "quality": { "type": "number" },
+            "goal_alignment": { "type": "number" },
+            "efficiency": { "type": "number" },
+            "satisfaction": { "type": "number" }
+          }
+        },
+        "alignment_proxy": {
+          "type": "boolean",
+          "description": "Goal 지표를 직접 측정할 수 없어 Expected Output 충족도로 대체했는가.",
+          "default": false
+        }
+      }
+    },
+    "decision_review": {
+      "type": "object",
+      "description": "결정 자체에 대한 사후 검토. decision_quality는 outcome quality에서 역산하지 않는다 (INV-EVA-05).",
+      "properties": {
+        "decision_id": { "type": ["string", "null"] },
+        "decision_quality": {
+          "type": ["number", "null"],
+          "description": "Decision.inputs_snapshot 만으로 그 선택이 최선이었는가. 결과와 독립적으로 산출한다.",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "prediction_error": {
+          "type": "object",
+          "description": "예측 − 실측. Prediction Model 보정의 입력이다.",
+          "properties": {
+            "utility": { "type": "number" },
+            "cost": { "type": "number" },
+            "latency_ms": { "type": "number" }
+          }
+        }
+      }
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["accept", "accept_with_revision", "reject", "escalate", "inconclusive"]
+    },
+    "adopted": {
+      "type": "boolean",
+      "description": "산출물을 실제로 채택했는가. Collaborative 실행의 미채택 결과도 평가는 정상 수행한다.",
+      "default": true
+    },
+    "rationale": {
+      "type": "array",
+      "description": "판정 근거 (Rule EVA-005). 근거 없는 점수는 재현도 이의 제기도 불가능하다.",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "feedback_ids": {
+      "type": "array",
+      "description": "참고한 Feedback. Feedback은 Evaluation의 입력이지 Evaluation 자체가 아니다.",
+      "items": { "type": "string" }
+    },
+    "supersedes": { "type": ["string", "null"] },
+    "status": {
+      "type": "string",
+      "enum": ["Pending", "InProgress", "Completed", "Disputed", "Superseded", "Skipped"],
+      "default": "Completed"
+    },
+    "evaluated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Outcome.measured_at 이상이어야 한다 (INV-EVA-04)."
+    }
+  }
+}

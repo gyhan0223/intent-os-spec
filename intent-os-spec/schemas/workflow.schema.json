@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/workflow.schema.json",
+  "title": "Workflow",
+  "description": "Capability 위에 정의된 재사용 가능하고 버전을 갖는 제어 흐름 템플릿. Plan(일회성·Goal 종속)과 달리 Goal에 독립이며, Resource를 지정하지 않는다(INV-WFL-03). 발행된 버전은 수정되지 않고 진행 중 Plan은 시작 시점 버전을 계속 쓴다(Version Pinning). Entity 022 명세(entities/e022-workflow.md) 참조.",
+  "type": "object",
+  "required": ["workflow_id", "name", "version", "type", "entry_step", "steps", "status"],
+  "properties": {
+    "workflow_id": { "type": "string" },
+    "name": { "type": "string" },
+    "version": { "type": "string" },
+    "type": {
+      "type": "string",
+      "description": "saga는 비가역 단계 + 보상 트랜잭션을 포함한다. 되돌릴 수 없다면 앞에 승인 게이트를 둔다.",
+      "enum": ["linear", "branching", "iterative", "event_driven", "saga"]
+    },
+    "owner": { "type": "string" },
+    "entry_step": { "type": "string" },
+    "variables": {
+      "type": "array",
+      "description": "인스턴스화 시 Goal의 Constraint에서 값이 주입된다.",
+      "items": {
+        "type": "object",
+        "required": ["name", "type"],
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string", "enum": ["string", "number", "boolean"] },
+          "default": {}
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["step_id", "control"],
+        "properties": {
+          "step_id": { "type": "string" },
+          "name": { "type": "string" },
+          "control": {
+            "type": "string",
+            "description": "이 6개로 표현할 수 없는 흐름은 Workflow를 분할해야 한다는 신호다.",
+            "enum": ["sequence", "parallel", "branch", "loop", "wait", "compensate"]
+          },
+          "required_capabilities": {
+            "type": "array",
+            "description": "Resource가 아니라 Capability로 표현한다 (Rule WFL-002). 그래야 다음 실행에서 더 나은 Resource로 자동 교체된다.",
+            "items": { "type": "string" }
+          },
+          "expected_output": { "type": "string" },
+          "branches": { "type": "array", "items": { "type": "string" }, "description": "control=parallel일 때의 동시 실행 단계들." },
+          "next": { "type": ["string", "null"] },
+          "condition": { "type": "string", "description": "control=branch일 때의 조건식." },
+          "on_true": { "type": "string" },
+          "on_false": { "type": "string" },
+          "loop_condition": { "type": "string" },
+          "max_iterations": {
+            "type": "integer",
+            "description": "control=loop일 때 필수 (INV-WFL-02). 상한 없는 반복은 예산을 태운다.",
+            "minimum": 1
+          },
+          "wait_for": {
+            "type": "object",
+            "properties": {
+              "event_type": { "type": "string" },
+              "timeout": { "type": "string" }
+            }
+          },
+          "on_failure": {
+            "type": "string",
+            "enum": ["retry", "skip", "fail_workflow", "compensate", "branch_to"]
+          },
+          "branch_to": {
+            "type": "string",
+            "description": "on_failure가 branch_to일 때의 대체 경로 step_id."
+          },
+          "max_retries": { "type": "integer", "minimum": 0 },
+          "irreversible": {
+            "type": "boolean",
+            "description": "true면 선행 경로에 승인 게이트 또는 Rehearsal이 있어야 한다 (INV-WFL-05).",
+            "default": false
+          },
+          "requires_approval": { "type": "boolean", "default": false },
+          "budget_cap": { "type": ["string", "number"] },
+          "compensation": { "type": ["string", "null"], "description": "실패 시 실행할 보상 단계 ID." }
+        }
+      }
+    },
+    "policy_refs": { "type": "array", "items": { "type": "string" } },
+    "usage_stats": {
+      "type": "object",
+      "properties": {
+        "instantiations": { "type": "integer", "minimum": 0 },
+        "success_rate": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "derived_from": {
+      "type": ["string", "null"],
+      "description": "학습으로 추출된 경우의 Knowledge ID. Workflow의 가장 강력한 출처는 사람이 아니라 학습이다."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["Draft", "Review", "Published", "Deprecated", "Retired", "Rejected"]
+    }
+  }
+}

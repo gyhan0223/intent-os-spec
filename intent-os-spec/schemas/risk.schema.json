@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/risk.schema.json",
+  "title": "Risk",
+  "description": "Goal 달성을 해칠 수 있는 나쁜 사건의 가능성으로서 식별된 것. Assumption(참이라고 믿는 것)의 부정형이며, 발생확률·영향도·조기 경보·대응책을 함께 갖는다. 발생한 Risk는 삭제하지 않는다 — 확률 추정 보정의 근거 데이터다(Rule RSK-007). Entity 018 명세(entities/e018-risk.md) 참조.",
+  "type": "object",
+  "required": ["risk_id", "scope", "type", "statement", "likelihood", "impact", "strategy", "owner", "status"],
+  "properties": {
+    "risk_id": { "type": "string" },
+    "scope": {
+      "type": "object",
+      "description": "떠다니는 Risk는 없다 (Rule RSK-006). Plan이 폐기되면 그 Plan에만 속한 Risk도 Closed가 된다.",
+      "properties": {
+        "goal_id": { "type": "string" },
+        "plan_id": { "type": "string" }
+      }
+    },
+    "type": {
+      "type": "string",
+      "description": "irreversible은 되돌릴 수 없는 작업의 위험. impact를 한 단계 상향해 평가한다 (Rule RSK-008).",
+      "enum": ["resource", "cost", "schedule", "quality", "dependency", "compliance", "external", "irreversible"]
+    },
+    "statement": {
+      "type": "string",
+      "description": "'무엇이 일어나서 무엇을 해치는가' 형식. 예: '광고비가 9월부터 삭감되어 목표 모집 인원에 미달한다'"
+    },
+    "likelihood": {
+      "type": "number",
+      "description": "발생확률. 추정 데이터가 전혀 없으면 0.5(최대 무지)로 두고 estimation_basis를 명시한다.",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "impact": { "type": "number", "minimum": 0, "maximum": 1 },
+    "severity": {
+      "type": "number",
+      "description": "likelihood × impact (자동 계산). 곱만 남기지 않고 두 값을 각각 보존한다.",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "severity_band": {
+      "type": "string",
+      "enum": ["Low", "Medium", "High", "Critical"]
+    },
+    "estimation_basis": {
+      "type": "string",
+      "description": "likelihood 추정의 근거. 'no_data'면 임의의 낮은 값 대신 0.5를 쓴다.",
+      "enum": ["historical", "expert", "assumption_derived", "no_data"]
+    },
+    "assessed_at": { "type": "string", "format": "date-time" },
+    "early_warning": {
+      "type": ["object", "null"],
+      "description": "조기 경보 지표 (Rule RSK-004). 없으면 Risk는 문서로만 존재하고 아무도 보지 않는다.",
+      "properties": {
+        "metric": { "type": "string" },
+        "threshold": { "type": "number" },
+        "window": { "type": "string" }
+      }
+    },
+    "trigger_condition": {
+      "type": "string",
+      "description": "발생(Materialized) 판정 조건."
+    },
+    "strategy": {
+      "type": "string",
+      "description": "accept는 명시적 승인이 필요하다 (INV-RSK-03). 시스템이 스스로 감수를 결정할 수 없다.",
+      "enum": ["avoid", "mitigate", "transfer", "accept", "contingency"]
+    },
+    "response_plan": {
+      "type": ["string", "null"],
+      "description": "severity_band가 High 이상이면 필수 (INV-RSK-02)."
+    },
+    "contingency_ref": { "type": ["string", "null"] },
+    "residual_severity": {
+      "type": ["number", "null"],
+      "description": "대응 후 잔여 위험. severity 이하여야 한다 (INV-RSK-06). accept 전략에서는 severity와 같다.",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "owner": {
+      "type": "string",
+      "description": "주인 없는 Risk는 관리되지 않는다 (Rule RSK-003)."
+    },
+    "accepted_by": { "type": ["string", "null"] },
+    "accepted_at": { "type": ["string", "null"], "format": "date-time" },
+    "source_assumption_id": {
+      "type": ["string", "null"],
+      "description": "대응하는 Assumption. Materialized 시 해당 Assumption을 Invalidated로 먼저 전이시킨다."
+    },
+    "related_risk_ids": { "type": "array", "items": { "type": "string" } },
+    "materialized_event_id": { "type": ["string", "null"] },
+    "monitoring_mode": {
+      "type": "string",
+      "enum": ["active", "passive"],
+      "default": "active"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["Identified", "Assessed", "Accepted", "Mitigating", "Monitored", "Materialized", "Resolved", "Closed"]
+    }
+  }
+}

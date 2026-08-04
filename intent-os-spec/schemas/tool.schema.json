@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/tool.schema.json",
+  "title": "Tool",
+  "description": "결정론적이고 스키마로 정의된 인터페이스를 가진 Resource. 부수효과·권한·멱등성을 선언한다. Resource의 부분집합이며 Universal Resource Interface를 그대로 따르되, 관리 축이 다르다 — 일반 Resource는 품질 점수를, Tool은 스키마 계약과 권한을 관리한다. Entity 024 명세(entities/e024-tool.md) 참조.",
+  "type": "object",
+  "required": ["tool_id", "name", "provider", "category", "capabilities", "operations", "required_scopes", "status"],
+  "properties": {
+    "tool_id": { "type": "string" },
+    "name": { "type": "string" },
+    "provider": { "type": "string" },
+    "version": { "type": "string" },
+    "category": {
+      "type": "string",
+      "description": "messaging이 가장 위험하다 — 발송은 되돌릴 수 없고 멱등하지도 않다.",
+      "enum": ["search", "browser", "calendar", "messaging", "storage", "analytics", "crm", "code_exec", "external_platform"]
+    },
+    "capabilities": {
+      "type": "array",
+      "description": "Tool도 Capability를 제공한다 (Rule TOL-005). 선언이 없으면 매칭 대상이 되지 못한다.",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "effect", "idempotency"],
+        "properties": {
+          "name": { "type": "string" },
+          "effect": {
+            "type": "string",
+            "description": "선언되지 않은 부수효과는 버그가 아니라 사고다 (INV-TOL-02). irreversible/external_visible은 승인이 필수다.",
+            "enum": ["read", "write", "irreversible", "external_visible"]
+          },
+          "idempotency": {
+            "type": "string",
+            "description": "non_idempotent는 자동 재시도가 금지된다 (INV-TOL-03). 재시도하면 메시지가 두 번 발송된다.",
+            "enum": ["idempotent", "idempotent_with_key", "non_idempotent"]
+          },
+          "input_schema": { "type": "object", "description": "JSON Schema. 호출 전 검증한다 (INV-TOL-01)." },
+          "output_schema": { "type": "object", "description": "JSON Schema. 3회 연속 위반하면 Tool이 Degraded로 전이한다 (INV-TOL-06)." },
+          "requires_approval": { "type": "boolean", "default": false }
+        }
+      }
+    },
+    "error_codes": {
+      "type": "array",
+      "description": "Tool 오류를 Execution의 failure_class로 매핑한다 (Rule TOL-008). 재시도 전략이 여기서 결정된다.",
+      "items": {
+        "type": "object",
+        "required": ["code", "failure_class"],
+        "properties": {
+          "code": { "type": "string" },
+          "failure_class": {
+            "type": "string",
+            "enum": ["resource_unavailable", "resource_incapable", "input_insufficient", "timeout", "constraint_violation", "policy_violation", "internal_error"]
+          },
+          "retryable": { "type": "boolean" }
+        }
+      }
+    },
+    "rate_limit": {
+      "type": "object",
+      "properties": {
+        "per_minute": { "type": "integer", "minimum": 0 },
+        "per_day": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "timeout_ms": { "type": "integer", "minimum": 0 },
+    "required_scopes": {
+      "type": "array",
+      "description": "최소 권한 원칙 (Rule TOL-003). 와일드카드(*)는 허용하지 않는다. 연결 자격이 이 범위를 넘을 수 없다 (INV-TOL-04).",
+      "items": { "type": "string" }
+    },
+    "auth_type": {
+      "type": "string",
+      "enum": ["none", "api_key", "oauth2", "mtls", "internal"]
+    },
+    "data_residency": {
+      "type": "string",
+      "description": "데이터 처리 지역. Policy(리전 제한)와 정합 검사를 거친다."
+    },
+    "breaking_change_policy": {
+      "type": "string",
+      "enum": ["schema_check_on_every_call", "schema_check_daily", "version_pinned"]
+    },
+    "status": {
+      "type": "string",
+      "description": "Degraded는 스키마 불일치·가용성 저하로 신규 배정을 중단한 상태. Quarantined는 미선언 부수효과가 감지된 격리 상태.",
+      "enum": ["Registered", "Evaluating", "Active", "Degraded", "Quarantined", "Deprecated", "Removed"]
+    },
+    "health": {
+      "type": "object",
+      "properties": {
+        "success_rate_24h": { "type": "number", "minimum": 0, "maximum": 1 },
+        "p95_latency_ms": { "type": "integer", "minimum": 0 },
+        "consecutive_schema_violations": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

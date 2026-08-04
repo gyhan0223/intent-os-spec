@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/policy.schema.json",
+  "title": "Policy",
+  "description": "시스템이 무엇을 해도 되고 무엇을 하면 안 되는지를 규정하는 기계 강제 가능한 규칙. 특정 Goal과 무관하게 정의되며 최적화보다 우선한다 — Policy > Hard Constraint > Decision Utility > Soft Constraint (INV-11). Entity 019 명세(entities/e019-policy.md) 참조.",
+  "type": "object",
+  "required": ["policy_id", "name", "type", "authority", "applies_to", "condition", "effect", "enforcement_points", "status"],
+  "properties": {
+    "policy_id": { "type": "string" },
+    "name": { "type": "string" },
+    "type": {
+      "type": "string",
+      "enum": ["privacy", "security", "compliance", "cost", "human_oversight", "quality", "data_retention", "resource_usage", "brand"]
+    },
+    "version": { "type": "string" },
+    "authority": {
+      "type": "string",
+      "description": "권위 근거 (Rule POL-004). 충돌 해소 시 legal > security > organization > contractual > user 순으로 우선한다.",
+      "enum": ["legal", "security", "organization", "contractual", "user"]
+    },
+    "owner": { "type": "string" },
+    "reference": { "type": "string", "description": "근거 문서. 예: '개인정보보호법 제17조'" },
+    "applies_to": {
+      "type": "array",
+      "description": "적용 대상 Entity 타입. Goal ID가 등장하면 그것은 Policy가 아니라 Constraint다 (Rule POL-001).",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "condition": {
+      "type": "object",
+      "description": "판정 조건 (Rule POL-002). 모든 field는 시스템이 판정 가능한 값이어야 한다. all/any 조합으로 표현한다.",
+      "properties": {
+        "all": { "type": "array", "items": { "$ref": "#/$defs/predicate" } },
+        "any": { "type": "array", "items": { "$ref": "#/$defs/predicate" } },
+        "not": { "$ref": "#/$defs/predicate" }
+      }
+    },
+    "effect": {
+      "type": "string",
+      "description": "deny된 후보는 Utility를 계산하지도 않는다 (Rule POL-003).",
+      "enum": ["deny", "require_approval", "warn", "log"]
+    },
+    "approval": {
+      "type": "object",
+      "description": "effect가 require_approval일 때 필수.",
+      "properties": {
+        "approver_role": { "type": "string" },
+        "timeout": { "type": "string", "description": "ISO 8601 duration. 예: 'PT24H'" },
+        "on_timeout": { "type": "string", "enum": ["deny", "allow", "escalate"] }
+      }
+    },
+    "priority": { "type": "integer", "description": "동일 조건·동일 authority일 때의 우선순위." },
+    "enforcement_points": {
+      "type": "array",
+      "description": "언제 검사하는가 (Rule POL-008). 사후 감사만 하는 Policy는 사고를 막지 못한다.",
+      "items": {
+        "type": "string",
+        "enum": ["pre_decision", "pre_execution", "during", "post_outcome", "continuous"]
+      },
+      "minItems": 1
+    },
+    "on_violation": {
+      "type": "string",
+      "enum": ["block_and_alert", "block_silent", "alert_only", "log_only"],
+      "default": "block_and_alert"
+    },
+    "exceptions": {
+      "type": "array",
+      "description": "만료 없는 예외는 Policy를 무력화한다 (Rule POL-007, INV-POL-03).",
+      "items": {
+        "type": "object",
+        "required": ["exception_id", "reason", "approved_by", "expires_at"],
+        "properties": {
+          "exception_id": { "type": "string" },
+          "scope": { "type": "object" },
+          "reason": { "type": "string" },
+          "approved_by": { "type": "string" },
+          "approved_at": { "type": "string", "format": "date-time" },
+          "expires_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "description": "Deprecated Policy는 신규 검사에 쓰이지 않지만 과거 판정 기록은 보존된다 (INV-POL-05).",
+      "enum": ["Drafted", "Review", "Active", "Suspended", "Deprecated", "Retired", "Rejected"]
+    },
+    "effective_from": { "type": "string", "format": "date" },
+    "effective_until": { "type": ["string", "null"], "format": "date" }
+  },
+  "$defs": {
+    "predicate": {
+      "type": "object",
+      "required": ["field", "op", "value"],
+      "properties": {
+        "field": { "type": "string", "description": "예: 'artifact.contains_pii'" },
+        "op": { "type": "string", "enum": ["eq", "ne", "gt", "gte", "lt", "lte", "in", "not_in", "contains", "matches"] },
+        "value": {}
+      }
+    }
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/resource-profile.schema.json",
+  "title": "Resource Profile",
+  "description": "하나의 Resource가 실제로 어떻게 수행하는지에 대한 살아있는·버전을 갖는·Context별 측정 기록. Resource의 정체성과 분리되어 있어 Decision의 inputs_snapshot이 특정 시점의 Profile을 동결 참조할 수 있다(Rule RPF-004). Intent OS에 절대 순위는 없다 — 모든 점수는 Context에 종속된다. Entity 025 명세(entities/e025-resource-profile.md) 참조.",
+  "type": "object",
+  "required": ["profile_id", "resource_id", "snapshot_version", "capability_scores", "status"],
+  "properties": {
+    "profile_id": { "type": "string" },
+    "resource_id": {
+      "type": "string",
+      "description": "Resource와 1:1이다 (INV-RPF-01). 스냅샷은 Profile의 버전이지 별도 Profile이 아니다."
+    },
+    "snapshot_version": {
+      "type": "string",
+      "description": "동결 버전. 불변이다 (INV-RPF-03). 예: 'rp_claude5_2026-08-04T09:00Z'"
+    },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "status": {
+      "type": "string",
+      "description": "Drifting에서는 후보 순위만 낮추고 점수는 유지한다. 3회 연속 이탈에서 Degraded로 확정한다 (INV-RPF-07).",
+      "enum": ["Initialized", "Calibrating", "Established", "Drifting", "Degraded", "Stale"]
+    },
+    "capability_scores": {
+      "type": "array",
+      "description": "(능력 × Context)별 점수. Context 없는 점수는 존재하지 않는다 (INV-RPF-04).",
+      "items": {
+        "type": "object",
+        "required": ["capability", "context", "confidence"],
+        "properties": {
+          "capability": { "type": "string" },
+          "context": {
+            "type": "object",
+            "description": "점수의 범위. 전역 점수는 { domain: 'global' }로 명시한다.",
+            "properties": {
+              "domain": { "type": "string" },
+              "language": { "type": "string" },
+              "audience": { "type": "string" },
+              "task_type": { "type": "string" }
+            }
+          },
+          "declared_score": {
+            "type": ["number", "null"],
+            "description": "제공자가 선언한 값. 신뢰의 시작점일 뿐이다 (Rule RPF-003).",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "observed_score": {
+            "type": ["number", "null"],
+            "description": "실측값. 한 번도 실행되지 않았으면 null이다. 0으로 두지 않는다 — 측정 안 함과 0점은 다르다.",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "sample_size": { "type": "integer", "minimum": 0 },
+          "confidence": {
+            "type": "number",
+            "description": "표본 없는 신뢰도는 근거가 없다 (INV-RPF-05). 표본 3건의 93점과 200건의 93점은 다른 정보다.",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "variance": { "type": ["number", "null"], "minimum": 0 },
+          "last_observed_at": { "type": ["string", "null"], "format": "date-time" }
+        }
+      }
+    },
+    "cost_model": {
+      "type": "object",
+      "properties": {
+        "unit": { "type": "string", "enum": ["token", "task", "hour", "call", "flat"] },
+        "rates": { "type": "object" },
+        "observed_avg_cost": {
+          "type": "object",
+          "properties": {
+            "amount": { "type": "number", "minimum": 0 },
+            "currency": { "type": "string" },
+            "per": { "type": "string" }
+          }
+        }
+      }
+    },
+    "performance": {
+      "type": "object",
+      "properties": {
+        "latency_ms": {
+          "type": "object",
+          "description": "평균이 아니라 분포로 관리한다. 평균이 같아도 p95가 4배 다를 수 있다.",
+          "properties": {
+            "p50": { "type": "integer", "minimum": 0 },
+            "p95": { "type": "integer", "minimum": 0 },
+            "p99": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "reliability": { "type": "number", "minimum": 0, "maximum": 1 },
+        "success_rate": {
+          "type": "number",
+          "description": "실패한 Execution도 반영된다. observed_score와 달리 산출물 품질이 아니라 완주 여부를 본다.",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "throughput": { "type": "object" }
+      }
+    },
+    "availability": {
+      "type": "object",
+      "properties": {
+        "schedule": { "type": "string", "description": "예: '24/7', '평일 10:00-19:00'" },
+        "uptime_30d": { "type": "number", "minimum": 0, "maximum": 1 },
+        "rate_limit": { "type": "object" }
+      }
+    },
+    "drift": {
+      "type": "object",
+      "description": "성능 변화는 예외가 아니라 상시 추적되는 상태다 (Rule RPF-007).",
+      "properties": {
+        "detected": { "type": "boolean", "default": false },
+        "direction": { "type": ["string", "null"], "enum": ["up", "down", null] },
+        "magnitude": { "type": ["number", "null"] },
+        "detected_at": { "type": ["string", "null"], "format": "date-time" },
+        "windows_deviated": { "type": "integer", "minimum": 0, "default": 0 }
+      }
+    },
+    "limitations": { "type": "array", "items": { "type": "string" } },
+    "genome_ref": {
+      "type": ["string", "null"],
+      "description": "Resource Genome(Volume 4-C) 참조. Genome은 행동 특성, Profile은 수치 측정값이다."
+    },
+    "evidence": {
+      "type": "object",
+      "description": "근거 표본. 오래된 관찰은 감쇠한다 (Rule RPF-005).",
+      "properties": {
+        "execution_count": { "type": "integer", "minimum": 0 },
+        "window": { "type": "string" },
+        "decay_lambda": { "type": "number", "minimum": 0 }
+      }
+    },
+    "visibility": {
+      "type": "string",
+      "description": "인간 Resource의 Profile은 인사 평가로 전용될 위험이 있어 접근을 제한한다.",
+      "enum": ["internal", "internal_restricted"],
+      "default": "internal"
+    }
+  }
+}
