@@ -31,7 +31,7 @@ Intent OS 기술 명세서. 코드가 아니라 **문서(Markdown) + JSON Schema
   - 헤더 블록: `**Version:**` / `**Status:**` / `**Last Updated:**`
   - 공식 정의는 영문 blockquote + 한국어 번역
   - **"X는 무엇이 아닌가"** — 인접 개념 3개 이상, 각각 ❌ 반례. 이 명세의 핵심 서술 방식이다.
-  - `Rule <PREFIX>-<NNN>` / `INV-<PREFIX>-<NN>` 번호 규칙. Prefix는 e000 §3 표에 등록한다. **다른 Entity의 번호를 인용할 때는 출처를 밝힌다** — 링크(`[Rule REL-004](e000a-...)`)나 문서 id 표기(`e015 Rule EVA-004`).
+  - `Rule <PREFIX>-<NNN>` / `INV-<PREFIX>-<NN>` 번호 규칙. Prefix는 e000 §3 표에 등록한다. **다른 Entity의 번호를 인용할 때는 출처를 밝힌다** — 해당 문서로 링크를 걸거나, 코드 블록 안에서는 `e015 Rule EVA-004`처럼 문서 id를 앞에 붙인다.
   - **부속 문서(Annex)는 12개 섹션을 면제받되 헤더에 `**Format:** Annex`를 선언한다** (e000 §7.1). 선언 없는 미준수는 검증 실패다.
   - §7 Relationships에는 반드시 **Cardinality**(`1:N`, `N:M` 등)를 표기한다.
   - §5 Invariants의 각 항목에는 **위반 시 시스템 반응**을 함께 쓴다.
