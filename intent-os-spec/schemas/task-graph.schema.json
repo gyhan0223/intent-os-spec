@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/task-graph.schema.json",
+  "title": "Task Graph",
+  "description": "하나의 Plan에 속한 Task들의 방향성 비순환 그래프. 간선은 실행 의존을 표현하며(depends_on 한 종류), 그 구조가 병렬성·임계 경로·실패 전파·재계획 시 보존 범위를 결정한다. Workflow(제어 흐름)와 달리 분기·반복을 표현하지 않는다. Entity 005-A 명세(entities/e005a-task-graph.md) 참조.",
+  "type": "object",
+  "required": ["graph_id", "plan_id", "version", "nodes", "edges", "status"],
+  "properties": {
+    "graph_id": { "type": "string" },
+    "plan_id": {
+      "type": "string",
+      "description": "모든 노드가 동일 Plan에 속해야 한다 (INV-TG-03). Plan 간 의존은 Goal Graph로 표현한다."
+    },
+    "version": { "type": "integer", "minimum": 1 },
+    "nodes": {
+      "type": "array",
+      "description": "Task ID 목록. 모든 노드는 entry_tasks에서 도달 가능해야 한다 (INV-TG-02).",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "edges": {
+      "type": "array",
+      "description": "(from, to)는 'to는 from이 완료되어야 시작 가능'을 뜻한다. 순환 금지 (INV-TG-01). 불필요한 간선은 병렬성을 죽인다 (Rule TG-004).",
+      "items": {
+        "type": "object",
+        "required": ["from", "to"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "redundant": {
+            "type": "boolean",
+            "description": "전이적 축약으로 제거 제안되었으나 명시적 순서 요구로 유지된 간선. 병렬성 손실을 드러낸다.",
+            "default": false
+          }
+        }
+      }
+    },
+    "entry_tasks": {
+      "type": "array",
+      "description": "진입 차수 0인 노드. 비어 있으면 순환 그래프다.",
+      "items": { "type": "string" }
+    },
+    "analysis": {
+      "type": "object",
+      "properties": {
+        "critical_path": {
+          "type": "array",
+          "description": "임계 경로. 이 위의 Task가 지연되면 전체가 지연된다.",
+          "items": { "type": "string" }
+        },
+        "estimated_duration": { "type": "string", "description": "ISO 8601 duration." },
+        "max_parallelism": { "type": "integer", "minimum": 1 },
+        "spof": {
+          "type": "array",
+          "description": "단일 실패점. 하류 도달 집합이 임계치를 넘는 Task. Risk 자동 식별의 입력이 된다.",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "derived_from": {
+      "type": ["string", "null"],
+      "description": "인스턴스화한 Workflow. 예: 'wf_seasonal_campaign@2.1'"
+    },
+    "previous_version": {
+      "type": ["string", "null"],
+      "description": "재계획 시의 이전 그래프. 예: 'tg_014@1'"
+    },
+    "diff": {
+      "type": ["object", "null"],
+      "description": "재계획 시의 Graph Diff 결과. Completed Task와 그 Artifact는 보존된다 (Rule TG-007, INV-TG-05).",
+      "properties": {
+        "preserved": { "type": "array", "items": { "type": "string" } },
+        "invalidated": { "type": "array", "items": { "type": "string" } },
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "added": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["Constructed", "Validated", "Active", "Suspended", "Superseded", "Completed"]
+    }
+  }
+}

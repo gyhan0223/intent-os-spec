@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/artifact.schema.json",
+  "title": "Artifact",
+  "description": "하나의 Execution이 만들어낸 구체적이고 주소를 가진 산출물. 그것을 만든 과정과 독립적으로 보존되며, Session이 끝나도 살아남는다(INV-16). 모든 Artifact는 정확히 하나의 Outcome에 속한다(INV-05). Entity 016 명세(entities/e016-artifact.md) 참조.",
+  "type": "object",
+  "required": ["artifact_id", "outcome_id", "type", "name", "produced_by", "produced_at"],
+  "properties": {
+    "artifact_id": { "type": "string" },
+    "outcome_id": {
+      "type": "string",
+      "description": "유일한 소속처 (Rule ART-001). 출처 없는 산출물은 신뢰할 수 없다."
+    },
+    "content_hash": {
+      "type": ["string", "null"],
+      "description": "SHA-256 (Rule ART-004). 중복 검출·무결성 검증·재생성 판별에 쓰인다. external_ref는 null 허용."
+    },
+    "type": {
+      "type": "string",
+      "description": "external_ref는 외부 시스템에 생성된 상태(광고 캠페인 등). 내용을 소유하지 않는다.",
+      "enum": ["text", "document", "image", "video", "audio", "code", "data", "structured", "external_ref"]
+    },
+    "media_type": { "type": "string", "description": "MIME 타입. 예: 'text/markdown'" },
+    "location": { "type": "string", "description": "예: 'blob://artifacts/art_450', 'adplatform://campaigns/camp_88421'" },
+    "size_bytes": { "type": ["integer", "null"], "minimum": 0 },
+    "encoding": { "type": ["string", "null"] },
+    "schema_ref": {
+      "type": ["string", "null"],
+      "description": "구조화 데이터의 스키마. 있으면 후행 Task가 파싱 없이 입력으로 받을 수 있다."
+    },
+    "name": { "type": "string" },
+    "summary": { "type": "string", "maxLength": 200 },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "produced_by": {
+      "type": "string",
+      "description": "만든 Resource. 성능 분석의 표본이 된다."
+    },
+    "derived_from": {
+      "type": "array",
+      "description": "파생 원본 (Rule ART-003). 수정 대신 새 Artifact + derived_from을 쓴다. 순환 금지(INV-ART-03).",
+      "items": { "type": "string" }
+    },
+    "duplicate_of": {
+      "type": ["string", "null"],
+      "description": "동일 content_hash를 가진 기존 Artifact. 낭비 신호로 발행된다."
+    },
+    "produced_at": { "type": "string", "format": "date-time" },
+    "last_verified_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "external_ref 전용. 외부 대상의 존재를 마지막으로 확인한 시각."
+    },
+    "retention_policy_id": { "type": ["string", "null"] },
+    "visibility": {
+      "type": "string",
+      "description": "contains_pii가 true면 public/external이 될 수 없다 (INV-ART-04).",
+      "enum": ["private", "internal", "external", "public"],
+      "default": "internal"
+    },
+    "contains_pii": { "type": "boolean", "default": false },
+    "status": {
+      "type": "string",
+      "description": "Published는 외부로 나간 상태이며 되돌릴 수 없다. 무효화하려면 취소 Task를 새로 만든다.",
+      "enum": ["Produced", "Adopted", "Rejected", "Published", "Superseded", "Archived", "Purged"],
+      "default": "Produced"
+    }
+  }
+}

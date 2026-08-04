@@ -39,22 +39,36 @@ graph TD
 
 ## 3. Runtime Object Model
 
-### Execution Instance
+> **⚠️ v0.1 명세 정정 (2026-08-04)**
+>
+> 초안에서 "Execution Instance"라 부르던 **Goal 단위 실행 객체**는 실제로는 [Session](entities/e021-session.md)(Entity 021)이다.
+> 이름이 [Execution](entities/e013-execution.md)(Entity 013, Task 한 번의 시도)과 겹쳐 계층 혼동을 낳았으므로 분리했다.
 
-**정의:** 하나의 Goal이 처리되는 전체 실행 단위
+### 계층 구분
 
-**Schema** → [`schemas/execution.schema.json`](intent-os-spec/schemas/execution.schema.json)
+| 계층 | Entity | 단위 | 스키마 |
+|---|---|---|---|
+| **Session** | [021](entities/e021-session.md) | 하나 이상의 Goal을 추진하는 상호작용·실행 경계 | [`session.schema.json`](intent-os-spec/schemas/session.schema.json) |
+| **Execution** | [013](entities/e013-execution.md) | Task 하나를 특정 Resource로 수행하는 **한 번의 시도** | [`execution.schema.json`](intent-os-spec/schemas/execution.schema.json) |
+| **Outcome** | [014](entities/e014-outcome.md) | 그 시도가 낳은 불변 측정 기록 | [`outcome.schema.json`](intent-os-spec/schemas/outcome.schema.json) |
+
+`Session 1 : Execution 0..N`, `Execution 1 : Outcome 0..1` 이다.
+
+### Session
+
+**정의:** 하나 이상의 Goal을 추진하는 경계 지어진 실행 단위. 일시적 Context와 예산을 보유하되 **영속 Entity는 참조만 한다.**
 
 ```json
 {
-  "execution_id": "",
-  "goal_id": "",
-  "status": "",
-  "created_at": "",
-  "tasks": [],
-  "decisions": [],
-  "resources": [],
-  "outcomes": []
+  "session_id": "ses_057",
+  "type": "interactive",
+  "actor": "human:대표",
+  "goal_ids": ["goal_001"],
+  "budget": { "max_cost": { "amount": 50000, "currency": "KRW" }, "max_executions": 200 },
+  "execution_ids": [],
+  "decision_ids": [],
+  "artifact_ids": [],
+  "status": "Active"
 }
 ```
 
@@ -63,14 +77,16 @@ graph TD
 사용자 입력: *"겨울캠프 모집률을 높이고 싶어"*
 
 ```
-Execution Instance #001
+Session ses_057
 
-Goal:   Increase Winter Camp Enrollment
-Tasks:  - Market Analysis
-        - Content Strategy
-        - Landing Page Optimization
-Status: Planning
+Goal:   goal_001  윈터캠프 학생 100명 모집
+Tasks:  - 시장 조사
+        - 콘텐츠 전략
+        - 랜딩페이지 개선
+Status: Active   (phase: Planning)
 ```
+
+**Session이 끝나도 Goal·Plan·Outcome·Artifact·Memory는 살아남는다.** 사라지는 것은 대화 버퍼와 일시적 Context뿐이다 ([INV-16](entities/e000a-entity-relationships.md)).
 
 ---
 
@@ -236,12 +252,16 @@ ELSE
 
 #### Execution Monitoring
 
-Runtime은 항상 상태를 추적한다.
+Runtime은 항상 상태를 추적한다. 상세 정의는 [Entity 013 §6](entities/e013-execution.md).
 
 ```
-CREATED → QUEUED → RUNNING → WAITING → COMPLETED
-                                     ↘ FAILED
+Created → Queued → Running → Waiting → Completed
+                                     ↘ Failed / TimedOut / Aborted
 ```
+
+**종료 상태 4개는 모두 Outcome 1개를 낳는다**([INV-04](entities/e000a-entity-relationships.md)). 실패도 결과다 — 실패 Outcome이 누락되면 Resource 성공률이 실제보다 높게 계산된다.
+
+`Completed`는 "실행이 끝났다"는 뜻이지 "잘 됐다"는 뜻이 아니다. 성공 판정은 Stage 6의 [Evaluation](entities/e015-evaluation.md)이 한다.
 
 ---
 
@@ -293,10 +313,21 @@ CREATED → QUEUED → RUNNING → WAITING → COMPLETED
 
 ## 5. Runtime State Machine
 
+아래 7단계는 **Session 내부의 진행 단계(phase)** 이지 Execution의 상태가 아니다. 두 계층을 혼동하면 안 된다.
+
 ```
+Session.phase
 IDLE → UNDERSTANDING → PLANNING → DECIDING
 → EXECUTING → EVALUATING → LEARNING → COMPLETED
 ```
+
+| 계층 | 상태 |
+|---|---|
+| `Session.status` | Created / Active / Idle / Suspended / Completed / Expired / Aborted |
+| `Session.phase` | 위 7단계 (Runtime 진행 위치) |
+| `Execution.status` | Created / Queued / Running / Waiting / Completed / Failed / TimedOut / Aborted |
+
+`phase` 필드의 정식 도입은 [Entity 021 §12](entities/e021-session.md)의 Open Issue다.
 
 ---
 

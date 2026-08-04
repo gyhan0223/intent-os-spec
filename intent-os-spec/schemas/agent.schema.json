@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/agent.schema.json",
+  "title": "Agent",
+  "description": "배정된 작업 범위를 스스로 추진하는 자율적 실행 주체. Resource가 아니라 Resource를 사용하는 쪽이다. 판별 기준은 'Intent OS가 그 결정 루프를 소유하는가'이며, 소유하지 않는 외부 에이전트 제품은 Resource(type:agent)로 등록한다. 권한은 위임 시 확대될 수 없다(INV-AGT-02). Entity 023 명세(entities/e023-agent.md) 참조.",
+  "type": "object",
+  "required": ["agent_id", "name", "type", "principal", "autonomy_level", "scope", "budget", "status"],
+  "properties": {
+    "agent_id": { "type": "string" },
+    "name": { "type": "string" },
+    "type": {
+      "type": "string",
+      "description": "evaluator는 L1을 넘을 수 없다 — 평가자가 자기 평가로 실행하면 자기 승인이 된다.",
+      "enum": ["planner", "executor", "evaluator", "monitor", "orchestrator"]
+    },
+    "principal": {
+      "type": "string",
+      "description": "상위 주체. 사슬을 따라가면 반드시 인간에 도달해야 한다 (INV-AGT-01)."
+    },
+    "autonomy_level": {
+      "type": "string",
+      "description": "L0=제안만, L1=승인 후 실행, L2=실행 후 보고, L3=하위 위임 가능. L3는 비가역 작업을 직접 수행할 수 없다 (INV-AGT-07).",
+      "enum": ["L0", "L1", "L2", "L3"]
+    },
+    "depth": {
+      "type": "integer",
+      "description": "위임 깊이. max_delegation_depth를 넘을 수 없다 (INV-AGT-04).",
+      "minimum": 0
+    },
+    "scope": {
+      "type": "object",
+      "description": "권한 범위 (Rule AGT-001). 범위 밖의 결정은 스스로 확장하지 않고 principal에게 escalate한다.",
+      "properties": {
+        "goal_ids": { "type": "array", "items": { "type": "string" } },
+        "allowed_capabilities": { "type": "array", "items": { "type": "string" } },
+        "allowed_tools": { "type": "array", "items": { "type": "string" } },
+        "forbidden_capabilities": { "type": "array", "items": { "type": "string" } },
+        "max_delegation_depth": { "type": "integer", "minimum": 1, "default": 3 }
+      }
+    },
+    "policy_scope": {
+      "type": "array",
+      "description": "Agent도 Policy를 우회할 수 없다 (Rule AGT-004).",
+      "items": { "type": "string" }
+    },
+    "budget": {
+      "type": "object",
+      "description": "자식 예산의 합은 부모 예산을 초과할 수 없다 (INV-AGT-03).",
+      "properties": {
+        "max_cost": {
+          "type": "object",
+          "properties": {
+            "amount": { "type": "number", "minimum": 0 },
+            "currency": { "type": "string" }
+          }
+        },
+        "max_executions": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "consumed": {
+      "type": "object",
+      "properties": {
+        "cost": {
+          "type": "object",
+          "properties": {
+            "amount": { "type": "number", "minimum": 0 },
+            "currency": { "type": "string" }
+          }
+        },
+        "executions": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "session_id": { "type": ["string", "null"] },
+    "assigned_scope": {
+      "type": "object",
+      "properties": {
+        "goal_ids": { "type": "array", "items": { "type": "string" } },
+        "task_ids": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "children": {
+      "type": "array",
+      "description": "부모 종료 시 재귀적으로 종료된다 (INV-AGT-06). 고아 Agent는 예산을 태우며 아무에게도 보고하지 않는다.",
+      "items": { "type": "string" }
+    },
+    "reasoning_resource_id": {
+      "type": ["string", "null"],
+      "description": "Agent가 판단에 사용하는 Resource. Agent와 Resource의 관계를 보여주는 필드다 — Agent는 Resource를 쓰지, Resource인 것이 아니다."
+    },
+    "report_interval": { "type": ["string", "null"], "description": "ISO 8601 duration." },
+    "last_report_at": { "type": ["string", "null"], "format": "date-time" },
+    "status": {
+      "type": "string",
+      "enum": ["Provisioned", "Active", "Reporting", "Suspended", "Completed", "Terminated"]
+    }
+  }
+}
