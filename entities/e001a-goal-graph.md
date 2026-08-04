@@ -2,7 +2,9 @@
 
 - **Version:** v1.0 Draft
 - **Status:** Core Architecture
-- **Last Updated:** 2026-08-03
+- **Format:** Annex — e001 Goal의 부속 문서 (e000 §7.1)
+- **Last Updated:** 2026-08-04
+- **Schema:** [`goal-graph.schema.json`](../intent-os-spec/schemas/goal-graph.schema.json)
 
 ---
 

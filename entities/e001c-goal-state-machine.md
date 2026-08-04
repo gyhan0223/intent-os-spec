@@ -1,9 +1,10 @@
 # Entity 001-C: Goal State Machine
 
 - **Version:** v2.0 Draft
-- **Status:** Core Entity — Lifecycle
+- **Status:** Core Entity
+- **Format:** Annex — e001 Goal의 부속 문서 (e000 §7.1)
 - **Last Updated:** 2026-08-04
-- **Machine-readable spec:** [`goal-state-machine.json`](../intent-os-spec/schemas/goal-state-machine.json)
+- **Schema:** [`goal-state-machine.json`](../intent-os-spec/schemas/goal-state-machine.json) — 형식은 [`state-machine.schema.json`](../intent-os-spec/schemas/state-machine.schema.json)이 정의한다
 
 ---
 

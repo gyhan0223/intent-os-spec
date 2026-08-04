@@ -1,8 +1,10 @@
 # Entity 001-D: Goal Validation Rules
 
 - **Version:** v2.0 Draft
-- **Status:** Core Entity — Validation & Scoring
+- **Status:** Core Entity
+- **Format:** Annex — e001 Goal의 부속 문서 (e000 §7.1)
 - **Last Updated:** 2026-08-04
+- **Schema:** [`goal.schema.json`](../intent-os-spec/schemas/goal.schema.json) — 이 문서의 규칙이 검사하는 대상
 
 ---
 
