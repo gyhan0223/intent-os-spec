@@ -6,7 +6,7 @@
 
 - **Version:** v0.1 Draft
 - **Status:** Foundational Specification
-- **Last Updated:** 2026-07-31
+- **Last Updated:** 2026-08-04
 
 ---
 
@@ -65,16 +65,40 @@ Answer                      Resource → Execution → Outcome
 | — | Entity 개요 — 12개 Core Entity, Entity/Process/Runtime State 구분 | [entities/README.md](entities/README.md) | v1.0 Draft |
 | 001 | Goal — 정의, 규칙, Formal Grammar, CGR, 검증 알고리즘 | [entities/e001-goal.md](entities/e001-goal.md) | v1.0 Draft |
 | 001-A | Goal Graph — 관계, 계층, Score, Propagation, Invariants | [entities/e001a-goal-graph.md](entities/e001a-goal-graph.md) | v1.0 Draft |
+| 002 | Intent — Goal과 Task 사이의 중간 계층, 해결 영역, Confidence | [entities/e002-intent.md](entities/e002-intent.md) | v1.0 Draft |
+| 003 | Context — Scope 계층, Freshness와 TTL, 수집·갱신 규칙 | [entities/e003-context.md](entities/e003-context.md) | v1.0 Draft |
+| 004 | Constraint — Hard/Soft 구분, 7개 유형, 충돌과 완화 | [entities/e004-constraint.md](entities/e004-constraint.md) | v1.0 Draft |
+| 005 | Task — 분해 규칙, Task Graph, 상태 머신, 실패 처리 | [entities/e005-task.md](entities/e005-task.md) | v1.0 Draft |
+| 006 | Capability — Taxonomy, 명명 규칙, Matching, Level | [entities/e006-capability.md](entities/e006-capability.md) | v1.0 Draft |
+| 007 | Resource — AI/Tool/Human 동일 취급, Profile, 등록과 Drift | [entities/e007-resource.md](entities/e007-resource.md) | v1.0 Draft |
+| 008 | Plan — Planner 산출물, Versioning, Replanning 트리거 | [entities/e008-plan.md](entities/e008-plan.md) | v1.0 Draft |
+| 009 | Decision — 감사 가능한 선택 기록, Rationale, 불변성 | [entities/e009-decision.md](entities/e009-decision.md) | v1.0 Draft |
+| 010 | Memory — Episodic/Semantic/Procedural, Scope, Decay | [entities/e010-memory.md](entities/e010-memory.md) | v1.0 Draft |
+| 011 | Knowledge — Memory로부터의 승격, Confidence와 반증 | [entities/e011-knowledge.md](entities/e011-knowledge.md) | v1.0 Draft |
+| 012 | Feedback — Explicit/Implicit/Systemic, 라우팅, Feedback Loop | [entities/e012-feedback.md](entities/e012-feedback.md) | v1.0 Draft |
+
+> 12개 Core Entity의 v1.0 Draft가 모두 작성되었다. Execution, Learning, Prediction은 Entity가 아니라 **Process**이므로 Volume 3·5에서 다룬다.
 
 ## 스키마
 
 기계가 읽을 수 있는 JSON Schema는 [`schemas/`](intent-os-spec/schemas/) 폴더에 있다.
 
-- [`goal.schema.json`](intent-os-spec/schemas/goal.schema.json) — Canonical Goal Representation (Entity 001)
-- [`goal-graph.schema.json`](intent-os-spec/schemas/goal-graph.schema.json) — Goal Graph (Entity 001-A)
-- [`task.schema.json`](intent-os-spec/schemas/task.schema.json)
-- [`resource.schema.json`](intent-os-spec/schemas/resource.schema.json)
-- [`execution.schema.json`](intent-os-spec/schemas/execution.schema.json)
+| 스키마 | 대응 Entity |
+|---|---|
+| [`goal.schema.json`](intent-os-spec/schemas/goal.schema.json) | Entity 001 — Canonical Goal Representation |
+| [`goal-graph.schema.json`](intent-os-spec/schemas/goal-graph.schema.json) | Entity 001-A — Goal Graph |
+| [`intent.schema.json`](intent-os-spec/schemas/intent.schema.json) | Entity 002 |
+| [`context.schema.json`](intent-os-spec/schemas/context.schema.json) | Entity 003 |
+| [`constraint.schema.json`](intent-os-spec/schemas/constraint.schema.json) | Entity 004 |
+| [`task.schema.json`](intent-os-spec/schemas/task.schema.json) | Entity 005 |
+| [`capability.schema.json`](intent-os-spec/schemas/capability.schema.json) | Entity 006 |
+| [`resource.schema.json`](intent-os-spec/schemas/resource.schema.json) | Entity 007 |
+| [`plan.schema.json`](intent-os-spec/schemas/plan.schema.json) | Entity 008 |
+| [`decision.schema.json`](intent-os-spec/schemas/decision.schema.json) | Entity 009 |
+| [`memory.schema.json`](intent-os-spec/schemas/memory.schema.json) | Entity 010 |
+| [`knowledge.schema.json`](intent-os-spec/schemas/knowledge.schema.json) | Entity 011 |
+| [`feedback.schema.json`](intent-os-spec/schemas/feedback.schema.json) | Entity 012 |
+| [`execution.schema.json`](intent-os-spec/schemas/execution.schema.json) | Process — Execution ([Volume 3](v3-runtime.md)) |
 
 ---
 

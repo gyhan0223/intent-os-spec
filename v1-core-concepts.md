@@ -171,7 +171,7 @@ Goal은 사용자가 달성하고자 하는 **최종 상태**이다. Goal은 방
 | ⭕ 좋은 Goal | 3개월 안에 신규 고객 100명 확보 |
 | ❌ 나쁜 Goal | 인스타그램 광고 돌리기 (← 이건 Task다) |
 
-**Schema** → [`schemas/goal.schema.json`](schemas/goal.schema.json)
+**Schema** → [`schemas/goal.schema.json`](intent-os-spec/schemas/goal.schema.json)
 
 ```json
 {
@@ -228,7 +228,7 @@ Task:
   - 성과 분석
 ```
 
-**Schema** → [`schemas/task.schema.json`](schemas/task.schema.json)
+**Schema** → [`schemas/task.schema.json`](intent-os-spec/schemas/task.schema.json)
 
 ```json
 {
@@ -275,7 +275,7 @@ Resource는 Capability를 제공하는 **실행 주체**이다.
 | Tool Resource | Search Engine, Browser, Database, Analytics Tool |
 | Human Resource | 전문가, 검수자, 상담원 |
 
-**Schema** → [`schemas/resource.schema.json`](schemas/resource.schema.json)
+**Schema** → [`schemas/resource.schema.json`](intent-os-spec/schemas/resource.schema.json)
 
 ```json
 {

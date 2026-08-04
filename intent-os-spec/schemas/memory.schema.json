@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/memory.schema.json",
+  "title": "Memory (Canonical Memory Representation)",
+  "description": "시스템이 나중에 회상할 수 있도록 영속화된 경험의 기록. 실행, 결정, 결과가 그 대상이다. 맥락(Goal/Decision/Context) 없는 결과는 Memory가 될 수 없다. Entity 010 명세(entities/e010-memory.md) 참조.",
+  "type": "object",
+  "required": ["memory_id", "memory_type", "scope", "content", "source", "created_at"],
+  "properties": {
+    "memory_id": { "type": "string" },
+    "memory_type": {
+      "type": "string",
+      "description": "Memory의 타입. Episodic: 개별 실행 기록 / Semantic: 일반화된 사실(검증 전 Knowledge 후보) / Procedural: 성공한 절차·전략",
+      "enum": ["Episodic", "Semantic", "Procedural"]
+    },
+    "scope": {
+      "type": "string",
+      "description": "적용 범위. 생성 시 가장 좁은 Scope로 시작하며, 확장은 검증과 익명화를 거쳐야 한다.",
+      "enum": ["Goal-level", "User-level", "Global"]
+    },
+    "goal_ref": {
+      "type": "string",
+      "description": "어떤 Goal의 맥락에서 생성된 경험인가. 예: 'goal_001' (학생 100명 모집)"
+    },
+    "decision_ref": {
+      "type": "string",
+      "description": "어떤 Decision의 결과인가. 예: 'dec_0088' (Claude 선택)"
+    },
+    "content": {
+      "type": "object",
+      "description": "경험의 본문. 결과물이 아니라 '왜 이 선택을 했고, 결과가 어땠는가'를 기록한다 (Rule M-001).",
+      "required": ["situation", "action", "result"],
+      "properties": {
+        "situation": {
+          "type": "string",
+          "description": "무슨 상황이었나. 예: '윈터캠프 광고 카피 작성, 한국 학부모 대상'"
+        },
+        "action": {
+          "type": "string",
+          "description": "무엇을 했나. 예: 'Claude 선택, 감성 소구 전략 사용'"
+        },
+        "result": {
+          "type": "string",
+          "description": "어떻게 됐나. 예: '상담 신청 30% 증가'"
+        }
+      }
+    },
+    "confidence": {
+      "type": "number",
+      "description": "이 기록의 신뢰도 (0~1). Decay가 반영된 Effective Confidence는 회상 시점에 별도 계산한다.",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "source": {
+      "type": "string",
+      "description": "출처(Provenance). 어떤 Execution에서 나왔는가. 예: 'exec_2210' (Rule M-003)"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "기록 시각. Memory는 사후 수정하지 않는다 (Rule M-002, Immutable)."
+    },
+    "last_recalled_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "마지막으로 회상된 시각"
+    },
+    "recall_count": {
+      "type": "integer",
+      "description": "회상된 횟수. 자주 회상되고 결과가 좋았던 Memory는 Knowledge 승격의 1차 후보다.",
+      "minimum": 0
+    },
+    "correction_of": {
+      "type": "string",
+      "description": "이 Memory가 정정하는 원본 Memory의 ID. 원본은 수정하지 않고 정정 Memory를 새로 기록한다 (Rule M-002)."
+    },
+    "status": {
+      "type": "string",
+      "description": "Memory Lifecycle 상태",
+      "enum": [
+        "Created",
+        "Active",
+        "Decaying",
+        "Dormant",
+        "Promoted",
+        "Expired",
+        "Archived",
+        "Deleted"
+      ]
+    }
+  }
+}

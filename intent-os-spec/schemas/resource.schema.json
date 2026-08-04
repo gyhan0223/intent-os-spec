@@ -2,27 +2,48 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/intent-os/resource.schema.json",
   "title": "Resource",
-  "description": "Capability를 제공하는 실행 주체. AI, Tool, Human을 동일하게 취급한다.",
+  "description": "Capability를 제공하는 실행 주체. AI, Tool, Human, Hybrid를 동일하게 취급한다 (Principle 03 — Resource Agnostic). Entity 007 명세(entities/e007-resource.md) 참조.",
   "type": "object",
   "required": ["id", "name", "type", "capabilities"],
   "properties": {
-    "id": { "type": "string" },
+    "id": {
+      "type": "string",
+      "description": "Registry 내 고유 식별자. 'provider:name' 네임스페이스 권장. 예: 'anthropic:claude-5', 'human:copywriter_kim'"
+    },
     "name": { "type": "string" },
     "type": {
       "type": "string",
-      "enum": ["llm", "image_model", "video_model", "api", "database", "tool", "agent", "human"]
+      "enum": [
+        "llm",
+        "image_model",
+        "video_model",
+        "search_engine",
+        "api",
+        "database",
+        "tool",
+        "agent",
+        "human",
+        "hybrid"
+      ]
     },
     "provider": { "type": "string" },
     "version": { "type": "string" },
     "capabilities": {
       "type": "array",
+      "description": "제공하는 Capability 목록 (Rule R-001 — 최소 하나 필요). name은 canonical capability id를 권장한다.",
       "items": {
         "type": "object",
         "required": ["name"],
         "properties": {
           "name": { "type": "string" },
           "declared_score": { "type": "number", "minimum": 0, "maximum": 100 },
-          "observed_score": { "type": "number", "minimum": 0, "maximum": 100 }
+          "observed_score": { "type": "number", "minimum": 0, "maximum": 100 },
+          "confidence": {
+            "type": "number",
+            "description": "observed_score의 신뢰도 (0~1). Intent OS는 Score보다 Confidence를 더 중요하게 본다 (Volume 4-B §10).",
+            "minimum": 0,
+            "maximum": 1
+          }
         }
       }
     },
@@ -31,7 +52,22 @@
       "type": "object",
       "properties": {
         "reliability": { "type": "number", "minimum": 0, "maximum": 1 },
-        "latency_ms": { "type": "number" }
+        "latency_ms": { "type": "number" },
+        "success_rate": {
+          "type": "number",
+          "description": "실사용 성공률 (0~1). Benchmark < Production Data.",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "drift_detected": {
+          "type": "boolean",
+          "description": "Expected vs Actual 차이가 임계값을 초과한 상태 (Volume 4-B §13 Drift Detection)"
+        },
+        "last_observed_at": {
+          "type": "string",
+          "description": "마지막 관찰 시각. 오래된 관찰은 가중치가 낮아진다 (Capability Decay).",
+          "format": "date-time"
+        }
       }
     },
     "limitations": { "type": "array", "items": { "type": "string" } },

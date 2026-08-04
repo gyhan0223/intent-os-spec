@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/constraint.schema.json",
+  "title": "Constraint (Canonical Constraint Representation)",
+  "description": "허용 가능한 계획·결정·실행의 공간을 제한하는 명시적 규칙. Hard Constraint는 Decision Engine의 필터, Soft Constraint는 점수 감점으로 동작한다. Legal/Ethical Constraint는 Soft로 선언할 수 없다. Entity 004 명세(entities/e004-constraint.md) 참조.",
+  "type": "object",
+  "required": ["constraint_id", "constraint_type", "hardness", "expression", "scope"],
+  "properties": {
+    "constraint_id": { "type": "string" },
+    "constraint_type": {
+      "type": "string",
+      "description": "Constraint 분류 (§4).",
+      "enum": [
+        "Budget",
+        "Time",
+        "Legal",
+        "Quality",
+        "Resource",
+        "Ethical",
+        "Policy"
+      ]
+    },
+    "hardness": {
+      "type": "string",
+      "description": "Hard: 위반 시 후보 즉시 탈락(필터). Soft: 위반 정도에 따라 점수 감점. 미지정 Constraint는 Runtime에 진입할 수 없다 (Rule CN-002).",
+      "enum": ["Hard", "Soft"]
+    },
+    "expression": {
+      "type": "string",
+      "description": "검사 가능한 조건식 (Rule CN-001). 예: 'total_ad_spend <= 3000000'"
+    },
+    "unit": {
+      "type": "string",
+      "description": "expression에 사용된 값의 단위. 예: 'KRW', '명', 'days'"
+    },
+    "scope": {
+      "type": "string",
+      "description": "적용 범위 (Rule CN-003). Global Constraint는 모든 Goal이 자동 상속한다.",
+      "enum": ["Global", "Goal", "Task"]
+    },
+    "goal_id": {
+      "type": "string",
+      "description": "scope가 Goal 또는 Task일 때 대상 Goal의 ID."
+    },
+    "task_id": {
+      "type": "string",
+      "description": "scope가 Task일 때 대상 Task의 ID."
+    },
+    "origin": {
+      "type": "string",
+      "description": "출처 (Rule CN-005). 완화 협상 시 누구와 협상할지 결정한다. Context에서 파생된 경우 반드시 derived_from_context로 표시한다.",
+      "enum": ["user_declared", "system_policy", "derived_from_context"]
+    },
+    "penalty": {
+      "type": "object",
+      "description": "Soft Constraint 위반 시 감점 (Rule CN-004). Soft Constraint는 penalty 없이 Decision Score에 반영할 수 없다.",
+      "properties": {
+        "score_delta": {
+          "type": "number",
+          "description": "위반 시 감점량. 예: -0.2"
+        },
+        "per": {
+          "type": "string",
+          "description": "감점 단위. 예: '초과 10%당'"
+        }
+      }
+    },
+    "relaxation": {
+      "type": "object",
+      "description": "완화(Relaxation) 정책. Soft는 시스템 자율 완화 가능, Hard는 승인 필수, Legal/Ethical은 어떤 절차로도 완화 불가 (§8).",
+      "properties": {
+        "relaxable": { "type": "boolean" },
+        "requires_approval": {
+          "type": "boolean",
+          "description": "true면 Origin 주체(보통 사용자)의 승인 없이 완화할 수 없다."
+        },
+        "max_relaxed_value": {
+          "type": ["string", "number"],
+          "description": "완화 허용 한계. 예: '4000000'"
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "description": "Constraint Lifecycle 상태 (§7).",
+      "enum": [
+        "Declared",
+        "Active",
+        "Satisfied",
+        "Violated",
+        "Resolved",
+        "Relaxed",
+        "Retired"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "constraint_type": { "enum": ["Legal", "Ethical"] }
+        },
+        "required": ["constraint_type"]
+      },
+      "then": {
+        "properties": {
+          "hardness": { "const": "Hard" }
+        }
+      }
+    }
+  ]
+}

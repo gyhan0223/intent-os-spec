@@ -43,7 +43,7 @@ graph TD
 
 **정의:** 하나의 Goal이 처리되는 전체 실행 단위
 
-**Schema** → [`schemas/execution.schema.json`](schemas/execution.schema.json)
+**Schema** → [`schemas/execution.schema.json`](intent-os-spec/schemas/execution.schema.json)
 
 ```json
 {

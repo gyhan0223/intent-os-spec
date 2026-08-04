@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/plan.schema.json",
+  "title": "Plan (Canonical Plan Representation)",
+  "description": "Planner가 Goal Graph를 입력으로 생성한 실행 청사진. Planning(Process)의 산출물인 Entity이며, Resource를 확정하지 않고 Task별 Capability 요구까지만 기술한다. Entity 008 명세(entities/e008-plan.md) 참조.",
+  "type": "object",
+  "required": ["plan_id", "version", "source_goal_ids", "status", "tasks"],
+  "properties": {
+    "plan_id": { "type": "string" },
+    "version": {
+      "type": "integer",
+      "description": "Plan 버전. Plan은 수정하지 않고 새 버전을 만든다 (Rule: Replanning 시 이전 버전은 Superseded).",
+      "minimum": 1
+    },
+    "source_goal_ids": {
+      "type": "array",
+      "description": "이 Plan이 파생된 Goal ID 목록 (Rule P-001). 기원 없는 Plan은 시스템이 관리하지 않는다.",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "status": {
+      "type": "string",
+      "description": "Plan Lifecycle 상태. Active는 Goal당 동시에 하나만 존재한다 (Rule P-006).",
+      "enum": ["Draft", "Approved", "Active", "Superseded", "Completed", "Aborted"]
+    },
+    "tasks": {
+      "type": "array",
+      "description": "실행 단위 목록. 의존 구조는 DAG여야 한다 (Rule P-002).",
+      "items": {
+        "type": "object",
+        "required": ["task_id", "name", "required_capabilities"],
+        "properties": {
+          "task_id": { "type": "string" },
+          "name": {
+            "type": "string",
+            "description": "Task 이름. Resource 이름을 포함하면 안 된다 (Rule P-005). 예: '광고 카피 작성'"
+          },
+          "required_capabilities": {
+            "type": "array",
+            "description": "이 Task 수행에 필요한 Capability. Decision Engine의 Candidate Filtering 기준. 예: ['Korean Writing', 'Persuasion']",
+            "items": { "type": "string" },
+            "minItems": 1
+          },
+          "depends_on": {
+            "type": "array",
+            "description": "선행 Task ID 목록. 비어 있으면 병렬 실행 후보.",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "estimated_cost": {
+      "type": "object",
+      "description": "예상 비용 (Rule P-003). 예: { value: 2800000, currency: 'KRW' }",
+      "properties": {
+        "value": { "type": "number", "minimum": 0 },
+        "currency": { "type": "string" }
+      }
+    },
+    "estimated_duration": {
+      "type": "object",
+      "description": "예상 기간 (Rule P-003). 예: { value: 6, unit: 'week' }",
+      "properties": {
+        "value": { "type": "number", "minimum": 0 },
+        "unit": { "type": "string", "enum": ["hour", "day", "week", "month"] }
+      }
+    },
+    "expected_success_probability": {
+      "type": "number",
+      "description": "Goal 달성 예상 확률 (0-1). Performance Prediction과 일관성을 유지해야 한다.",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "risk_level": {
+      "type": "string",
+      "description": "가정 취약성 + 실행 불확실성의 종합 리스크",
+      "enum": ["Low", "Medium", "High"]
+    },
+    "constraint_margin": {
+      "type": "object",
+      "description": "제약 대비 여유. 예: 예산 여유 20만원, 기간 여유 1주"
+    },
+    "assumptions": {
+      "type": "array",
+      "description": "이 Plan이 성립하는 전제 (Rule P-004). 가정이 깨지면 Replanning이 트리거된다. 예: '광고 예산 300만원 유지'",
+      "items": { "type": "string" }
+    },
+    "alternative_plan_ids": {
+      "type": "array",
+      "description": "고려된 대안 Plan ID 목록. 최종 채택은 Plan Selection Decision으로 기록된다.",
+      "items": { "type": "string" }
+    },
+    "supersedes": {
+      "type": ["string", "null"],
+      "description": "이 버전이 대체한 이전 Plan 참조 (plan_id@version 형식). 첫 버전이면 null."
+    },
+    "abort_reason": {
+      "type": "string",
+      "description": "status가 Aborted일 때 필수. 중단 사유."
+    },
+    "created_by": {
+      "type": "string",
+      "description": "생성 주체. 예: 'planner'"
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

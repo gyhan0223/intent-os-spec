@@ -2,26 +2,105 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/intent-os/task.schema.json",
   "title": "Task",
-  "description": "Goal 달성을 위해 수행해야 하는 작업 단위. 독립적으로 실행 가능해야 한다.",
+  "description": "Goal 달성을 위해 수행해야 하는 작업 단위. 독립적으로 실행 가능해야 한다. Entity 005 명세(entities/e005-task.md) 참조.",
   "type": "object",
   "required": ["id", "objective", "required_capabilities"],
   "properties": {
     "id": { "type": "string" },
-    "goal_id": { "type": "string" },
-    "objective": { "type": "string" },
+    "goal_id": {
+      "type": "string",
+      "description": "이 Task가 기여하는 Goal의 id (Rule T-005 — 고립된 Task는 관리하지 않는다)"
+    },
+    "objective": {
+      "type": "string",
+      "description": "무엇을 하는가. Resource/Tool 이름을 포함하면 안 된다 (Rule T-004). 예: '인스타그램 광고 카피 3종 작성'"
+    },
+    "task_type": {
+      "type": "string",
+      "description": "Task 분류. Decision Engine의 후보 생성을 좁혀준다.",
+      "enum": [
+        "Research",
+        "Analysis",
+        "Creation",
+        "Transformation",
+        "Decision",
+        "Communication",
+        "Automation",
+        "Verification"
+      ]
+    },
     "required_capabilities": {
       "type": "array",
-      "items": { "type": "string" }
+      "description": "Task의 가장 중요한 속성 (Rule T-003). canonical capability id 문자열, 또는 요구 수준을 포함한 객체.",
+      "items": {
+        "anyOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "required": ["capability_id"],
+            "properties": {
+              "capability_id": {
+                "type": "string",
+                "description": "canonical capability id. 예: 'language.generation.copywriting'"
+              },
+              "min_level": {
+                "type": "string",
+                "description": "요구 숙련도 (Entity 006 §7 Capability Level)",
+                "enum": ["L1", "L2", "L3", "L4", "L5"]
+              },
+              "weight": {
+                "type": "number",
+                "description": "매칭 시 이 Capability의 상대 중요도",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        ]
+      }
     },
     "dependencies": {
       "type": "array",
-      "description": "선행되어야 하는 Task id 목록 (Task Graph 구성)",
+      "description": "선행되어야 하는 Task id 목록 (Task Graph 구성. 순환 금지 — DAG)",
       "items": { "type": "string" }
     },
-    "expected_output": { "type": "string" },
+    "expected_output": {
+      "type": "string",
+      "description": "완료 판정 기준이 되는 산출물 (Rule T-002). 예: '카피 3종 + 각 카피의 타겟 근거'"
+    },
     "execution_mode": {
       "type": "string",
       "enum": ["sequential", "parallel", "conditional"]
+    },
+    "constraints": {
+      "type": "array",
+      "description": "Task 수준 제약. Goal의 Constraint에서 상속·전파된다. 예: '건당 비용 5,000원 이하'",
+      "items": { "type": "string" }
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["Low", "Medium", "High", "Critical"]
+    },
+    "retry_policy": {
+      "type": "object",
+      "description": "실패 시 행동 (Entity 005 §7 실패 처리와 재시도)",
+      "properties": {
+        "max_retries": { "type": "integer", "minimum": 0 },
+        "on_failure": {
+          "type": "string",
+          "description": "retry: 같은 Resource로 재시도, reassign: 다른 Resource 선택, decompose: Planner가 재분해, escalate: 사용자/상위 Task로 이관, abort: 중단 후 Goal Graph에 전파",
+          "enum": ["retry", "reassign", "decompose", "escalate", "abort"]
+        }
+      }
+    },
+    "assigned_resource_id": {
+      "type": "string",
+      "description": "Decision Engine이 할당한 Resource id. Assigned 상태 이후에만 존재한다. Task가 직접 지정하지 않는다 (Rule T-004)."
+    },
+    "attempts": {
+      "type": "integer",
+      "description": "지금까지의 실행 시도 횟수",
+      "minimum": 0
     },
     "state": {
       "type": "string",

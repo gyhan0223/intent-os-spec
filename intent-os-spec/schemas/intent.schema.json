@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/intent.schema.json",
+  "title": "Intent (Canonical Intent Representation)",
+  "description": "Goal에서 추론된 해결의 방향. 왜, 어느 영역에서 풀 것인가를 담되 실행 단위(Task)는 담지 않는다. 추론 결과이므로 반드시 Confidence를 가진다. Entity 002 명세(entities/e002-intent.md) 참조.",
+  "type": "object",
+  "required": ["intent_id", "goal_id", "intent_type", "direction", "confidence"],
+  "properties": {
+    "intent_id": { "type": "string" },
+    "goal_id": {
+      "type": "string",
+      "description": "부모 Goal의 ID. 부모 Goal이 없는 Intent는 존재할 수 없다 (Rule I-001)."
+    },
+    "intent_type": {
+      "type": "string",
+      "description": "해결 영역(Solution Domain) 분류. Planner의 Task 전개 전략 기준이 된다.",
+      "enum": [
+        "Promotion",
+        "Pricing",
+        "Brand",
+        "Process",
+        "Experience",
+        "Product",
+        "Efficiency"
+      ]
+    },
+    "direction": {
+      "type": "string",
+      "description": "방향 서술. 실행 단위(Task)를 포함하면 안 된다 (Rule I-003). 예: '타겟 지역(홍대) 학부모 대상 홍보 도달 확대'"
+    },
+    "rationale": {
+      "type": "string",
+      "description": "왜 이 방향인가. 예: '현재 등록자 20명. 상담 전환율은 정상이나 유입 자체가 부족'"
+    },
+    "confidence": {
+      "type": "number",
+      "description": "추론 확신도 (0.0~1.0). 0.8 이상은 자동 Selected 후보, 0.5 미만은 사용자 확인 없이 Selected 불가 (Rule I-004, §8).",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "priority": {
+      "type": "string",
+      "description": "Intent 간 우선순위. Goal의 Priority를 상속한 뒤 Intent 자체 점수로 보정한다.",
+      "enum": ["Low", "Medium", "High"]
+    },
+    "evidence": {
+      "type": "array",
+      "description": "추론 근거가 된 Context/데이터. Learning Engine의 입력이다.",
+      "items": { "type": "string" }
+    },
+    "expected_impact": {
+      "type": "string",
+      "description": "Goal 달성 기여 예상. 예: '등록 +40~60명'"
+    },
+    "status": {
+      "type": "string",
+      "description": "Intent Lifecycle 상태. Rejected된 Intent도 삭제하지 않는다.",
+      "enum": [
+        "Inferred",
+        "Validated",
+        "Selected",
+        "Expanded",
+        "Rejected",
+        "Archived"
+      ]
+    }
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/capability.schema.json",
+  "title": "Capability (Canonical Capability Representation)",
+  "description": "Task 수행에 필요한 능력의 명명된 단위. Resource 중립적으로 정의되며 Taxonomy에 canonical id로 등록된다. Entity 006 명세(entities/e006-capability.md) 참조.",
+  "type": "object",
+  "required": ["capability_id", "display_name"],
+  "properties": {
+    "capability_id": {
+      "type": "string",
+      "description": "Taxonomy 내 canonical id. 소문자 + 점(.) 계층 구분, 복합어는 밑줄(_). 예: 'language.generation.copywriting'",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$"
+    },
+    "display_name": {
+      "type": "string",
+      "description": "사람이 읽는 이름. 예: '카피라이팅'"
+    },
+    "parent": {
+      "type": "string",
+      "description": "상위 Capability의 canonical id. 최상위 도메인(root)은 생략한다. 예: 'language.generation'",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$"
+    },
+    "aliases": {
+      "type": "array",
+      "description": "자연어 매핑용 동의어. 예: '카피 작성', 'ad copy', '광고 문구'",
+      "items": { "type": "string" }
+    },
+    "description": {
+      "type": "string",
+      "description": "능력의 정의. Resource 이름이나 사양을 포함하면 안 된다 (Rule C-002)."
+    },
+    "related": {
+      "type": "array",
+      "description": "Capability Graph 관계. 계층(parent) 외의 연결을 표현한다.",
+      "items": {
+        "type": "object",
+        "required": ["capability_id", "relation"],
+        "properties": {
+          "capability_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$"
+          },
+          "relation": {
+            "type": "string",
+            "description": "REQUIRES: 이 능력 없이는 성립하지 않는다. SUPPORTS: 있으면 품질이 올라간다. COMPOSES: 여러 능력이 합쳐져 상위 능력을 이룬다.",
+            "enum": ["REQUIRES", "SUPPORTS", "COMPOSES"]
+          }
+        }
+      }
+    },
+    "level_scale": {
+      "type": "object",
+      "description": "숙련도 표현. Score(0~100)와 Level(L1~L5)을 함께 사용한다. Entity 006 §7 참조.",
+      "properties": {
+        "min_score": { "type": "number", "minimum": 0, "maximum": 100 },
+        "max_score": { "type": "number", "minimum": 0, "maximum": 100 },
+        "levels": {
+          "type": "array",
+          "description": "이산 등급 정의. 기본값: L1 Basic(0-39), L2 Functional(40-59), L3 Proficient(60-79), L4 Advanced(80-92), L5 Expert(93-100)",
+          "items": {
+            "type": "object",
+            "required": ["level", "name"],
+            "properties": {
+              "level": { "type": "string", "enum": ["L1", "L2", "L3", "L4", "L5"] },
+              "name": { "type": "string" },
+              "score_min": { "type": "number", "minimum": 0, "maximum": 100 },
+              "score_max": { "type": "number", "minimum": 0, "maximum": 100 }
+            }
+          }
+        }
+      }
+    },
+    "measurement": {
+      "type": "array",
+      "description": "관찰 방법 (Rule C-003 — 측정 불가능한 Capability는 등록할 수 없다). 예: 'output_quality', 'conversion_rate', 'user_feedback'",
+      "items": { "type": "string" }
+    },
+    "status": {
+      "type": "string",
+      "description": "Taxonomy 내 상태. Draft: 등록 직후, Active: 실사용 검증됨, Deprecated: 사용 중단 예정, Merged: 다른 id로 병합됨",
+      "enum": ["Draft", "Active", "Deprecated", "Merged"]
+    },
+    "merged_into": {
+      "type": "string",
+      "description": "status가 Merged일 때 병합된 대상 canonical id",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$"
+    }
+  }
+}

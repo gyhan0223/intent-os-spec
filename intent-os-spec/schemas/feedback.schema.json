@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/feedback.schema.json",
+  "title": "Feedback (Canonical Feedback Representation)",
+  "description": "실행 결과(Outcome)에 대한 평가 신호. Outcome(Runtime State) 자체가 아니라 그에 대한 평가의 기록이며, Learning(Process)의 입력이 된다. Entity 012 명세(entities/e012-feedback.md) 참조.",
+  "type": "object",
+  "required": ["feedback_id", "source_type", "target", "signal", "created_at"],
+  "properties": {
+    "feedback_id": { "type": "string" },
+    "source_type": {
+      "type": "string",
+      "description": "출처 분류. Explicit: 사용자가 의도적으로 준 평가(별점, 수정 요청) / Implicit: 사용자 행동에서 추론된 신호(재생성, 결과 미사용, 이탈) / Systemic: 시스템이 스스로 측정한 신호(Metric 달성 여부, 비용 초과)",
+      "enum": ["Explicit", "Implicit", "Systemic"]
+    },
+    "target": {
+      "type": "object",
+      "description": "무엇에 대한 평가인가. 대상 없는 신호는 Feedback으로 저장하지 않는다 (Rule F-001).",
+      "required": ["target_type", "target_ref"],
+      "properties": {
+        "target_type": {
+          "type": "string",
+          "description": "평가 대상의 종류",
+          "enum": ["Outcome", "Execution", "Decision", "Plan", "Resource"]
+        },
+        "target_ref": {
+          "type": "string",
+          "description": "평가 대상의 ID. 예: 'outcome_0871'"
+        }
+      }
+    },
+    "signal": {
+      "type": "string",
+      "description": "원시 신호(사실). 해석과 분리하여 보존한다 (Rule F-002). 예: '사용자가 결과를 사용하지 않고 3회 재생성'"
+    },
+    "interpretation": {
+      "type": "object",
+      "description": "원시 신호에 대한 해석. 해석은 틀릴 수 있으므로 Confidence와 함께 기록한다 (Rule F-002).",
+      "properties": {
+        "sentiment": {
+          "type": "string",
+          "description": "해석된 평가 방향",
+          "enum": ["Positive", "Negative", "Neutral", "Mixed"]
+        },
+        "confidence": {
+          "type": "number",
+          "description": "해석의 확신도 (0~1)",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "weight": {
+      "type": "number",
+      "description": "학습 반영 가중치 (0~1). 기본 순서: Explicit > Systemic > Implicit (Rule F-004). Single Feedback으로 Knowledge를 갱신하지 않는다 (Rule F-003).",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "routing": {
+      "type": "array",
+      "description": "이 Feedback이 갱신 근거로 라우팅되는 대상 목록. 하나의 Feedback이 복수 대상에 동시에 라우팅될 수 있다.",
+      "items": {
+        "type": "string",
+        "enum": ["ResourceProfile", "Knowledge", "Memory", "Goal", "Plan", "RuntimePolicy"]
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "description": "발생 주체와 채널 (Rule F-005). 오염된 Feedback을 사후 격리하기 위해 필요하다.",
+      "properties": {
+        "actor": {
+          "type": "string",
+          "description": "발생 주체. 예: 'user_A', 'metric_monitor'"
+        },
+        "channel": {
+          "type": "string",
+          "description": "발생 채널. 예: 'UI 재생성 버튼', '주간 Metric 관측'"
+        }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "status": {
+      "type": "string",
+      "description": "Feedback Lifecycle 상태. Quarantined: 이상 패턴(스팸, 조작 의심)으로 격리됨",
+      "enum": [
+        "Captured",
+        "Interpreted",
+        "Routed",
+        "Aggregated",
+        "Consumed",
+        "Quarantined",
+        "Archived"
+      ]
+    }
+  }
+}

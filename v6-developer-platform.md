@@ -79,7 +79,7 @@ class Resource:
 
 ### 3.3 Resource Metadata Schema
 
-모든 Resource는 Registry에 등록된다. → [`schemas/resource.schema.json`](schemas/resource.schema.json)
+모든 Resource는 Registry에 등록된다. → [`schemas/resource.schema.json`](intent-os-spec/schemas/resource.schema.json)
 
 ```json
 {

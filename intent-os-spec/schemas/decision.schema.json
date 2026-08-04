@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/decision.schema.json",
+  "title": "Decision (Canonical Decision Representation)",
+  "description": "Decision Engine(또는 인간)이 내린 선택의 불변·감사 가능 기록. 근거(rationale), 고려한 대안, 입력 스냅샷, 확신도를 포함한다. 핵심 속성은 생성 후 수정 불가이며, 변경은 새 Decision + supersedes 연결로만 가능하다 (Rule D-005). Entity 009 명세(entities/e009-decision.md) 참조.",
+  "type": "object",
+  "required": [
+    "decision_id",
+    "decision_type",
+    "subject",
+    "selection",
+    "alternatives_considered",
+    "rationale",
+    "inputs_snapshot",
+    "confidence",
+    "decided_by",
+    "status",
+    "decided_at"
+  ],
+  "properties": {
+    "decision_id": { "type": "string" },
+    "decision_type": {
+      "type": "string",
+      "description": "결정의 종류. 모든 Type은 동일한 Canonical 구조를 공유하며 subject/selection의 내용만 달라진다.",
+      "enum": [
+        "PlanSelection",
+        "ResourceSelection",
+        "ExecutionStrategy",
+        "RetryAbort",
+        "EscalationToHuman",
+        "BudgetReallocation"
+      ]
+    },
+    "subject": {
+      "type": "object",
+      "description": "결정 대상. subject를 따라가면 결국 하나 이상의 Goal에 도달해야 한다. 예: { plan_id: 'plan_014', task_id: 't3' }",
+      "properties": {
+        "goal_id": { "type": "string" },
+        "plan_id": { "type": "string" },
+        "task_id": { "type": "string" }
+      }
+    },
+    "selection": {
+      "type": ["string", "object"],
+      "description": "선택된 것. alternatives_considered에 포함된 후보여야 한다. 예: 'Claude'"
+    },
+    "alternatives_considered": {
+      "type": "array",
+      "description": "고려한 대안과 각각의 Utility 점수 (Rule D-003). 대안이 없는 선택은 Decision이 아니라 Forced Action이다.",
+      "items": {
+        "type": "object",
+        "required": ["candidate"],
+        "properties": {
+          "candidate": { "type": "string" },
+          "utility": { "type": "number" }
+        }
+      }
+    },
+    "rationale": {
+      "type": "array",
+      "description": "선택 근거 (Rule D-002). 빈 근거는 금지된다. 예: ['한국어 작문 능력 96', '교육 마케팅 Task 성공률 93%']",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "utility_scores": {
+      "type": "object",
+      "description": "Utility 공식(Volume 4-A §8) 계산 결과. 당시 가중치(Dynamic Weight)를 함께 동결한다.",
+      "properties": {
+        "selected_utility": { "type": "number" },
+        "weights": {
+          "type": "object",
+          "description": "판단 시점의 가중치. 예: { quality: 0.35, success: 0.25, reliability: 0.15, cost: 0.15, latency: 0.10 }",
+          "properties": {
+            "quality": { "type": "number" },
+            "success": { "type": "number" },
+            "reliability": { "type": "number" },
+            "cost": { "type": "number" },
+            "latency": { "type": "number" }
+          }
+        }
+      }
+    },
+    "inputs_snapshot": {
+      "type": "object",
+      "description": "판단 당시 사용한 데이터의 동결본 (Rule D-004). 참조 + 버전 방식 허용. 예: { resource_scores_version: 'rr_2026-08-04', historical_window: '최근 100회 실행' }"
+    },
+    "confidence": {
+      "type": "number",
+      "description": "확신도 (0-1). 임계값 미만이면 Multi-Agent 실행 또는 Escalation to Human이 트리거된다 (Rule D-006).",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "decided_by": {
+      "type": "string",
+      "description": "결정 주체. 예: 'decision_engine', 'human:대표'"
+    },
+    "status": {
+      "type": "string",
+      "description": "기록의 상태. 상태 전이는 필드 추가만 허용하며 핵심 속성은 수정할 수 없다.",
+      "enum": ["Proposed", "Committed", "Applied", "Evaluated", "Rejected", "Superseded"]
+    },
+    "supersedes": {
+      "type": ["string", "null"],
+      "description": "이 Decision이 대체한 이전 Decision ID. 없으면 null."
+    },
+    "outcome_link": {
+      "type": ["string", "null"],
+      "description": "사후 평가 연결. Evaluated 상태에서 Outcome(Runtime State) 참조가 기록되며 Learning Engine의 입력이 된다."
+    },
+    "forced_action": {
+      "type": "boolean",
+      "description": "대안 없이 강제된 선택인 경우 true. 기본값 false.",
+      "default": false
+    },
+    "rejection_reason": {
+      "type": "string",
+      "description": "status가 Rejected일 때 필수. Human의 승인 거부 사유."
+    },
+    "decided_at": { "type": "string", "format": "date-time" }
+  }
+}
