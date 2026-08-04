@@ -420,3 +420,42 @@ graph TD
 4. 상황에 맞는 실행 계획을 세우는 것 — **Decision Engine** (4-A)
 
 AI 모델은 계속 바뀌지만, **세상을 이해하고 목표 달성을 최적화하는 운영체제**라는 개념은 특정 모델에 종속되지 않는다. 이는 [Volume 1 Principle 03 — Resource Agnostic](v1-core-concepts.md#principle-03--resource-agnostic)과 일치한다.
+
+---
+
+## Volume 4-F Completion Criteria
+
+> **본 문서는 장기 연구 문서다** ([Volume 4](v4-decision-engine.md) 문서 목록의 ⚠️ 표시).
+
+| 항목 | 근거 | 판정 |
+|---|---|---|
+| 계층의 필요성 정의 | §0, §1, §2 | ✅ |
+| World State / Goal State / Gap 정의 | §3~§5 | ✅ |
+| World Graph 구조 정의 | §6~§8 | ⚠️ 부분 — 유형 목록만. [Entity 003 Context](entities/e003-context.md)와의 경계 미정의 |
+| 시간 모델 정의 | §10 | ⚠️ 부분 |
+| 인과 그래프 정의 | §11 | ❌ **미충족** — 인과 추론 방법 미정의. 상관과 인과의 구분 기준이 없다 |
+| 불확실성 모델 정의 | §12 | ⚠️ 부분 |
+| Simulation / Counterfactual 정의 | §14, §15 | ❌ **미충족** — 시뮬레이션의 신뢰 구간과 실행 대체 조건 미정의 |
+| Human / Organization 모델 정의 | §17, §18 | ⚠️ 부분 |
+| Goal 분해·행동 계획 정의 | §21, §22 | ⚠️ 부분 — [Volume 3 Stage 3](v3-runtime.md) Planning과 역할 중복. 경계 정리 필요 |
+| World DSL 정의 | §25 | ⚠️ 부분 |
+
+**미충족 2건(§11 인과, §14·15 시뮬레이션)은 서로 묶여 있다.** 인과 그래프 없이는 시뮬레이션이 상관관계의 외삽에 그치고, 그런 시뮬레이션으로 실제 실행을 대체하면 [4-D §16 Shadow Evaluation](v4d-autonomous-benchmarking.md)보다 위험하다.
+
+### Volume 4 계열 종결
+
+4-A~4-F로 Decision·Resource·Strategy·World 계층의 설계가 끝난다. 확정 명세는 **4-A와 4-B**이며, 4-C~4-F는 연구 설계 상태다.
+
+| 문서 | 상태 |
+|---|---|
+| [4-A Decision Engine Detail](v4a-decision-engine-detail.md) | Specification |
+| [4-B Resource Intelligence](v4b-resource-intelligence.md) | Specification |
+| [4-C Resource Genome](v4c-resource-genome.md) | Research Design |
+| [4-D Autonomous Benchmarking](v4d-autonomous-benchmarking.md) | Research Design |
+| [4-E Strategy Graph](v4e-strategy-graph.md) | Research Design ⚠️ |
+| [4-F World Model](v4f-world-model.md) | Research Design ⚠️ |
+
+
+---
+
+**다음:** [Volume 5 — Learning Engine](v5-learning-engine.md)

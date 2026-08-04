@@ -53,6 +53,7 @@ AI의 사고 방식.
 
 **항목:** Logical, Analytical, Reflective, Planning, Abstraction, Mathematical, Deductive, Inductive
 
+<!-- validate: none -->
 ```json
 {
   "logical": 95,
@@ -308,3 +309,29 @@ Intent OS가 스스로 새로운 모델을 발견하고, 대표 태스크를 자
 - [ ] Exploration 비율은 어떤 정책으로 조정할 것인가?
 
 이 단계가 이 프로젝트의 진짜 핵심이며, 특허나 논문으로 이어질 가능성이 가장 높은 영역이다.
+
+---
+
+## Volume 4-C Completion Criteria
+
+> **본 문서는 연구 설계 문서다.** 아래 판정은 "구현 가능한가"가 아니라 "설계 의도가 명확한가"를 본다.
+
+| 항목 | 근거 | 판정 |
+|---|---|---|
+| Genome 개념·필요성 정의 | §1, §2 | ✅ |
+| Genome 축 정의 | §3~§9 (Cognitive / Linguistic / Creative / Reliability / Economic / Behavioral 6축) | ✅ |
+| Genome 추출 구조 정의 | §10 | ⚠️ 부분 — 파이프라인만. 추출 알고리즘 미정의 |
+| Genome 변화 추적 정의 | §11 | ⚠️ 부분 |
+| Genome 유사도 정의 | §12 | ❌ **미충족** — 유사도 함수 미정의 (Appendix B 1번 질문) |
+| Meta Prediction 구조 정의 | §13, §14 | ⚠️ 부분 — 파이프라인만. 모델·피처 미정의 (Appendix B 2번) |
+| Few-Shot 평가 정의 | §16 | ⚠️ 부분 |
+| Meta Learning 정의 | §17, §19 | ❌ **미충족** — Reward 함수 미정의 (Appendix B 3번) |
+
+**미충족 3건은 Appendix B의 미해결 질문과 같은 것이다.** 그 질문들에 답하기 전까지 본 문서는 `Research Design` 상태이며, `Specification`으로 승격하지 않는다.
+
+Appendix B 4번(Exploration 비율)은 [Volume 5 §10](v5-learning-engine.md)이 Phase 1 잠정값(90/10)으로 운용하되 확정 정책은 본 문서에 위임한 상태다.
+
+
+---
+
+**다음:** [Volume 4-D — Autonomous Benchmarking Engine](v4d-autonomous-benchmarking.md)

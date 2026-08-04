@@ -59,6 +59,8 @@ Intent OS는 총 **8개의 핵심 Layer**로 구성된다.
 
 ### 3.1 User Layer
 
+**Component** — Goal Interface
+
 **Responsibility** — 사용자와 Intent OS 사이의 인터페이스를 담당한다.
 
 > **중요한 원칙:** 사용자는 AI와 대화하지 않는다. 사용자는 **Goal과 대화한다.**
@@ -91,15 +93,41 @@ Raw User Input → Structured Goal Request
 "홍대 미술학원 겨울캠프 홍보하고 싶어"
 ```
 
-**Output**
+**Output** — 정본은 [`goal.schema.json`](intent-os-spec/schemas/goal.schema.json) / [Entity 001](entities/e001-goal.md)이다.
 
+<!-- validate: goal.schema.json -->
 ```json
 {
-  "objective": "Increase winter camp enrollment",
-  "constraints": ["Budget unknown", "Target students"],
-  "deadline": "Before winter"
+  "goal_id": "goal_01HZX9M4Y4QF2X",
+  "version": 1,
+  "title": "2027 윈터캠프 학생 모집",
+  "goal_type": "Outcome",
+  "objective": {
+    "description": "겨울캠프 등록 학생 수를 늘린다",
+    "desired_state": {
+      "metric": "registered_students",
+      "operator": ">=",
+      "target": 100,
+      "unit": "students",
+      "baseline": 42
+    }
+  },
+  "constraints": { "deadline": "2027-01-10" },
+  "context": {
+    "current_state": { "registered_students": 42 },
+    "assumptions": ["겨울방학 일정 유지"]
+  },
+  "status": { "phase": "Created", "progress": 0 },
+  "quality": { "confidence": 0.55 },
+  "metadata": {
+    "created_by": "user_owner",
+    "created_at": "2026-08-04T09:00:00Z",
+    "source": "conversation"
+  }
 }
 ```
+
+예산이 미상이므로 `constraints.budget`을 **비워 둔다.** `"Budget unknown"` 같은 문자열을 제약으로 넣지 않는다 — 모르는 것은 제약이 아니라 [Assumption](entities/e017-assumption.md)이거나 Clarification 대상이다. `quality.confidence`가 낮은 것이 그 신호이며, Goal Layer는 이 상태에서 `Created`에 머문다.
 
 **내부 모듈**
 
@@ -219,17 +247,26 @@ Resource
 └── Autonomous Agent
 ```
 
-**Resource Registry 예시**
+**Resource Registry 예시** — 정본은 [`resource.schema.json`](intent-os-spec/schemas/resource.schema.json) / [Entity 007](entities/e007-resource.md)이다.
 
+<!-- validate: resource.schema.json -->
 ```json
 {
+  "id": "anthropic:claude",
   "name": "Claude",
-  "type": "LLM",
-  "capabilities": ["Reasoning", "Writing"],
-  "cost": "medium",
-  "latency": "fast"
+  "type": "llm",
+  "provider": "Anthropic",
+  "capabilities": [
+    { "name": "reasoning.planning", "declared_score": 90, "observed_score": 91, "confidence": 0.88 },
+    { "name": "language.generation.copywriting", "declared_score": 95, "observed_score": 94, "confidence": 0.91 }
+  ],
+  "cost_model": { "unit": "1k_tokens", "input": 3, "output": 15, "currency": "USD" },
+  "performance": { "reliability": 0.99, "latency_ms": 1800 },
+  "lifecycle": "Active"
 }
 ```
+
+`"cost": "medium"`, `"latency": "fast"` 같은 정성 표현은 쓰지 않는다. [Volume 4-A §8.1](v4a-decision-engine-detail.md)의 Utility 공식이 **수치 정규화**를 요구하므로, `medium`은 계산에 들어갈 수 없다.
 
 ---
 
@@ -243,12 +280,14 @@ Resource
 Task → Resource Allocation → Execution → Monitoring → Result Collection
 ```
 
-**State 관리**
+**State 관리** — 정본은 [Entity 013 §6](entities/e013-execution.md)이며 종료 상태는 4개다.
 
 ```
-Pending → Running → Completed
-                  ↘ Failed
+Created → Queued → Running → Waiting → Completed
+                                     ↘ Failed / TimedOut / Aborted
 ```
+
+종료 상태 4개는 **모두 Outcome 1개를 낳는다**([INV-04](entities/e000a-entity-relationships.md)). `Failed`를 결과 없는 상태로 취급하면 Resource 성공률이 실제보다 높게 계산된다.
 
 **Error Handling 예시**
 
@@ -308,11 +347,29 @@ GoalCreated Event
 
 ## 6. System State Model
 
-| 대상 | 상태 흐름 |
+> **⚠️ v0.2 명세 정정 (2026-08-04)**
+>
+> 초안의 상태 흐름은 Entity 명세 v2.0과 어긋나 있었다. Goal을 5상태로, Execution을 4상태로 적었고 **실패 상태가 아예 없었다.** 아래 표로 대체하며, 각 상태 집합의 정본은 Entity 문서다.
+
+| 대상 | 상태 | 정본 |
+|---|---|---|
+| **Goal** | Created → Clarified → Structured → Executable → Planning → Executing → Monitoring → Completed<br>↘ Failed / Suspended / Abandoned → Archived (**12개**) | [Entity 001-C](entities/e001c-goal-state-machine.md) |
+| **Task** | Pending → Assigned → Running → Completed → Evaluated<br>↘ Failed (**6개**) | [`task.schema.json`](intent-os-spec/schemas/task.schema.json) |
+| **Execution** | Created → Queued → Running → Waiting → Completed<br>↘ Failed / TimedOut / Aborted (**8개**) | [Entity 013](entities/e013-execution.md) |
+| **Session** | Created → Active → Idle → Suspended → Completed<br>↘ Expired / Aborted (**7개**) | [Entity 021](entities/e021-session.md) |
+| **Resource** | Registered → Evaluating → Active → Optimized → Deprecated → Removed (**6개**) | [Entity 007](entities/e007-resource.md) |
+
+### 6.1 계층 혼동 주의
+
+`Available → Selected → Executing`처럼 적던 초안의 Resource 상태는 **Resource의 상태가 아니라 Decision과 Execution의 상태였다.**
+
+| ❌ 초안 | ⭕ 실제 소유자 |
 |---|---|
-| **Goal** | Created → Understanding → Confirmed → Executing → Completed |
-| **Task** | Pending → Assigned → Running → Completed → Evaluated |
-| **Resource** | Available → Selected → Executing → Unavailable |
+| Resource `Selected` | [Decision](entities/e009-decision.md)의 선택 결과 |
+| Resource `Executing` | [Execution](entities/e013-execution.md)`.status = Running` |
+| Resource `Unavailable` | Resource `lifecycle = Deprecated` 또는 순간 Health 저하 ([4-B §14](v4b-resource-intelligence.md)) |
+
+Resource는 **여러 Execution에 동시에 쓰인다.** 따라서 "지금 실행 중"은 Resource의 상태가 될 수 없다 — 한 Resource가 동시에 `Executing`이면서 `Available`이어야 하기 때문이다.
 
 ---
 
@@ -363,9 +420,14 @@ Human
 
 ## Volume 2 Completion Criteria
 
-- [x] 전체 Layer 정의
-- [x] Component 책임 정의
-- [x] 데이터 흐름 정의
-- [x] Resource 추상화 정의
-- [x] 특정 AI 종속성 제거
-- [x] Runtime 구조 정의
+| 항목 | 근거 | 판정 |
+|---|---|---|
+| 전체 Layer 정의 | §2 (8개 Layer) · §3.1~3.8 | ✅ |
+| Component 책임 정의 | §3.1~3.8 각 절의 Component / Responsibility | ✅ |
+| 데이터 흐름 정의 | §4 · §5 Event 모델 | ✅ |
+| Resource 추상화 정의 | §3.6 · 정본 [Entity 007](entities/e007-resource.md) | ✅ |
+| 특정 AI 종속성 제거 | §7 Constraint 1 | ✅ |
+| 상태 모델 정의 | §6 (5개 대상, Entity 정본 참조) · §6.1 계층 구분 | ✅ |
+| Runtime 구조 정의 | §3.7 · 상세는 [Volume 3](v3-runtime.md)에 위임 | ✅ |
+
+본 문서는 **아키텍처 계층**만 정의한다. 상태 집합과 전이 규칙의 정본은 Entity 문서이며, 값이 갈릴 경우 Entity를 따른다.

@@ -173,17 +173,39 @@ Goal은 사용자가 달성하고자 하는 **최종 상태**이다. Goal은 방
 
 **Schema** → [`schemas/goal.schema.json`](intent-os-spec/schemas/goal.schema.json)
 
+<!-- validate: goal.schema.json -->
 ```json
 {
-  "id": "",
-  "objective": "",
-  "constraints": [],
-  "success_metrics": [],
-  "deadline": "",
-  "priority": "",
-  "context": {}
+  "goal_id": "goal_01HZX9M4Y4QF2X",
+  "version": 1,
+  "title": "2027 윈터캠프 학생 모집",
+  "goal_type": "Outcome",
+  "objective": {
+    "description": "학생 100명 모집",
+    "desired_state": {
+      "metric": "registered_students",
+      "operator": ">=",
+      "target": 100,
+      "unit": "students",
+      "baseline": 0
+    }
+  },
+  "constraints": {
+    "budget": { "max": 3000000, "currency": "KRW" },
+    "deadline": "2027-01-10"
+  },
+  "priority": { "level": "High" },
+  "context": { "current_state": { "registered_students": 0 } },
+  "status": { "phase": "Structured", "progress": 0 },
+  "metadata": {
+    "created_by": "user_owner",
+    "created_at": "2026-08-04T09:00:00Z",
+    "source": "conversation"
+  }
 }
 ```
+
+> `success_metrics`·`deadline`을 최상위 필드로 두던 v1 초안 표기는 폐기했다. 각각 `objective.desired_state`와 `constraints.deadline`으로 들어간다.
 
 **Attributes**
 
@@ -230,13 +252,22 @@ Task:
 
 **Schema** → [`schemas/task.schema.json`](intent-os-spec/schemas/task.schema.json)
 
+<!-- validate: task.schema.json -->
 ```json
 {
-  "id": "",
-  "objective": "",
-  "required_capabilities": [],
-  "dependencies": [],
-  "expected_output": ""
+  "id": "task_003",
+  "goal_id": "goal_01HZX9M4Y4QF2X",
+  "objective": "겨울캠프 광고 카피 제작",
+  "task_type": "Creation",
+  "required_capabilities": [
+    { "capability_id": "language.generation.copywriting", "min_level": "L4", "weight": 0.6 },
+    { "capability_id": "marketing.audience_analysis", "min_level": "L3", "weight": 0.4 }
+  ],
+  "dependencies": ["task_001", "task_002"],
+  "expected_output": "A/B 테스트용 광고 카피 3안",
+  "execution_mode": "sequential",
+  "priority": "High",
+  "state": "Pending"
 }
 ```
 
@@ -277,17 +308,25 @@ Resource는 Capability를 제공하는 **실행 주체**이다.
 
 **Schema** → [`schemas/resource.schema.json`](intent-os-spec/schemas/resource.schema.json)
 
+<!-- validate: resource.schema.json -->
 ```json
 {
-  "id": "",
-  "type": "",
-  "capabilities": [],
-  "cost": "",
-  "latency": "",
-  "reliability": "",
-  "availability": ""
+  "id": "anthropic:claude",
+  "name": "Claude",
+  "type": "llm",
+  "provider": "Anthropic",
+  "capabilities": [
+    { "name": "language.generation.copywriting", "declared_score": 95, "observed_score": 94, "confidence": 0.91 },
+    { "name": "reasoning.planning", "declared_score": 90 }
+  ],
+  "cost_model": { "unit": "1k_tokens", "input": 3, "output": 15, "currency": "USD" },
+  "performance": { "reliability": 0.99, "latency_ms": 1800, "success_rate": 0.92 },
+  "availability": "active",
+  "lifecycle": "Active"
 }
 ```
+
+> `cost`·`latency`·`reliability`를 최상위 문자열로 두던 표기는 폐기했다. 비용은 `cost_model`, 나머지는 `performance` 아래로 들어간다.
 
 ---
 

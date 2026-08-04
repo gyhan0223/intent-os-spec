@@ -4,36 +4,75 @@
   "title": "Session",
   "description": "하나 이상의 Goal을 추진하는 경계 지어진 상호작용·실행 단위. 일시적 Context와 예산을 보유하되 영속 Entity는 참조만 한다 — Session이 끝나도 Goal·Memory·Knowledge·Artifact·Outcome은 살아남는다(INV-16). v0.1 Volume 3의 'Execution Instance'가 실제로는 이 Entity다. Entity 021 명세(entities/e021-session.md) 참조.",
   "type": "object",
-  "required": ["session_id", "type", "actor", "budget", "started_at", "status"],
+  "required": [
+    "session_id",
+    "type",
+    "actor",
+    "budget",
+    "started_at",
+    "status"
+  ],
   "properties": {
-    "session_id": { "type": "string" },
+    "session_id": {
+      "type": "string"
+    },
     "type": {
       "type": "string",
       "description": "autonomous가 가장 위험하다 — 사람이 보지 않는 상태에서 비용이 발생한다. replay는 부수효과가 금지된다(INV-SES-05).",
-      "enum": ["interactive", "autonomous", "triggered", "batch", "replay"]
+      "enum": [
+        "interactive",
+        "autonomous",
+        "triggered",
+        "batch",
+        "replay"
+      ]
     },
     "actor": {
       "type": "string",
       "description": "주체 (Rule SES-006). 없으면 승인 요청을 보낼 곳이 없다. 예: 'human:대표', 'scheduler:weekly_report'"
     },
-    "participants": { "type": "array", "items": { "type": "string" } },
+    "participants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "goal_ids": {
       "type": "array",
       "description": "Session은 Goal을 소유하지 않고 참조한다 (Rule SES-001). Goal이 Session보다 오래 산다.",
-      "items": { "type": "string" }
-    },
-    "trigger_ref": {
-      "type": ["object", "null"],
-      "description": "autonomous는 스케줄, triggered는 원인 Event를 담는다.",
-      "properties": {
-        "cron": { "type": "string" },
-        "event_id": { "type": "string" },
-        "correlation_id": { "type": "string" }
+      "items": {
+        "type": "string"
       }
     },
-    "policy_scope": { "type": "array", "items": { "type": "string" } },
+    "trigger_ref": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "autonomous는 스케줄, triggered는 원인 Event를 담는다.",
+      "properties": {
+        "cron": {
+          "type": "string"
+        },
+        "event_id": {
+          "type": "string"
+        },
+        "correlation_id": {
+          "type": "string"
+        }
+      }
+    },
+    "policy_scope": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "context_ref": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "일시적 Context. Session 종료 시 폐기되는 유일한 대상이다."
     },
     "dry_run": {
@@ -48,12 +87,23 @@
         "max_cost": {
           "type": "object",
           "properties": {
-            "amount": { "type": "number", "minimum": 0 },
-            "currency": { "type": "string" }
+            "amount": {
+              "type": "number",
+              "minimum": 0
+            },
+            "currency": {
+              "type": "string"
+            }
           }
         },
-        "max_executions": { "type": "integer", "minimum": 0 },
-        "max_duration": { "type": "string", "description": "ISO 8601 duration. 예: 'PT4H'" }
+        "max_executions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_duration": {
+          "type": "string",
+          "description": "ISO 8601 duration. 예: 'PT4H'"
+        }
       }
     },
     "consumed": {
@@ -63,39 +113,129 @@
         "cost": {
           "type": "object",
           "properties": {
-            "amount": { "type": "number", "minimum": 0 },
-            "currency": { "type": "string" }
+            "amount": {
+              "type": "number",
+              "minimum": 0
+            },
+            "currency": {
+              "type": "string"
+            }
           }
         },
-        "executions": { "type": "integer", "minimum": 0 },
-        "duration": { "type": "string" }
+        "executions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "duration": {
+          "type": "string"
+        }
       }
     },
-    "started_at": { "type": "string", "format": "date-time" },
-    "last_activity_at": { "type": ["string", "null"], "format": "date-time" },
-    "ended_at": { "type": ["string", "null"], "format": "date-time" },
-    "idle_timeout": { "type": "string", "default": "PT30M" },
-    "absolute_timeout": { "type": "string", "default": "PT24H" },
-    "execution_ids": { "type": "array", "items": { "type": "string" } },
-    "decision_ids": { "type": "array", "items": { "type": "string" } },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_activity_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "ended_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "idle_timeout": {
+      "type": "string",
+      "default": "PT30M"
+    },
+    "absolute_timeout": {
+      "type": "string",
+      "default": "PT24H"
+    },
+    "execution_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "decision_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "artifact_ids": {
       "type": "array",
       "description": "참조일 뿐이다. Session 종료가 Artifact 삭제를 유발할 수 없다 (INV-ART-05).",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
-    "agent_ids": { "type": "array", "items": { "type": "string" } },
+    "agent_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "summary": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "종료 시 필수 (INV-SES-06). 요약 없는 종료는 학습 손실이다."
     },
-    "memory_ids": { "type": "array", "items": { "type": "string" } },
+    "memory_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "status": {
       "type": "string",
-      "enum": ["Created", "Active", "Idle", "Suspended", "Completed", "Expired", "Aborted"]
+      "enum": [
+        "Created",
+        "Active",
+        "Idle",
+        "Suspended",
+        "Completed",
+        "Expired",
+        "Aborted"
+      ]
+    },
+    "phase": {
+      "type": "string",
+      "description": "Session 내부의 Runtime 진행 단계 (Volume 3 §5). status와 계층이 다르다 — status는 Session의 생존 상태, phase는 진행 위치다.",
+      "enum": [
+        "IDLE",
+        "UNDERSTANDING",
+        "PLANNING",
+        "DECIDING",
+        "EXECUTING",
+        "EVALUATING",
+        "LEARNING",
+        "COMPLETED"
+      ]
     },
     "end_reason": {
-      "type": ["string", "null"],
-      "enum": ["user_closed", "goal_task_completed", "idle_timeout", "absolute_timeout", "budget_exceeded", "policy_violation", "operator_abort", null]
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "user_closed",
+        "goal_task_completed",
+        "idle_timeout",
+        "absolute_timeout",
+        "budget_exceeded",
+        "policy_violation",
+        "operator_abort",
+        null
+      ]
     }
   }
 }

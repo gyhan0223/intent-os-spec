@@ -175,6 +175,7 @@ Session
 | **summary** | 종료 요약 (SES-004) | `윈터캠프 Plan 수립, 카피 3종 확정` |
 | **memory_ids** | 생성된 Memory | `["mem_770"]` |
 | **status** | 상태 (§6) | `Active` |
+| **phase** | Runtime 진행 단계 ([Volume 3 §5](../v3-runtime.md)) | `PLANNING` |
 | **end_reason** | 종료 사유 | `null` |
 
 ### 4.1 Session Types
@@ -579,13 +580,14 @@ ses_500  replay  운영자
 
 Rule SES-005는 재개 시 Context 재수집을 요구한다. 그러나 Context 수집 자체가 비용이 드는 경우(외부 API 조회) 매 재개마다 비용이 발생한다. TTL 기반 부분 재사용 규칙이 필요하다.
 
-### Volume 3와의 정합
+### ~~Volume 3와의 정합~~ — 해소됨 (2026-08-04)
 
-[Volume 3](../v3-runtime.md)의 Runtime State Machine과 본 문서의 Session Lifecycle이 같은 계층인데 상태 이름이 다르다(`UNDERSTANDING/PLANNING/DECIDING` vs `Active/Idle/Suspended`). Volume 3의 상태는 **Session 내부의 진행 단계**이므로 `phase` 필드로 분리하는 것이 맞다. 다음 버전에서 반영한다.
+[Volume 3](../v3-runtime.md)의 Runtime State Machine과 본 문서의 Session Lifecycle이 같은 계층인데 상태 이름이 달랐다(`UNDERSTANDING/PLANNING/DECIDING` vs `Active/Idle/Suspended`).
+
+**`phase` 필드를 §4 Attributes와 [`session.schema.json`](../intent-os-spec/schemas/session.schema.json)에 정식 도입해 해소했다.** `status`는 Session의 생존 상태, `phase`는 진행 위치로 계층이 분리된다. 두 필드는 독립적이다 — `status = Suspended`이면서 `phase = EXECUTING`인 상태가 정상이며, 이는 "실행 도중 멈춘 Session"을 뜻한다.
 
 ### 앞으로 보강해야 할 항목
 
-- `phase` 필드 도입 (Volume 3의 7단계를 Session 내부 진행으로 표현)
 - 다중 actor Session의 승인 위임 규칙
 - Session 요약 생성 알고리즘 (무엇을 요약에 넣는가)
 - 실제 예시 30~50개
