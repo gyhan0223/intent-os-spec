@@ -1,32 +1,94 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/intent-os/goal.schema.json",
-  "title": "Goal",
-  "description": "사용자가 달성하고자 하는 최종 상태. 방법을 포함하지 않는다.",
+  "title": "Goal (Canonical Goal Representation)",
+  "description": "사용자 또는 다른 지능형 주체가 원하는 미래 상태. 방법(Method), Resource, Task를 포함하지 않는다. Entity 001 명세(entities/e001-goal.md) 참조.",
   "type": "object",
-  "required": ["id", "objective"],
+  "required": ["goal_id", "goal_type", "objective"],
   "properties": {
-    "id": { "type": "string" },
+    "goal_id": { "type": "string" },
+    "goal_type": {
+      "type": "string",
+      "description": "Goal의 타입. Planner와 Decision Engine의 동작 기준이 된다.",
+      "enum": [
+        "Outcome",
+        "Optimization",
+        "Learning",
+        "Exploration",
+        "Maintenance",
+        "Creation",
+        "Decision",
+        "Automation"
+      ]
+    },
     "objective": {
       "type": "string",
-      "description": "원하는 결과. 예: '3개월 안에 신규 고객 100명 확보'"
+      "description": "무엇을 이루고 싶은가. 방법/AI 이름/Tool 이름을 포함하면 안 된다. 예: '학생 모집'"
     },
-    "constraints": {
-      "type": "array",
-      "description": "제약조건 (예산, 시간, 법적 제한, 사용 가능 자원)",
-      "items": { "type": "string" }
+    "motivation": {
+      "type": "string",
+      "description": "왜 이 Goal을 원하는가. Motivation에 따라 전략이 달라진다."
+    },
+    "target_state": {
+      "type": "object",
+      "description": "원하는 미래 상태의 측정 가능한 표현. 예: { value: 100, unit: '명' }",
+      "properties": {
+        "value": { "type": ["number", "string"] },
+        "unit": { "type": "string" }
+      }
     },
     "success_metrics": {
       "type": "array",
-      "description": "성공 판단 기준 (매출, 사용자 수, 점수, 시간 절약)",
+      "description": "성공 판단 기준. 예: '100명', '매출 2억', 'CTR 8%'",
       "items": { "type": "string" }
     },
-    "deadline": { "type": "string", "format": "date-time" },
-    "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
-    "context": { "type": "object" },
-    "state": {
+    "constraints": {
+      "type": "array",
+      "description": "제약조건 (예산, 시간, 법률, 지역)",
+      "items": { "type": "string" }
+    },
+    "priority": { "type": "string", "enum": ["Low", "Medium", "High", "Critical"] },
+    "deadline": { "type": "string", "format": "date" },
+    "context": {
+      "type": "object",
+      "description": "현재 상황. 예: 현재 등록자 20명, 예산 300만원, 지역 홍대"
+    },
+    "stakeholders": {
+      "type": "array",
+      "description": "누가 영향을 받는가. 예: 대표, 학생, 학부모, 마케팅팀",
+      "items": { "type": "string" }
+    },
+    "assumptions": {
+      "type": "array",
+      "description": "가정. 예: '광고 예산은 유지된다'",
+      "items": { "type": "string" }
+    },
+    "status": {
       "type": "string",
-      "enum": ["Created", "Understanding", "Confirmed", "Executing", "Completed"]
+      "description": "Goal Lifecycle 상태",
+      "enum": [
+        "Draft",
+        "Clarifying",
+        "Confirmed",
+        "Planning",
+        "Executing",
+        "Monitoring",
+        "Learning",
+        "Completed",
+        "Failed",
+        "Archived"
+      ]
+    },
+    "completeness_score": {
+      "type": "number",
+      "description": "Goal Completeness Score (0-100). Objective 25% + Success Metric 20% + Deadline 15% + Constraints 15% + Context 10% + Stakeholders 10% + Priority 5%",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "completeness_level": {
+      "type": "integer",
+      "description": "1: Raw Goal, 2: Structured Goal, 3: Executable Goal",
+      "enum": [1, 2, 3]
     }
   }
 }

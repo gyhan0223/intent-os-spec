@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/goal-graph.schema.json",
+  "title": "Goal Graph",
+  "description": "모든 Goal의 관계를 표현하는 최상위 데이터 구조 GG = (V, E). DAG여야 하며, 순환은 Workflow Graph / Control Loop로 별도 표현한다. Entity 001-A 명세(entities/e001a-goal-graph.md) 참조.",
+  "type": "object",
+  "required": ["graph_id", "nodes", "edges"],
+  "properties": {
+    "graph_id": { "type": "string" },
+    "root_goal_id": {
+      "type": "string",
+      "description": "최상위 Root Goal. 모든 Goal은 최소 하나의 상위 목적 또는 Root Goal과 연결되어야 한다 (Invariant 2)."
+    },
+    "nodes": {
+      "type": "array",
+      "description": "Goal 노드 집합 V. 각 노드는 goal.schema.json의 Canonical Goal Representation을 따른다.",
+      "items": { "$ref": "goal.schema.json" }
+    },
+    "edges": {
+      "type": "array",
+      "description": "Goal 관계 집합 E. 방향성과 의미를 가진다 (Invariant 3). 순환 의존은 허용하지 않는다 (Invariant 1).",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "relationship"],
+        "properties": {
+          "from": { "type": "string", "description": "출발 Goal의 goal_id" },
+          "to": { "type": "string", "description": "도착 Goal의 goal_id" },
+          "relationship": {
+            "type": "string",
+            "enum": [
+              "DEPENDS_ON",
+              "ENABLES",
+              "CONFLICTS_WITH",
+              "REQUIRES",
+              "SUPPORTS",
+              "BLOCKS"
+            ]
+          },
+          "weight": {
+            "type": "number",
+            "description": "관계의 강도. Goal Propagation 계산에 사용된다."
+          }
+        }
+      }
+    },
+    "weights": {
+      "type": "object",
+      "description": "Goal Score 계산 가중치: Score = w_p*P + w_i*I + w_u*U - w_r*R + w_c*C",
+      "properties": {
+        "priority": { "type": "number" },
+        "impact": { "type": "number" },
+        "urgency": { "type": "number" },
+        "risk": { "type": "number" },
+        "confidence": { "type": "number" }
+      }
+    }
+  }
+}
