@@ -2,9 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/intent-os/capability.schema.json",
   "title": "Capability (Canonical Capability Representation)",
-  "description": "Task 수행에 필요한 능력의 명명된 단위. Resource 중립적으로 정의되며 Taxonomy에 canonical id로 등록된다. Entity 006 명세(entities/e006-capability.md) 참조.",
+  "description": "Task 수행에 필요한 능력의 명명된 단위. 누가 제공하는지와 무관하게 정의되며, Task와 Resource는 오직 Capability를 통해서만 만난다 (Principle 02 — Capability Before Resource). 본 스키마는 Capability의 '개념과 의미 관계'를 정의한다. 이름·계층·별칭·난이도·측정 정의의 권위는 capability-taxonomy.schema.json(Entity 006-A)이다. Entity 006 명세(entities/e006-capability.md) 참조.",
   "type": "object",
-  "required": ["capability_id", "display_name"],
+  "required": [
+    "capability_id",
+    "display_name"
+  ],
   "properties": {
     "capability_id": {
       "type": "string",
@@ -23,7 +26,9 @@
     "aliases": {
       "type": "array",
       "description": "자연어 매핑용 동의어. 예: '카피 작성', 'ad copy', '광고 문구'",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "description": {
       "type": "string",
@@ -31,10 +36,13 @@
     },
     "related": {
       "type": "array",
-      "description": "Capability Graph 관계. 계층(parent) 외의 연결을 표현한다.",
+      "description": "의미 관계 그래프. 계층(parent)은 포함 관계, related는 의존·보완 관계이며 둘을 섞지 않는다 (Rule CP-006). REQUIRES와 COMPOSES는 순환할 수 없다 (INV-CP-04) — 매칭이 무한 루프에 빠진다. SUPPORTS는 상호 참조가 가능하다.",
       "items": {
         "type": "object",
-        "required": ["capability_id", "relation"],
+        "required": [
+          "capability_id",
+          "relation"
+        ],
         "properties": {
           "capability_id": {
             "type": "string",
@@ -43,7 +51,11 @@
           "relation": {
             "type": "string",
             "description": "REQUIRES: 이 능력 없이는 성립하지 않는다. SUPPORTS: 있으면 품질이 올라간다. COMPOSES: 여러 능력이 합쳐져 상위 능력을 이룬다.",
-            "enum": ["REQUIRES", "SUPPORTS", "COMPOSES"]
+            "enum": [
+              "REQUIRES",
+              "SUPPORTS",
+              "COMPOSES"
+            ]
           }
         }
       }
@@ -52,38 +64,72 @@
       "type": "object",
       "description": "숙련도 표현. Score(0~100)와 Level(L1~L5)을 함께 사용한다. Entity 006 §7 참조.",
       "properties": {
-        "min_score": { "type": "number", "minimum": 0, "maximum": 100 },
-        "max_score": { "type": "number", "minimum": 0, "maximum": 100 },
+        "min_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "max_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
         "levels": {
           "type": "array",
           "description": "이산 등급 정의. 기본값: L1 Basic(0-39), L2 Functional(40-59), L3 Proficient(60-79), L4 Advanced(80-92), L5 Expert(93-100)",
           "items": {
             "type": "object",
-            "required": ["level", "name"],
+            "required": [
+              "level",
+              "name"
+            ],
             "properties": {
-              "level": { "type": "string", "enum": ["L1", "L2", "L3", "L4", "L5"] },
-              "name": { "type": "string" },
-              "score_min": { "type": "number", "minimum": 0, "maximum": 100 },
-              "score_max": { "type": "number", "minimum": 0, "maximum": 100 }
+              "level": {
+                "type": "string",
+                "enum": [
+                  "L1",
+                  "L2",
+                  "L3",
+                  "L4",
+                  "L5"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "score_min": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "score_max": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              }
             }
           }
         }
       }
     },
-    "measurement": {
-      "type": "array",
-      "description": "관찰 방법 (Rule C-003 — 측정 불가능한 Capability는 등록할 수 없다). 예: 'output_quality', 'conversion_rate', 'user_feedback'",
-      "items": { "type": "string" }
-    },
     "status": {
       "type": "string",
-      "description": "Taxonomy 내 상태. Draft: 등록 직후, Active: 실사용 검증됨, Deprecated: 사용 중단 예정, Merged: 다른 id로 병합됨",
-      "enum": ["Draft", "Active", "Deprecated", "Merged"]
+      "description": "Capability 노드의 수명. 측정 정의가 완비되어야 Active가 된다 (INV-CP-03) — 측정할 수 없는 능력을 Task가 요구하면 평가가 불가능해진다. Deprecated는 삭제되지 않는다 (INV-CP-05): 과거 Decision과 Resource Profile이 그 이름을 참조하고 있다.",
+      "enum": [
+        "Proposed",
+        "Draft",
+        "Active",
+        "Deprecated",
+        "Retired",
+        "Rejected"
+      ]
     },
     "merged_into": {
-      "type": "string",
-      "description": "status가 Merged일 때 병합된 대상 canonical id",
-      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$"
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Deprecated 시 대체 capability_id. 이름은 영구 예약되며 재사용하지 않는다."
     }
   }
 }

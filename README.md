@@ -60,32 +60,38 @@ Answer                      Resource → Execution → Outcome
 
 25개 Core Entity를 RFC/ISO 표준 수준으로 정의하는 명세. **모든 문서가 12개 필수 섹션을 강제**하므로 구현 시 해석의 여지가 거의 없다.
 
+> **Entity 목록은 v2.0에서 동결되었다.** 25개 + 구조 문서 3개. 추가하려면 5개 심사 질문을 통과하고 major 버전을 올려야 한다.
+> → [entities/e000b-entity-registry.md](entities/e000b-entity-registry.md)
+>
+> 전 Entity가 **L2**(12개 섹션 + JSON Schema)에 도달했다. → [준수 현황](entities/README.md)
+
 > Entity 정의만으로는 운영체제가 되지 않는다. Entity 사이의 **관계와 불변식**이 함께 정의되어야 한다.
 > → [entities/e000a-entity-relationships.md](entities/e000a-entity-relationships.md)
 
 | Entity | 이름 | 문서 | 상태 |
 |---|---|---|---|
-| — | Entity 개요 — 25개 Core Entity, Entity/Process/Runtime State 구분 | [entities/README.md](entities/README.md) | v2.0 Draft |
+| — | Entity 개요 — 25개 Core Entity, 준수 현황, 알려진 정합성 문제 | [entities/README.md](entities/README.md) | v3.0 Draft |
 | 000 | **Specification Format** — 12개 필수 섹션, 번호 규칙, 준수 등급 | [entities/e000-spec-format.md](entities/e000-spec-format.md) | v1.0 Draft |
 | 000-A | **Entity Relationships & Invariants** — Cardinality 전체표, 전역 불변식 16개 | [entities/e000a-entity-relationships.md](entities/e000a-entity-relationships.md) | v1.0 Draft |
-| 001 | Goal — 정의, 규칙, Formal Grammar, Goal Types | [entities/e001-goal.md](entities/e001-goal.md) | v2.0 Draft |
-| 001-A | Goal Graph — 관계, 계층, Score, Propagation, Invariants | [entities/e001a-goal-graph.md](entities/e001a-goal-graph.md) | v1.0 Draft |
+| 000-B | **Entity Registry** — 25개 목록 동결, 추가/폐기 절차, Entity가 아닌 것 | [entities/e000b-entity-registry.md](entities/e000b-entity-registry.md) | **v2.0 FROZEN** |
+| 001 | Goal — 정의, 규칙, Formal Grammar, Goal Types | [entities/e001-goal.md](entities/e001-goal.md) | v3.0 Draft |
+| 001-A | Goal Graph — 6종 관계, 계층, Score, Propagation | [entities/e001a-goal-graph.md](entities/e001a-goal-graph.md) | v2.0 Draft |
 | 001-B | Goal JSON Schema — CGR v2 필드 정의, v1→v2 마이그레이션 | [entities/e001b-goal-schema.md](entities/e001b-goal-schema.md) | v2.0 Draft |
 | 001-C | Goal State Machine — 12개 상태, 상태별 Action, Guard | [entities/e001c-goal-state-machine.md](entities/e001c-goal-state-machine.md) | v2.0 Draft |
 | 001-D | Goal Validation Rules — 검증 파이프라인, Completeness, Confidence | [entities/e001d-goal-validation.md](entities/e001d-goal-validation.md) | v2.0 Draft |
-| 002 | Intent — Goal과 Task 사이의 중간 계층, 해결 영역, Confidence | [entities/e002-intent.md](entities/e002-intent.md) | v1.0 Draft |
-| 003 | Context — Scope 계층, Freshness와 TTL, 수집·갱신 규칙 | [entities/e003-context.md](entities/e003-context.md) | v1.0 Draft |
-| 004 | Constraint — Hard/Soft 구분, 7개 유형, 충돌과 완화 | [entities/e004-constraint.md](entities/e004-constraint.md) | v1.0 Draft |
-| 005 | Task — 분해 규칙, 상태 머신, 실패 처리 | [entities/e005-task.md](entities/e005-task.md) | v1.0 Draft |
-| 005-A | ↳ Task Graph — 임계 경로, SPOF, 재계획 시 보존 규칙 | [entities/e005a-task-graph.md](entities/e005a-task-graph.md) | v1.0 Draft |
-| 006 | Capability — 명명 규칙, Matching, Level | [entities/e006-capability.md](entities/e006-capability.md) | v1.0 Draft |
+| 002 | Intent — Goal과 Task 사이의 중간 계층, 해결 영역, Confidence | [entities/e002-intent.md](entities/e002-intent.md) | v2.0 Draft |
+| 003 | Context — Scope 계층, Freshness와 TTL, 수집·갱신 규칙 | [entities/e003-context.md](entities/e003-context.md) | v2.0 Draft |
+| 004 | Constraint — Hard/Soft 구분, 6개 유형, 충돌과 완화 | [entities/e004-constraint.md](entities/e004-constraint.md) | v2.0 Draft |
+| 005 | Task — 분해 규칙, 상태 머신, 실패 처리 | [entities/e005-task.md](entities/e005-task.md) | v2.0 Draft |
+| 005-A | ↳ Task Graph — 임계 경로, SPOF, 재계획 시 보존 규칙 | [entities/e005a-task-graph.md](entities/e005a-task-graph.md) | v2.0 Draft |
+| 006 | Capability — 명명 규칙, Matching, Level | [entities/e006-capability.md](entities/e006-capability.md) | v2.0 Draft |
 | 006-A | ↳ Capability Taxonomy — 이름공간, 별칭, 난이도와 측정 정의 | [entities/e006a-capability-taxonomy.md](entities/e006a-capability-taxonomy.md) | v1.0 Draft |
-| 007 | Resource — AI/Tool/Human 동일 취급, 등록과 Drift | [entities/e007-resource.md](entities/e007-resource.md) | v1.0 Draft |
-| 008 | Plan — Planner 산출물, Versioning, Replanning 트리거 | [entities/e008-plan.md](entities/e008-plan.md) | v1.0 Draft |
-| 009 | Decision — 감사 가능한 선택 기록, Rationale, 불변성 | [entities/e009-decision.md](entities/e009-decision.md) | v1.0 Draft |
-| 010 | Memory — Episodic/Semantic/Procedural, Scope, Decay | [entities/e010-memory.md](entities/e010-memory.md) | v1.0 Draft |
-| 011 | Knowledge — Memory로부터의 승격, Confidence와 반증 | [entities/e011-knowledge.md](entities/e011-knowledge.md) | v1.0 Draft |
-| 012 | Feedback — Explicit/Implicit/Systemic, 라우팅, Feedback Loop | [entities/e012-feedback.md](entities/e012-feedback.md) | v1.0 Draft |
+| 007 | Resource — AI/Tool/Human 동일 취급, 등록과 Drift | [entities/e007-resource.md](entities/e007-resource.md) | v2.0 Draft |
+| 008 | Plan — Planner 산출물, Versioning, Replanning 트리거 | [entities/e008-plan.md](entities/e008-plan.md) | v2.0 Draft |
+| 009 | Decision — 감사 가능한 선택 기록, Rationale, 불변성 | [entities/e009-decision.md](entities/e009-decision.md) | v2.0 Draft |
+| 010 | Memory — Episodic/Semantic/Procedural, Scope, Decay | [entities/e010-memory.md](entities/e010-memory.md) | v2.0 Draft |
+| 011 | Knowledge — Memory로부터의 승격, Confidence와 반증 | [entities/e011-knowledge.md](entities/e011-knowledge.md) | v2.0 Draft |
+| 012 | Feedback — Explicit/Implicit/Systemic, 라우팅, Feedback Loop | [entities/e012-feedback.md](entities/e012-feedback.md) | v2.0 Draft |
 | 013 | Execution — Task 한 번의 시도, 재시도 체인, 실패 분류 | [entities/e013-execution.md](entities/e013-execution.md) | v1.0 Draft |
 | 014 | Outcome — 측정값만 담는 불변 기록, goal_progress 델타 | [entities/e014-outcome.md](entities/e014-outcome.md) | v1.0 Draft |
 | 015 | Evaluation — 4축 판정, **결과 품질과 결정 품질의 분리** | [entities/e015-evaluation.md](entities/e015-evaluation.md) | v1.0 Draft |

@@ -2,17 +2,18 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/intent-os/resource.schema.json",
   "title": "Resource",
-  "description": "Capability를 제공하는 실행 주체. AI, Tool, Human, Hybrid를 동일하게 취급한다 (Principle 03 — Resource Agnostic). Entity 007 명세(entities/e007-resource.md) 참조.",
+  "description": "Capability를 제공하는 실행 주체. AI, Tool, Human, Hybrid를 동일하게 취급한다 (Principle 03 — Resource Agnostic). v2.0에서 '무엇인가'(선언)와 '얼마나 잘하는가'(관측)를 분리했다 — 관측값은 resource-profile.schema.json에 있다. Entity 007 명세(entities/e007-resource.md) 참조.",
   "type": "object",
-  "required": ["id", "name", "type", "capabilities"],
+  "required": ["id", "name", "type", "declared_capabilities"],
   "properties": {
     "id": {
       "type": "string",
-      "description": "Registry 내 고유 식별자. 'provider:name' 네임스페이스 권장. 예: 'anthropic:claude-5', 'human:copywriter_kim'"
+      "description": "Registry 내 고유 식별자. 'provider:name' 네임스페이스 권장. 재사용하지 않는다 — 과거 Decision의 selection이 이 id를 가리키고 있다 (INV-R-03). 예: 'anthropic:claude-5', 'human:copywriter_kim'"
     },
     "name": { "type": "string" },
     "type": {
       "type": "string",
+      "description": "agent 타입은 '외부' 에이전트 제품(블랙박스)이다. Intent OS가 결정 루프를 소유하면 Agent Entity(023)이지 Resource가 아니다. tool/api 타입의 상세는 Entity 024가 다룬다.",
       "enum": [
         "llm",
         "image_model",
@@ -28,53 +29,59 @@
     },
     "provider": { "type": "string" },
     "version": { "type": "string" },
-    "capabilities": {
+    "declared_capabilities": {
       "type": "array",
-      "description": "제공하는 Capability 목록 (Rule R-001 — 최소 하나 필요). name은 canonical capability id를 권장한다.",
+      "description": "선언한 Capability 목록 (Rule R-001 — 최소 하나 필요). capability_id는 Capability Taxonomy(006-A)의 표준 id여야 한다. 선언은 신뢰의 시작점일 뿐이며 관측으로 계속 보정된다 (Rule R-002). 인간 Resource는 declared_score를 갖지 않는다 — 자기 점수를 선언하지 않는다.",
       "items": {
         "type": "object",
-        "required": ["name"],
+        "required": ["capability_id"],
         "properties": {
-          "name": { "type": "string" },
-          "declared_score": { "type": "number", "minimum": 0, "maximum": 100 },
-          "observed_score": { "type": "number", "minimum": 0, "maximum": 100 },
-          "confidence": {
-            "type": "number",
-            "description": "observed_score의 신뢰도 (0~1). Intent OS는 Score보다 Confidence를 더 중요하게 본다 (Volume 4-B §10).",
-            "minimum": 0,
-            "maximum": 1
-          }
+          "capability_id": {
+            "type": "string",
+            "description": "canonical capability id. 예: 'language.generation.copywriting'"
+          },
+          "declared_score": { "type": "number", "minimum": 0, "maximum": 100 }
         }
-      }
+      },
+      "minItems": 1
     },
-    "cost_model": { "type": "object" },
-    "performance": {
+    "published_cost_model": {
       "type": "object",
+      "description": "공표된 비용 구조 (Rule R-004). 실측 평균은 Resource Profile의 observed_avg_cost에 있다. 추정 불가한 Resource도 안분값을 제시해야 한다 — null은 비용 0으로 오인되어 Utility를 왜곡한다.",
       "properties": {
-        "reliability": { "type": "number", "minimum": 0, "maximum": 1 },
-        "latency_ms": { "type": "number" },
-        "success_rate": {
-          "type": "number",
-          "description": "실사용 성공률 (0~1). Benchmark < Production Data.",
-          "minimum": 0,
-          "maximum": 1
-        },
-        "drift_detected": {
-          "type": "boolean",
-          "description": "Expected vs Actual 차이가 임계값을 초과한 상태 (Volume 4-B §13 Drift Detection)"
-        },
-        "last_observed_at": {
-          "type": "string",
-          "description": "마지막 관찰 시각. 오래된 관찰은 가중치가 낮아진다 (Capability Decay).",
-          "format": "date-time"
-        }
+        "unit": { "type": "string", "enum": ["token", "task", "hour", "call", "flat"] },
+        "rates": { "type": "object" }
       }
     },
-    "limitations": { "type": "array", "items": { "type": "string" } },
-    "availability": { "type": "string" },
+    "declared_availability": {
+      "type": "string",
+      "description": "선언된 가용 시간. 실측 uptime은 Resource Profile에 있다. 예: '24/7', '평일 10:00-19:00'"
+    },
+    "limitations": {
+      "type": "array",
+      "description": "알려진 제약. 예: '실시간 검색 불가', '주말 불가'",
+      "items": { "type": "string" }
+    },
+    "adapter_ref": {
+      "type": "string",
+      "description": "Universal Resource Interface 어댑터 참조 (Rule R-003). 인간 Resource도 요청 전달·결과 회수 어댑터가 있으면 동일하게 취급된다."
+    },
+    "data_residency": {
+      "type": "string",
+      "description": "데이터 처리 지역. Policy가 판정할 수 있는 값이어야 한다 (Rule POL-002). 예: 'kr', 'us-east'"
+    },
+    "profile_id": {
+      "type": "string",
+      "description": "Resource Profile(025) 참조. Active 상태의 Resource는 반드시 Profile을 가진다 (INV-R-01, INV-15) — Profile이 없으면 cost/latency 추정이 불가능해 Utility를 계산할 수 없다."
+    },
+    "genome_ref": {
+      "type": ["string", "null"],
+      "description": "Resource Genome(Volume 4-C) 참조. Genome은 행동 특성, Profile은 수치 측정값이다."
+    },
     "lifecycle": {
       "type": "string",
-      "enum": ["Registered", "Evaluating", "Active", "Optimized", "Deprecated", "Removed"]
+      "description": "Resource의 lifecycle은 Profile의 status를 따라간다. Profile이 Degraded로 확정되면 Resource도 Degraded가 된다. Removed여도 이력은 삭제하지 않는다 (INV-R-05).",
+      "enum": ["Registered", "Evaluating", "Active", "Optimized", "Degraded", "Deprecated", "Removed"]
     }
   }
 }

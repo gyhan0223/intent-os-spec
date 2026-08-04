@@ -66,7 +66,10 @@
       "type": "object",
       "description": "Utility 공식(Volume 4-A §8) 계산 결과. 당시 가중치(Dynamic Weight)를 함께 동결한다.",
       "properties": {
-        "selected_utility": { "type": "number" },
+        "selected_utility": {
+          "type": ["number", "null"],
+          "description": "forced_action이 true면 비교 대상이 없으므로 null이다."
+        },
         "weights": {
           "type": "object",
           "description": "판단 시점의 가중치. 예: { quality: 0.35, success: 0.25, reliability: 0.15, cost: 0.15, latency: 0.10 }",
@@ -109,8 +112,20 @@
     },
     "forced_action": {
       "type": "boolean",
-      "description": "대안 없이 강제된 선택인 경우 true. 기본값 false.",
+      "description": "대안 없이 강제된 선택인 경우 true. 이때 alternatives_considered는 빈 배열이고 selected_utility는 null이다. 기록 자체를 생략하지는 않는다 — '선택의 여지가 없었다'는 사실이 시스템의 공백을 드러내는 정보다 (INV-02 예외 조항).",
       "default": false
+    },
+    "policy_evaluation": {
+      "type": "object",
+      "description": "pre_decision 지점의 Policy 판정 결과 (Rule D-007). 판정 시점의 Policy 버전을 함께 기록해야 나중에 Policy가 개정되어도 '그때는 이 버전으로 판정했다'를 설명할 수 있다.",
+      "properties": {
+        "evaluated_at": { "type": "string", "format": "date-time" },
+        "point": { "type": "string" },
+        "matched_policies": { "type": "array", "items": { "type": "string" } },
+        "policy_versions": { "type": "object" },
+        "exceptions_used": { "type": "array", "items": { "type": "string" } },
+        "result": { "type": "string", "enum": ["allow", "deny", "require_approval"] }
+      }
     },
     "rejection_reason": {
       "type": "string",

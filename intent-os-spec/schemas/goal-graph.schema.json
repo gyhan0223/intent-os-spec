@@ -2,23 +2,24 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/intent-os/goal-graph.schema.json",
   "title": "Goal Graph",
-  "description": "모든 Goal의 관계를 표현하는 최상위 데이터 구조 GG = (V, E). DAG여야 하며, 순환은 Workflow Graph / Control Loop로 별도 표현한다. Entity 001-A 명세(entities/e001a-goal-graph.md) 참조.",
+  "description": "모든 Goal의 관계를 표현하는 최상위 데이터 구조 GG = (V, E). DAG여야 하며(INV-GG-01), 순환 운영은 Workflow(022)의 명시적 loop로 표현한다. Planner의 단일 입력이다 — Planner는 Goal 하나가 아니라 Goal Graph 전체를 받아 실행 구조를 생성하는 컴파일러다. Entity 001-A 명세(entities/e001a-goal-graph.md) 참조.",
   "type": "object",
   "required": ["graph_id", "nodes", "edges"],
   "properties": {
     "graph_id": { "type": "string" },
-    "root_goal_id": {
+    "owner_scope": {
       "type": "string",
-      "description": "최상위 Root Goal. 모든 Goal은 최소 하나의 상위 목적 또는 Root Goal과 연결되어야 한다 (Invariant 2)."
+      "description": "이 그래프의 소유 범위. 예: 'org:hongdae_academy', 'user:대표'"
     },
+    "version": { "type": "integer", "minimum": 1 },
     "nodes": {
       "type": "array",
-      "description": "Goal 노드 집합 V. 각 노드는 goal.schema.json의 Canonical Goal Representation을 따른다.",
-      "items": { "$ref": "goal.schema.json" }
+      "description": "Goal 노드 집합 V. Goal 객체를 복사하지 않고 goal_id로 참조한다 — 복사하면 Goal 저장소와 그래프가 두 개의 진실 원천이 된다.",
+      "items": { "type": "string" }
     },
     "edges": {
       "type": "array",
-      "description": "Goal 관계 집합 E. 방향성과 의미를 가진다 (Invariant 3). 순환 의존은 허용하지 않는다 (Invariant 1).",
+      "description": "Goal 관계 집합 E. 유형과 방향을 가진다 (INV-GG-03). 순환은 허용하지 않는다 (INV-GG-01). CONFLICTS_WITH는 유일한 무방향 관계이며 순환 검사에서 제외된다.",
       "items": {
         "type": "object",
         "required": ["from", "to", "relationship"],
@@ -27,6 +28,7 @@
           "to": { "type": "string", "description": "도착 Goal의 goal_id" },
           "relationship": {
             "type": "string",
+            "description": "DEPENDS_ON: 없으면 어렵다(연기 가능). REQUIRES: 없으면 불가능하다(실행 차단, INV-GG-05). ENABLES: 다른 Goal을 가능하게 한다. SUPPORTS: 도움은 되나 필수는 아니다. CONFLICTS_WITH: 충돌(무방향, 자동 해소 금지 — INV-GG-08). BLOCKS: 완전히 막는다(대상은 Suspended — INV-GG-06).",
             "enum": [
               "DEPENDS_ON",
               "ENABLES",
@@ -38,14 +40,40 @@
           },
           "weight": {
             "type": "number",
-            "description": "관계의 강도. Goal Propagation 계산에 사용된다."
+            "description": "관계의 강도. Goal Propagation의 영향도 계산에 사용된다."
           }
+        }
+      }
+    },
+    "root_goals": {
+      "type": "array",
+      "description": "상위가 없는 Goal. 고립된 Goal은 관리하지 않지만 Root는 예외다 (Rule GG-003).",
+      "items": { "type": "string" }
+    },
+    "analysis": {
+      "type": "object",
+      "description": "그래프 구조에서 파생되는 값. 간선 추가 시마다 재계산된다 (§9.1).",
+      "properties": {
+        "blocked_goals": {
+          "type": "array",
+          "description": "BLOCKS 간선의 대상. Suspended로 전이된다.",
+          "items": { "type": "string" }
+        },
+        "conflict_pairs": {
+          "type": "array",
+          "description": "CONFLICTS_WITH 쌍. 시스템이 자동 해소하지 않고 트레이드오프를 제시한다.",
+          "items": { "type": "array", "items": { "type": "string" } }
+        },
+        "critical_goals": {
+          "type": "array",
+          "description": "ENABLES/SUPPORTS 하위 도달 집합이 큰 Goal. Score의 Impact 항이 상향된다 (Rule GG-006).",
+          "items": { "type": "string" }
         }
       }
     },
     "weights": {
       "type": "object",
-      "description": "Goal Score 계산 가중치: Score = w_p*P + w_i*I + w_u*U - w_r*R + w_c*C",
+      "description": "Goal Score 계산 가중치: Score = w_p*P + w_i*I + w_u*U - w_r*R + w_c*C. 가중치의 출처(동적 vs 조직 정책 고정)는 미결이다.",
       "properties": {
         "priority": { "type": "number" },
         "impact": { "type": "number" },
@@ -53,6 +81,11 @@
         "risk": { "type": "number" },
         "confidence": { "type": "number" }
       }
+    },
+    "status": {
+      "type": "string",
+      "description": "Inconsistent는 Propagation이 진행 중이라 일부 Goal이 낡은 전제 위에 있는 상태다. 이 상태에서는 새 Plan을 생성하지 않는다 — 곧 폐기될 계획을 만들게 된다.",
+      "enum": ["Empty", "Active", "Inconsistent", "Archived"]
     }
   }
 }

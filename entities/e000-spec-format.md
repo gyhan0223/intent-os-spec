@@ -108,11 +108,13 @@ RFC 수준 명세의 핵심 10개 섹션에, 이 저장소의 관례 2개(Attrib
 | 009 Decision | `D` | 023 Agent | `AGT` |
 | 010 Memory | `M` | 024 Tool | `TOL` |
 | 011 Knowledge | `K` | 025 Resource Profile | `RPF` |
-| 012 Feedback | `F` | 005-A Task Graph | `TG` |
-| 013 Execution | `EXE` | 006-A Capability Taxonomy | `CT` |
-| 014 Outcome | `OUT` | | |
+| 012 Feedback | `F` | 001-A Goal Graph | `GG` |
+| 013 Execution | `EXE` | 005-A Task Graph | `TG` |
+| 014 Outcome | `OUT` | 006-A Capability Taxonomy | `CT` |
 
 **Prefix는 영구 예약이다.** Entity가 폐기되어도 Prefix는 재사용하지 않는다. 옛 문서를 참조하는 링크가 다른 의미로 해석되면 안 되기 때문이다.
+
+> **v1.0 정정:** Capability의 Prefix가 `C`에서 `CP`로 바뀌었다. [Context](e003-context.md)가 이미 `C`를 쓰고 있어 충돌했기 때문이다. 목록 동결([e000b](e000b-entity-registry.md)) 시점에 발견해 정정했다.
 
 ### Invariant 번호
 

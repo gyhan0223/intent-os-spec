@@ -20,8 +20,8 @@
     },
     "status": {
       "type": "string",
-      "description": "Plan Lifecycle 상태. Active는 Goal당 동시에 하나만 존재한다 (Rule P-006).",
-      "enum": ["Draft", "Approved", "Active", "Superseded", "Completed", "Aborted"]
+      "description": "Plan Lifecycle 상태. Active는 Goal당 동시에 하나만 존재한다 (Rule P-006, INV-P-01). Suspended는 가정 무효화·예산 초과·Critical Risk 발생으로 실행이 중지된 상태다.",
+      "enum": ["Draft", "Approved", "Active", "Suspended", "Superseded", "Completed", "Aborted"]
     },
     "tasks": {
       "type": "array",
@@ -79,11 +79,29 @@
     },
     "constraint_margin": {
       "type": "object",
-      "description": "제약 대비 여유. 예: 예산 여유 20만원, 기간 여유 1주"
+      "description": "제약 대비 여유. 여유가 20% 미만인 항목은 Risk 자동 식별의 입력이 된다. 예: 예산 여유 20만원, 기간 여유 1주"
     },
-    "assumptions": {
+    "task_graph_id": {
+      "type": "string",
+      "description": "이 Plan의 의존 구조 (Entity 005-A). Plan 1:1 Task Graph."
+    },
+    "workflow_id": {
+      "type": ["string", "null"],
+      "description": "인스턴스화한 Workflow (Entity 022). 버전 고정 형식. 예: 'wf_seasonal_campaign@2.1'. Workflow 없이 만들어지는 Plan도 있다."
+    },
+    "assumption_ids": {
       "type": "array",
-      "description": "이 Plan이 성립하는 전제 (Rule P-004). 가정이 깨지면 Replanning이 트리거된다. 예: '광고 예산 300만원 유지'",
+      "description": "이 Plan이 성립하는 전제 (Rule P-004). Assumption Entity(017) 참조. Invalidated 가정을 가진 Plan은 Active일 수 없다 (INV-P-03). v1.0의 문자열 배열 assumptions를 대체한다 — 문자열로는 반증 조건·검증 주기·조치를 담을 수 없다.",
+      "items": { "type": "string" }
+    },
+    "risk_ids": {
+      "type": "array",
+      "description": "식별된 위험 (Rule P-007). Risk Entity(018) 참조. severity High 이상에 대응 계획이 없으면 Active가 될 수 없다 (INV-P-04).",
+      "items": { "type": "string" }
+    },
+    "constraint_ids": {
+      "type": "array",
+      "description": "적용되는 Constraint(004) 참조. Hard Constraint 위반 시 Active 전이가 차단된다 (INV-P-05).",
       "items": { "type": "string" }
     },
     "alternative_plan_ids": {

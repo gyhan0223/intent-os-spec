@@ -9,7 +9,11 @@
     "id": { "type": "string" },
     "goal_id": {
       "type": "string",
-      "description": "이 Task가 기여하는 Goal의 id (Rule T-005 — 고립된 Task는 관리하지 않는다)"
+      "description": "이 Task가 기여하는 Goal의 id (Rule T-005 — 고립된 Task는 관리하지 않는다). 단수다 — 하나의 Task는 두 Goal에 기여하지 않는다."
+    },
+    "plan_id": {
+      "type": "string",
+      "description": "소속 Plan (Rule T-006). Task는 Plan 밖에서 독립적으로 실행되지 않는다 (INV-P-07). 다른 Plan의 결과 재사용은 Artifact 참조로 한다."
     },
     "objective": {
       "type": "string",
@@ -81,9 +85,14 @@
       "type": "string",
       "enum": ["Low", "Medium", "High", "Critical"]
     },
+    "irreversible": {
+      "type": "boolean",
+      "description": "되돌릴 수 없는 작업인가 (광고 집행·메시지 발송·외부 공개). true면 Risk의 impact가 한 단계 상향되고(Rule RSK-008), Policy 승인 게이트를 반드시 통과해야 하며(INV-T-08), retry_policy.max_retries는 0이어야 한다. 실행 시점에 판단하면 이미 늦다.",
+      "default": false
+    },
     "retry_policy": {
       "type": "object",
-      "description": "실패 시 행동 (Entity 005 §7 실패 처리와 재시도)",
+      "description": "실패 시 행동 (Rule T-007, Entity 005 §6.1). 원인 분류는 Execution의 failure_class가 제공한다.",
       "properties": {
         "max_retries": { "type": "integer", "minimum": 0 },
         "on_failure": {
@@ -104,7 +113,8 @@
     },
     "state": {
       "type": "string",
-      "enum": ["Pending", "Assigned", "Running", "Completed", "Evaluated", "Failed"]
+      "description": "Completed는 '산출물이 나왔다'는 뜻이지 '잘 됐다'는 뜻이 아니다 — 성공 판정은 Evaluated에서 한다. Aborted는 재시도 소진(INV-T-07) 또는 취소, Blocked는 상류 실패 전파로 실행 불가한 상태다.",
+      "enum": ["Pending", "Assigned", "Running", "Completed", "Evaluated", "Failed", "Aborted", "Blocked", "Orphaned"]
     }
   }
 }

@@ -2,20 +2,37 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/intent-os/memory.schema.json",
   "title": "Memory (Canonical Memory Representation)",
-  "description": "시스템이 나중에 회상할 수 있도록 영속화된 경험의 기록. 실행, 결정, 결과가 그 대상이다. 맥락(Goal/Decision/Context) 없는 결과는 Memory가 될 수 없다. Entity 010 명세(entities/e010-memory.md) 참조.",
+  "description": "나중에 회상할 수 있도록 영속화된 경험의 기록. 결정·실행·판정이 맥락과 함께 묶인 단위이며, Learning(Process)이 읽는 재료다. 직접 입력은 Outcome이 아니라 Evaluation이다 — 무엇이 좋은 결과였는지 판정되지 않은 기록은 학습 재료가 되지 못한다. Entity 010 명세(entities/e010-memory.md) 참조.",
   "type": "object",
-  "required": ["memory_id", "memory_type", "scope", "content", "source", "created_at"],
+  "required": [
+    "memory_id",
+    "memory_type",
+    "scope",
+    "goal_ref",
+    "content",
+    "created_at"
+  ],
   "properties": {
-    "memory_id": { "type": "string" },
+    "memory_id": {
+      "type": "string"
+    },
     "memory_type": {
       "type": "string",
       "description": "Memory의 타입. Episodic: 개별 실행 기록 / Semantic: 일반화된 사실(검증 전 Knowledge 후보) / Procedural: 성공한 절차·전략",
-      "enum": ["Episodic", "Semantic", "Procedural"]
+      "enum": [
+        "Episodic",
+        "Semantic",
+        "Procedural"
+      ]
     },
     "scope": {
       "type": "string",
-      "description": "적용 범위. 생성 시 가장 좁은 Scope로 시작하며, 확장은 검증과 익명화를 거쳐야 한다.",
-      "enum": ["Goal-level", "User-level", "Global"]
+      "description": "적용 범위. 가장 좁은 Scope로 시작하며 확장은 패턴 검증과 익명화를 거쳐야 한다 (INV-M-04). 하위 Scope Memory를 다른 사용자의 Decision에 사용할 수 없다 (INV-M-05).",
+      "enum": [
+        "Goal-level",
+        "User-level",
+        "Global"
+      ]
     },
     "goal_ref": {
       "type": "string",
@@ -27,8 +44,12 @@
     },
     "content": {
       "type": "object",
-      "description": "경험의 본문. 결과물이 아니라 '왜 이 선택을 했고, 결과가 어땠는가'를 기록한다 (Rule M-001).",
-      "required": ["situation", "action", "result"],
+      "description": "상황·행동·결과 (Rule M-001). 맥락 없는 결과는 Memory가 될 수 없다 — 저장해야 하는 것은 결과물이 아니라 '왜 이 선택을 했고 결과가 어땠는가'이다. 실패 경험도 반드시 기록한다 (Rule M-006, INV-M-07).",
+      "required": [
+        "situation",
+        "action",
+        "result"
+      ],
       "properties": {
         "situation": {
           "type": "string",
@@ -46,13 +67,9 @@
     },
     "confidence": {
       "type": "number",
-      "description": "이 기록의 신뢰도 (0~1). Decay가 반영된 Effective Confidence는 회상 시점에 별도 계산한다.",
+      "description": "이 기록의 신뢰도 (0~1). Decay가 반영된 Effective Confidence는 회상 시점에 계산한다. Decay는 confidence만 낮추고 기록을 지우지 않는다 (INV-M-06).",
       "minimum": 0,
       "maximum": 1
-    },
-    "source": {
-      "type": "string",
-      "description": "출처(Provenance). 어떤 Execution에서 나왔는가. 예: 'exec_2210' (Rule M-003)"
     },
     "created_at": {
       "type": "string",
@@ -69,10 +86,6 @@
       "description": "회상된 횟수. 자주 회상되고 결과가 좋았던 Memory는 Knowledge 승격의 1차 후보다.",
       "minimum": 0
     },
-    "correction_of": {
-      "type": "string",
-      "description": "이 Memory가 정정하는 원본 Memory의 ID. 원본은 수정하지 않고 정정 Memory를 새로 기록한다 (Rule M-002)."
-    },
     "status": {
       "type": "string",
       "description": "Memory Lifecycle 상태",
@@ -86,6 +99,39 @@
         "Archived",
         "Deleted"
       ]
+    },
+    "execution_ref": {
+      "type": "string",
+      "description": "출처(Provenance)의 시작점 (Rule M-003). 이 참조를 따라가면 Decision → Task → Goal에 도달해야 한다 (INV-M-02). 예: 'exe_220'"
+    },
+    "evaluation_ref": {
+      "type": "string",
+      "description": "이 경험을 판정한 Evaluation(015). Evaluation이 Skipped면 Memory를 만들지 않는다."
+    },
+    "outcome_quality": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "결과 품질 (Rule M-007). Evaluation의 quality를 그대로 보존한다.",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "decision_quality": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "결정 품질 (Rule M-007). outcome_quality와 독립적으로 보존한다 — 결과만 저장하면 '좋은 결정, 나쁜 운' 사례에서 시스템이 잘못 학습한다.",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "corrects": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "정정 대상 Memory ID (Rule M-002). Memory는 수정하지 않고 정정 기록을 새로 만들어 연결한다 (INV-M-01)."
     }
   }
 }

@@ -1,6 +1,6 @@
 # Entity Specification
 
-- **Version:** v2.0 Draft
+- **Version:** v3.0 Draft
 - **Status:** Core Specification
 - **Last Updated:** 2026-08-04
 
@@ -100,29 +100,30 @@ Entity 명세는 PRD 수준이 아니라 **RFC / ISO 표준** 수준으로 작�
 |---|---|---|---|
 | 000 | **Specification Format** — 12개 필수 섹션, 번호 규칙, 준수 등급 | [e000-spec-format.md](e000-spec-format.md) | v1.0 Draft |
 | 000-A | **Entity Relationships & Invariants** — Cardinality 전체표, 전역 불변식 16개 | [e000a-entity-relationships.md](e000a-entity-relationships.md) | v1.0 Draft |
+| 000-B | **Entity Registry** — 25개 목록 **동결**, 추가/폐기 절차, Entity가 아닌 것 | [e000b-entity-registry.md](e000b-entity-registry.md) | **v2.0 FROZEN** |
 
 ### Core Entity
 
 | 번호 | 이름 | 문서 | 상태 |
 |---|---|---|---|
-| 001 | Goal — Definition | [e001-goal.md](e001-goal.md) | v2.0 Draft |
-| 001-A | ↳ Goal Graph | [e001a-goal-graph.md](e001a-goal-graph.md) | v1.0 Draft |
+| 001 | Goal — Definition | [e001-goal.md](e001-goal.md) | v3.0 Draft |
+| 001-A | ↳ Goal Graph — 6종 관계, Score, Propagation | [e001a-goal-graph.md](e001a-goal-graph.md) | v2.0 Draft |
 | 001-B | ↳ Goal JSON Schema (CGR v2) | [e001b-goal-schema.md](e001b-goal-schema.md) | v2.0 Draft |
 | 001-C | ↳ Goal State Machine | [e001c-goal-state-machine.md](e001c-goal-state-machine.md) | v2.0 Draft |
 | 001-D | ↳ Goal Validation Rules | [e001d-goal-validation.md](e001d-goal-validation.md) | v2.0 Draft |
-| 002 | Intent | [e002-intent.md](e002-intent.md) | v1.0 Draft |
-| 003 | Context | [e003-context.md](e003-context.md) | v1.0 Draft |
-| 004 | Constraint | [e004-constraint.md](e004-constraint.md) | v1.0 Draft |
-| 005 | Task | [e005-task.md](e005-task.md) | v1.0 Draft |
-| 005-A | ↳ Task Graph — 임계 경로, SPOF, 재계획 시 보존 규칙 | [e005a-task-graph.md](e005a-task-graph.md) | v1.0 Draft |
-| 006 | Capability | [e006-capability.md](e006-capability.md) | v1.0 Draft |
+| 002 | Intent | [e002-intent.md](e002-intent.md) | v2.0 Draft |
+| 003 | Context | [e003-context.md](e003-context.md) | v2.0 Draft |
+| 004 | Constraint | [e004-constraint.md](e004-constraint.md) | v2.0 Draft |
+| 005 | Task | [e005-task.md](e005-task.md) | v2.0 Draft |
+| 005-A | ↳ Task Graph — 임계 경로, SPOF, 재계획 시 보존 규칙 | [e005a-task-graph.md](e005a-task-graph.md) | v2.0 Draft |
+| 006 | Capability | [e006-capability.md](e006-capability.md) | v2.0 Draft |
 | 006-A | ↳ Capability Taxonomy — 명명·매칭·별칭·측정 정의 | [e006a-capability-taxonomy.md](e006a-capability-taxonomy.md) | v1.0 Draft |
-| 007 | Resource | [e007-resource.md](e007-resource.md) | v1.0 Draft |
-| 008 | Plan | [e008-plan.md](e008-plan.md) | v1.0 Draft |
-| 009 | Decision | [e009-decision.md](e009-decision.md) | v1.0 Draft |
-| 010 | Memory | [e010-memory.md](e010-memory.md) | v1.0 Draft |
-| 011 | Knowledge | [e011-knowledge.md](e011-knowledge.md) | v1.0 Draft |
-| 012 | Feedback | [e012-feedback.md](e012-feedback.md) | v1.0 Draft |
+| 007 | Resource | [e007-resource.md](e007-resource.md) | v2.0 Draft |
+| 008 | Plan | [e008-plan.md](e008-plan.md) | v2.0 Draft |
+| 009 | Decision | [e009-decision.md](e009-decision.md) | v2.0 Draft |
+| 010 | Memory | [e010-memory.md](e010-memory.md) | v2.0 Draft |
+| 011 | Knowledge | [e011-knowledge.md](e011-knowledge.md) | v2.0 Draft |
+| 012 | Feedback | [e012-feedback.md](e012-feedback.md) | v2.0 Draft |
 | 013 | **Execution** — Task 한 번의 시도. 재시도마다 새 레코드 | [e013-execution.md](e013-execution.md) | v1.0 Draft |
 | 014 | **Outcome** — 실행이 낳은 것의 불변 측정 기록 | [e014-outcome.md](e014-outcome.md) | v1.0 Draft |
 | 015 | **Evaluation** — 결과 품질과 결정 품질의 분리 판정 | [e015-evaluation.md](e015-evaluation.md) | v1.0 Draft |
@@ -194,21 +195,34 @@ graph TD
 
 | 등급 | 조건 | 해당 문서 |
 |---|---|---|
-| **L2 — Specified** | 12개 섹션 전부 + JSON Schema | 013~025, 005-A, 006-A, 000, 000-A |
-| **L1 — Draft** | §1~§9 존재. 일부 섹션 미비 | 001~012, 001-A~D |
 | **L3 — Verified** | L2 + 검증기 + 예시 30개 이상 | 없음 |
+| **L2 — Specified** | 12개 섹션 전부 + JSON Schema | **전 Entity (001~025, 001-A, 005-A, 006-A) + 000, 000-A, 000-B** |
+| **L1 — Draft** | §1~§9 존재. 일부 섹션 미비 | 없음 |
 
-### 소급 적용 대상
+### 절 확장 문서 (형식 면제)
 
-Entity 001~012는 형식이 확정되기 전에 작성되었다. 대부분 **§5 Invariants**와 **§11 Edge Cases**가 없다. 다음 순서로 보강한다.
+Entity 001의 명세가 커져 분리된 문서다. **12개 섹션 형식이 적용되지 않는다** — 이들은 그 자체가 e001의 한 절이기 때문이다([e000b §2](e000b-entity-registry.md)).
 
-| 우선순위 | 대상 | 이유 |
+| 문서 | e001의 어느 절인가 |
+|---|---|
+| [e001b-goal-schema.md](e001b-goal-schema.md) | §8 Canonical Representation |
+| [e001c-goal-state-machine.md](e001c-goal-state-machine.md) | §6 Lifecycle |
+| [e001d-goal-validation.md](e001d-goal-validation.md) | §9 Validation Rules |
+
+### L2 승격에서 함께 정정된 defect
+
+001~012를 L2로 올리는 과정에서 발견된 실제 오류들이다.
+
+| 문서 | defect | 정정 |
 |---|---|---|
-| 1 | 009 Decision, 008 Plan | 실행 사슬의 중심. 불변식 누락의 영향이 크다 |
-| 2 | 005 Task, 007 Resource | 새 Entity(013·025)와 참조가 많다 |
-| 3 | 006 Capability | Taxonomy(006-A) 분리에 따라 본문 정리 필요 |
-| 4 | 002·003·004 | 횡단 관심사. Assumption(017)과의 경계 정리 필요 |
-| 5 | 010·011·012 | 학습 경로. Evaluation(015) 신설에 따라 입력 정의 갱신 필요 |
+| 006 Capability | Rule Prefix `C`가 003 Context와 **충돌** | `C` → `CP`로 변경 ([e000 §3](e000-spec-format.md)) |
+| 001 Goal | §3 `Goal Rule 1~5`와 §10 `Rule G-001~005`가 **같은 내용 중복 정의** | `Rule G-001~007`로 통합 |
+| 006 / 006-A | Taxonomy 트리의 capability id가 **서로 어긋남** | 006-A를 권위로 확정 + id 마이그레이션 표 ([e006 §8](e006-capability.md)) |
+| 007 / 025 | Resource와 Profile이 관측값을 **중복 보관** | 선언(007) / 관측(025) 분리. 스키마도 분할 |
+| 008 Plan | `assumptions`가 검증 불가능한 **문자열 배열** | `assumption_ids` → [Assumption](e017-assumption.md) 참조 |
+| 004 Constraint | `Policy` 타입이 실제로는 **Goal 독립 규칙** | 타입 제거. [Policy](e019-policy.md) Entity로 이관 |
+| 010 / 012 | Outcome을 Runtime State로 분류. Feedback이 Learning으로 **직행** | Outcome은 Entity 014. Feedback → Evaluation → Memory 경로 확정 |
+| 001-A Goal Graph | 스키마가 Goal 객체를 **복사해 임베드** | `goal_id` 참조로 전환 (진실 원천 이원화 제거) |
 
 ---
 
@@ -218,9 +232,12 @@ Entity 001~012는 형식이 확정되기 전에 작성되었다. 대부분 **§5
 
 | 항목 | 내용 | 조치 |
 |---|---|---|
-| 상태 필드명 불일치 | Task만 `state`, 나머지는 `status` | 다음 버전에서 `status`로 통일 |
+| 상태 필드명 불일치 | Task만 `state`, 나머지는 `status` | **미해소.** 다음 버전에서 `status`로 통일 |
 | Volume 3의 Execution Instance | Goal 단위 실행 객체를 Execution이라 불렀으나 실제로는 Session이다 | [v3-runtime.md §3](../v3-runtime.md)에 반영 완료. 스키마는 `session.schema.json`으로 이관 |
-| Volume 3 Runtime State Machine | `IDLE → … → COMPLETED`는 Session 내부 진행 단계다 | Session에 `phase` 필드 도입 예정 ([e021 §12](e021-session.md)) |
+| Volume 3 Runtime State Machine | `IDLE → … → COMPLETED`는 Session 내부 진행 단계다 | **미해소.** Session에 `phase` 필드 도입 예정 ([e021 §12](e021-session.md)) |
+| 표현식 언어 3중화 | Constraint `expression` / Policy `condition` / Workflow `condition`이 각각 다른 문법 | **미해소.** 통합 문법 필요 ([e004 §12](e004-constraint.md)) |
+| confidence 산출식 3중화 | Knowledge / Resource Profile / Feedback 집계가 각각 다른 방식 | **미해소.** 같은 공식 계열 필요 ([e011 §12](e011-knowledge.md)) |
+| 기여도 귀속(Attribution) | Outcome의 `goal_progress` 델타를 어느 Task에 돌릴지 미정 | **미해소.** 배분 모델 선택 필요 ([e014 §12](e014-outcome.md)) |
 | Resource Type `agent` | Entity 023 Agent와 이름이 겹친다 | 판별 기준을 [e023 §2](e023-agent.md)에 명시. 결정 루프 소유 여부로 구분 |
 | Rubric의 소속 | Evaluation이 참조하지만 Entity로 정의되지 않았다 | [e015 §12](e015-evaluation.md) Open Issue |
 | Connection(자격 증명) | Tool이 `auth_type`을 갖지만 계정 바인딩은 표현 불가 | [e024 §12](e024-tool.md) Open Issue |
@@ -229,11 +246,20 @@ Entity 001~012는 형식이 확정되기 전에 작성되었다. 대부분 **§5
 
 ## 8. 다음 단계
 
-| 항목 | 내용 |
+Entity 목록이 동결되고([e000b](e000b-entity-registry.md)) 전 Entity가 L2에 도달했다. 남은 작업은 **깊이**다.
+
+| 우선순위 | 항목 | 내용 |
+|---|---|---|
+| 1 | **표현식 언어 통일** | Constraint `expression` / Policy `condition` / Workflow `condition`을 하나의 문법으로. 세 곳에서 각각 구현하면 비용이 3배다 |
+| 2 | **confidence 산출식 확정** | Knowledge·Resource Profile·Feedback 집계가 같은 공식 계열을 써야 한다. 다르면 "0.9"가 서로 다른 의미가 된다 |
+| 3 | **보류 Entity 4개 결정** | Rubric / Connection / Budget / Experiment. Reference Implementation 착수 전까지 결론 필요 ([e000b §3](e000b-entity-registry.md)) |
+| 4 | **불변식 검증기** | [e000a §5](e000a-entity-relationships.md)의 전역 불변식 16개 + Entity별 불변식을 검사하는 구현 → [Volume 7](../v7-reference-implementation.md) |
+| 5 | **Volume 갱신** | Volume 1~7이 12개 Entity를 전제로 쓰여 있다. 25개 체계로 갱신 |
+| 6 | **L3 승격** | 각 Entity마다 실제 예시 30~50개 + 검증기 통과 |
+
+### 도구
+
+| 명령 | 검사 대상 |
 |---|---|
-| **형식 소급 적용** | Entity 001~012를 L2로 승격 (§6 우선순위 순) |
-| **불변식 검증기** | [e000a §5](e000a-entity-relationships.md)의 16개 전역 불변식을 검사하는 구현 → [Volume 7](../v7-reference-implementation.md) |
-| **표현식 언어** | Policy의 `condition`과 Workflow의 `condition`을 통합한 문법 정의 |
-| **Rubric 결정** | Evaluation의 평가 기준을 Entity로 둘지 Policy 하위로 둘지 확정 |
-| **예시 확충** | 각 Entity마다 실제 예시 30~50개 (현재는 핵심 예시 위주) |
-| **Volume 갱신** | Volume 1~7이 12개 Entity를 전제로 쓰여 있다. 25개 체계로 갱신 |
+| `python3 tools/validate-examples.py` | 문서의 JSON 예시가 대응 스키마를 통과하는가 |
+| `python3 -c "import json,glob; [json.load(open(f)) for f in glob.glob('intent-os-spec/schemas/*.json')]"` | 스키마 파싱 |
