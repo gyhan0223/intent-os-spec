@@ -4,18 +4,36 @@
   "title": "Memory (Canonical Memory Representation)",
   "description": "시스템이 나중에 회상할 수 있도록 영속화된 경험의 기록. 실행, 결정, 결과가 그 대상이다. 맥락(Goal/Decision/Context) 없는 결과는 Memory가 될 수 없다. Entity 010 명세(entities/e010-memory.md) 참조.",
   "type": "object",
-  "required": ["memory_id", "memory_type", "scope", "content", "source", "created_at"],
+  "required": [
+    "memory_id",
+    "memory_type",
+    "scope",
+    "content",
+    "source",
+    "created_at"
+  ],
   "properties": {
-    "memory_id": { "type": "string" },
+    "memory_id": {
+      "type": "string",
+      "description": "Memory의 고유 식별자."
+    },
     "memory_type": {
       "type": "string",
       "description": "Memory의 타입. Episodic: 개별 실행 기록 / Semantic: 일반화된 사실(검증 전 Knowledge 후보) / Procedural: 성공한 절차·전략",
-      "enum": ["Episodic", "Semantic", "Procedural"]
+      "enum": [
+        "Episodic",
+        "Semantic",
+        "Procedural"
+      ]
     },
     "scope": {
       "type": "string",
       "description": "적용 범위. 생성 시 가장 좁은 Scope로 시작하며, 확장은 검증과 익명화를 거쳐야 한다.",
-      "enum": ["Goal-level", "User-level", "Global"]
+      "enum": [
+        "Goal-level",
+        "User-level",
+        "Global"
+      ]
     },
     "goal_ref": {
       "type": "string",
@@ -28,7 +46,11 @@
     "content": {
       "type": "object",
       "description": "경험의 본문. 결과물이 아니라 '왜 이 선택을 했고, 결과가 어땠는가'를 기록한다 (Rule M-001).",
-      "required": ["situation", "action", "result"],
+      "required": [
+        "situation",
+        "action",
+        "result"
+      ],
       "properties": {
         "situation": {
           "type": "string",
@@ -42,7 +64,8 @@
           "type": "string",
           "description": "어떻게 됐나. 예: '상담 신청 30% 증가'"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "confidence": {
       "type": "number",
@@ -87,5 +110,6 @@
         "Deleted"
       ]
     }
-  }
+  },
+  "additionalProperties": false
 }

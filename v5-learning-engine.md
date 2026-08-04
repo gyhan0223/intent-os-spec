@@ -297,7 +297,7 @@ Intent OS는 두 가지 균형이 필요하다.
 10%  New Candidate Exploration
 ```
 
-> **⚠️ 이 90/10은 확정 정책이 아니라 초기 고정값이다.** [Volume 4-C Appendix B](v4c-resource-genome.md)는 *"Exploration 비율을 어떤 정책으로 조정할 것인가"* 를 미해결 질문으로 남겨 두었다. 초안이 본 절에서 이를 확정값처럼 서술해 두 문서가 어긋나 있었다.
+> **📌 이 90/10은 확정 정책이 아니라 초기 고정값이다.** [Volume 4-C Appendix B](v4c-resource-genome.md)는 *"Exploration 비율을 어떤 정책으로 조정할 것인가"* 를 미해결 질문으로 남겨 두었다. 초안이 본 절에서 이를 확정값처럼 서술해 두 문서가 어긋나 있었다.
 
 단계별로 다음과 같이 다룬다.
 

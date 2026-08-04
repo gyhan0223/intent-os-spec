@@ -4,29 +4,52 @@
   "title": "Feedback (Canonical Feedback Representation)",
   "description": "실행 결과(Outcome)에 대한 평가 신호. Outcome(Runtime State) 자체가 아니라 그에 대한 평가의 기록이며, Learning(Process)의 입력이 된다. Entity 012 명세(entities/e012-feedback.md) 참조.",
   "type": "object",
-  "required": ["feedback_id", "source_type", "target", "signal", "created_at"],
+  "required": [
+    "feedback_id",
+    "source_type",
+    "target",
+    "signal",
+    "created_at"
+  ],
   "properties": {
-    "feedback_id": { "type": "string" },
+    "feedback_id": {
+      "type": "string",
+      "description": "Feedback의 고유 식별자."
+    },
     "source_type": {
       "type": "string",
       "description": "출처 분류. Explicit: 사용자가 의도적으로 준 평가(별점, 수정 요청) / Implicit: 사용자 행동에서 추론된 신호(재생성, 결과 미사용, 이탈) / Systemic: 시스템이 스스로 측정한 신호(Metric 달성 여부, 비용 초과)",
-      "enum": ["Explicit", "Implicit", "Systemic"]
+      "enum": [
+        "Explicit",
+        "Implicit",
+        "Systemic"
+      ]
     },
     "target": {
       "type": "object",
       "description": "무엇에 대한 평가인가. 대상 없는 신호는 Feedback으로 저장하지 않는다 (Rule F-001).",
-      "required": ["target_type", "target_ref"],
+      "required": [
+        "target_type",
+        "target_ref"
+      ],
       "properties": {
         "target_type": {
           "type": "string",
           "description": "평가 대상의 종류",
-          "enum": ["Outcome", "Execution", "Decision", "Plan", "Resource"]
+          "enum": [
+            "Outcome",
+            "Execution",
+            "Decision",
+            "Plan",
+            "Resource"
+          ]
         },
         "target_ref": {
           "type": "string",
           "description": "평가 대상의 ID. 예: 'outcome_0871'"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "signal": {
       "type": "string",
@@ -39,7 +62,12 @@
         "sentiment": {
           "type": "string",
           "description": "해석된 평가 방향",
-          "enum": ["Positive", "Negative", "Neutral", "Mixed"]
+          "enum": [
+            "Positive",
+            "Negative",
+            "Neutral",
+            "Mixed"
+          ]
         },
         "confidence": {
           "type": "number",
@@ -47,7 +75,8 @@
           "minimum": 0,
           "maximum": 1
         }
-      }
+      },
+      "additionalProperties": false
     },
     "weight": {
       "type": "number",
@@ -60,7 +89,14 @@
       "description": "이 Feedback이 갱신 근거로 라우팅되는 대상 목록. 하나의 Feedback이 복수 대상에 동시에 라우팅될 수 있다.",
       "items": {
         "type": "string",
-        "enum": ["ResourceProfile", "Knowledge", "Memory", "Goal", "Plan", "RuntimePolicy"]
+        "enum": [
+          "ResourceProfile",
+          "Knowledge",
+          "Memory",
+          "Goal",
+          "Plan",
+          "RuntimePolicy"
+        ]
       }
     },
     "provenance": {
@@ -75,9 +111,14 @@
           "type": "string",
           "description": "발생 채널. 예: 'UI 재생성 버튼', '주간 Metric 관측'"
         }
-      }
+      },
+      "additionalProperties": false
     },
-    "created_at": { "type": "string", "format": "date-time" },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Feedback이 도착한 시각. 대상 Outcome이 생성된 시각과는 다르며, 시차가 클수록 인과 귀속이 약해진다."
+    },
     "status": {
       "type": "string",
       "description": "Feedback Lifecycle 상태. Quarantined: 이상 패턴(스팸, 조작 의심)으로 격리됨",
@@ -91,5 +132,6 @@
         "Archived"
       ]
     }
-  }
+  },
+  "additionalProperties": false
 }

@@ -6,7 +6,7 @@
 
 ---
 
-## 0. Why a Taxonomy
+## Why a Taxonomy
 
 [Capability](e006-capability.md)는 Intent OS에서 **Task와 Resource를 잇는 유일한 통로**다.
 

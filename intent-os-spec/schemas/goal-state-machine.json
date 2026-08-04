@@ -1,123 +1,291 @@
 {
+  "$schema": "https://example.com/intent-os/state-machine.schema.json",
   "$id": "https://example.com/intent-os/goal-state-machine.json",
   "title": "Goal State Machine Specification",
   "description": "Goal은 단순한 데이터가 아니라 살아있는 객체(Living Object)다. 이 문서는 Goal의 상태(State), 상태별 허용 행동(Action), 상태 전이(Transition)와 그 조건(Guard)을 기계가 읽을 수 있는 형태로 정의한다. 해설: entities/e001c-goal-state-machine.md. 상태값은 goal.schema.json의 status.phase enum과 1:1 대응한다.",
   "entity": "Goal",
   "spec_version": "2.0",
   "initial_state": "Created",
-  "terminal_states": ["Archived"],
+  "terminal_states": [
+    "Archived"
+  ],
   "states": {
     "Created": {
       "description": "Goal이 생성되었으나 아직 모호하다. Raw Goal (Completeness Level 1).",
-      "allowed_actions": ["clarify", "ask_questions", "edit", "estimate_confidence", "abandon"],
+      "allowed_actions": [
+        "clarify",
+        "ask_questions",
+        "edit",
+        "estimate_confidence",
+        "abandon"
+      ],
       "transitions": [
         {
           "to": "Clarified",
           "event": "clarification_completed",
           "guard": "objective.description이 존재하고 Semantic Rules G-001~G-004를 통과한다"
         },
-        { "to": "Abandoned", "event": "abandon", "guard": null }
+        {
+          "to": "Abandoned",
+          "event": "abandon",
+          "guard": null
+        }
       ]
     },
     "Clarified": {
       "description": "무엇을 원하는지는 명확하지만 아직 측정 가능한 구조가 없다.",
-      "allowed_actions": ["structure", "add_metric", "add_constraints", "edit", "abandon"],
+      "allowed_actions": [
+        "structure",
+        "add_metric",
+        "add_constraints",
+        "edit",
+        "abandon"
+      ],
       "transitions": [
         {
           "to": "Structured",
           "event": "structure_completed",
           "guard": "objective.desired_state.metric이 존재하고 quality.completeness >= 60"
         },
-        { "to": "Created", "event": "invalidated", "guard": "핵심 가정 또는 objective가 변경되었다" },
-        { "to": "Abandoned", "event": "abandon", "guard": null }
+        {
+          "to": "Created",
+          "event": "invalidated",
+          "guard": "핵심 가정 또는 objective가 변경되었다"
+        },
+        {
+          "to": "Abandoned",
+          "event": "abandon",
+          "guard": null
+        }
       ]
     },
     "Structured": {
       "description": "측정 가능한 구조를 갖춘 Goal (Completeness Level 2). Planner 실행이 가능하지만 아직 검증되지 않았다.",
-      "allowed_actions": ["validate", "detect_conflicts", "compute_priority", "edit", "abandon"],
+      "allowed_actions": [
+        "validate",
+        "detect_conflicts",
+        "compute_priority",
+        "edit",
+        "abandon"
+      ],
       "transitions": [
         {
           "to": "Executable",
           "event": "validation_passed",
           "guard": "quality.completeness >= 80, Owner가 정확히 1명 존재, 미해소 CONFLICTS_WITH가 없음, Goal Graph에 연결됨 (Invariant 2)"
         },
-        { "to": "Clarified", "event": "validation_failed", "guard": "필수 정보 누락 또는 규칙 위반이 발견되었다" },
-        { "to": "Abandoned", "event": "abandon", "guard": null }
+        {
+          "to": "Clarified",
+          "event": "validation_failed",
+          "guard": "필수 정보 누락 또는 규칙 위반이 발견되었다"
+        },
+        {
+          "to": "Abandoned",
+          "event": "abandon",
+          "guard": null
+        }
       ]
     },
     "Executable": {
       "description": "모든 제약조건과 성공 기준이 포함되어 즉시 Planning을 시작할 수 있는 상태 (Completeness Level 3).",
-      "allowed_actions": ["start_planning", "recompute_priority", "edit", "suspend", "abandon"],
+      "allowed_actions": [
+        "start_planning",
+        "recompute_priority",
+        "edit",
+        "suspend",
+        "abandon"
+      ],
       "transitions": [
-        { "to": "Planning", "event": "planning_started", "guard": "Planner가 이 Goal을 스케줄링했다 (Goal Score 기반)" },
-        { "to": "Structured", "event": "field_changed", "guard": "검증에 영향을 주는 필드가 수정되어 재검증이 필요하다. version이 1 증가한다" },
-        { "to": "Suspended", "event": "suspend", "guard": null },
-        { "to": "Abandoned", "event": "abandon", "guard": null }
+        {
+          "to": "Planning",
+          "event": "planning_started",
+          "guard": "Planner가 이 Goal을 스케줄링했다 (Goal Score 기반)"
+        },
+        {
+          "to": "Structured",
+          "event": "field_changed",
+          "guard": "검증에 영향을 주는 필드가 수정되어 재검증이 필요하다. version이 1 증가한다"
+        },
+        {
+          "to": "Suspended",
+          "event": "suspend",
+          "guard": null
+        },
+        {
+          "to": "Abandoned",
+          "event": "abandon",
+          "guard": null
+        }
       ]
     },
     "Planning": {
       "description": "Planner가 Goal Graph를 입력으로 Execution Graph를 생성하고 있다.",
-      "allowed_actions": ["generate_plan", "evaluate_plan", "approve_plan", "suspend", "abandon"],
+      "allowed_actions": [
+        "generate_plan",
+        "evaluate_plan",
+        "approve_plan",
+        "suspend",
+        "abandon"
+      ],
       "transitions": [
-        { "to": "Executing", "event": "plan_approved", "guard": "Plan이 승인되었고 필요한 Resource가 할당 가능하다" },
-        { "to": "Executable", "event": "planning_aborted", "guard": "실행 가능한 Plan을 생성하지 못했다" },
-        { "to": "Suspended", "event": "suspend", "guard": null },
-        { "to": "Abandoned", "event": "abandon", "guard": null }
+        {
+          "to": "Executing",
+          "event": "plan_approved",
+          "guard": "Plan이 승인되었고 필요한 Resource가 할당 가능하다"
+        },
+        {
+          "to": "Executable",
+          "event": "planning_aborted",
+          "guard": "실행 가능한 Plan을 생성하지 못했다"
+        },
+        {
+          "to": "Suspended",
+          "event": "suspend",
+          "guard": null
+        },
+        {
+          "to": "Abandoned",
+          "event": "abandon",
+          "guard": null
+        }
       ]
     },
     "Executing": {
       "description": "Task들이 실행되고 있다. Runtime이 Outcome을 생성한다.",
-      "allowed_actions": ["execute_tasks", "report_progress", "update_current_state", "suspend"],
+      "allowed_actions": [
+        "execute_tasks",
+        "report_progress",
+        "update_current_state",
+        "suspend"
+      ],
       "transitions": [
-        { "to": "Monitoring", "event": "checkpoint_reached", "guard": "측정 가능한 중간 결과가 생겼다" },
-        { "to": "Suspended", "event": "suspend", "guard": null },
-        { "to": "Failed", "event": "execution_failed", "guard": "복구 불가능한 실패 (예: deadline 경과, 필수 Resource 소멸)" }
+        {
+          "to": "Monitoring",
+          "event": "checkpoint_reached",
+          "guard": "측정 가능한 중간 결과가 생겼다"
+        },
+        {
+          "to": "Suspended",
+          "event": "suspend",
+          "guard": null
+        },
+        {
+          "to": "Failed",
+          "event": "execution_failed",
+          "guard": "복구 불가능한 실패 (예: deadline 경과, 필수 Resource 소멸)"
+        }
       ]
     },
     "Monitoring": {
       "description": "실행 결과를 desired_state와 비교하며 관찰한다. 필요하면 재계획한다. Goal Propagation이 이 상태에서 발생한다.",
-      "allowed_actions": ["measure", "compare_with_desired_state", "propagate_changes", "replan", "suspend"],
+      "allowed_actions": [
+        "measure",
+        "compare_with_desired_state",
+        "propagate_changes",
+        "replan",
+        "suspend"
+      ],
       "transitions": [
-        { "to": "Completed", "event": "success_criteria_met", "guard": "current_state가 desired_state의 operator/target 조건을 만족한다" },
-        { "to": "Executing", "event": "continue_execution", "guard": "아직 목표 미달이며 Plan이 유효하다" },
-        { "to": "Planning", "event": "replan_required", "guard": "Plan이 무효화되었다 (가정 붕괴, 제약 변경, Goal Propagation)" },
-        { "to": "Failed", "event": "goal_infeasible", "guard": "deadline 내 달성이 불가능하다고 판정되었다" },
-        { "to": "Suspended", "event": "suspend", "guard": null }
+        {
+          "to": "Completed",
+          "event": "success_criteria_met",
+          "guard": "current_state가 desired_state의 operator/target 조건을 만족한다"
+        },
+        {
+          "to": "Executing",
+          "event": "continue_execution",
+          "guard": "아직 목표 미달이며 Plan이 유효하다"
+        },
+        {
+          "to": "Planning",
+          "event": "replan_required",
+          "guard": "Plan이 무효화되었다 (가정 붕괴, 제약 변경, Goal Propagation)"
+        },
+        {
+          "to": "Failed",
+          "event": "goal_infeasible",
+          "guard": "deadline 내 달성이 불가능하다고 판정되었다"
+        },
+        {
+          "to": "Suspended",
+          "event": "suspend",
+          "guard": null
+        }
       ]
     },
     "Completed": {
       "description": "성공 기준을 충족했다. 이 상태의 Goal은 직접 수정하지 않는다 (Goal Graph Invariant 4). Learning Engine의 입력이 된다.",
-      "allowed_actions": ["extract_learnings", "create_follow_up_goal", "archive"],
+      "allowed_actions": [
+        "extract_learnings",
+        "create_follow_up_goal",
+        "archive"
+      ],
       "transitions": [
-        { "to": "Archived", "event": "archive", "guard": "Learning 추출이 완료되었거나 보존 기간이 지났다" }
+        {
+          "to": "Archived",
+          "event": "archive",
+          "guard": "Learning 추출이 완료되었거나 보존 기간이 지났다"
+        }
       ]
     },
     "Failed": {
       "description": "달성에 실패했다. 실패 원인은 status.blocked_reason과 metadata.history에 기록되어 Learning Engine의 입력이 된다.",
-      "allowed_actions": ["analyze_failure", "extract_learnings", "create_new_version", "archive"],
+      "allowed_actions": [
+        "analyze_failure",
+        "extract_learnings",
+        "create_new_version",
+        "archive"
+      ],
       "transitions": [
-        { "to": "Archived", "event": "archive", "guard": null },
-        { "to": "Created", "event": "reopen_as_new_version", "guard": "새 version으로 재시작한다. 기존 이력은 metadata.history에 보존된다" }
+        {
+          "to": "Archived",
+          "event": "archive",
+          "guard": null
+        },
+        {
+          "to": "Created",
+          "event": "reopen_as_new_version",
+          "guard": "새 version으로 재시작한다. 기존 이력은 metadata.history에 보존된다"
+        }
       ]
     },
     "Suspended": {
       "description": "일시 중지 상태. Owner의 결정 또는 상위 Goal의 변경으로 진입한다. 진입 전 상태를 기억한다.",
-      "allowed_actions": ["resume", "abandon"],
+      "allowed_actions": [
+        "resume",
+        "abandon"
+      ],
       "transitions": [
-        { "to": "@previous", "event": "resume", "guard": "중지 사유가 해소되었다. @previous는 Suspended 진입 직전의 상태를 의미한다" },
-        { "to": "Abandoned", "event": "abandon", "guard": null }
+        {
+          "to": "@previous",
+          "event": "resume",
+          "guard": "중지 사유가 해소되었다. @previous는 Suspended 진입 직전의 상태를 의미한다"
+        },
+        {
+          "to": "Abandoned",
+          "event": "abandon",
+          "guard": null
+        }
       ]
     },
     "Abandoned": {
       "description": "실행 전 또는 실행 중 포기된 Goal. 실패(Failed)와 구분된다 — 달성하지 못한 것이 아니라 더 이상 원하지 않는 것이다.",
-      "allowed_actions": ["archive"],
+      "allowed_actions": [
+        "archive"
+      ],
       "transitions": [
-        { "to": "Archived", "event": "archive", "guard": null }
+        {
+          "to": "Archived",
+          "event": "archive",
+          "guard": null
+        }
       ]
     },
     "Archived": {
       "description": "종료 상태(terminal). 읽기 전용이며 어떤 전이도 허용되지 않는다. Memory/Knowledge Entity의 소스로만 사용된다.",
-      "allowed_actions": ["read"],
+      "allowed_actions": [
+        "read"
+      ],
       "transitions": []
     }
   },

@@ -4,13 +4,28 @@
   "title": "Knowledge (Canonical Knowledge Representation)",
   "description": "여러 Memory로부터 도출되어 검증을 통과한 일반화. 개별 사례(Memory)가 아니며, LLM 내부 지식도 아니다. Decision Engine과 Planner가 참조한다. Entity 011 명세(entities/e011-knowledge.md) 참조.",
   "type": "object",
-  "required": ["knowledge_id", "knowledge_type", "statement", "confidence", "evidence", "status"],
+  "required": [
+    "knowledge_id",
+    "knowledge_type",
+    "statement",
+    "confidence",
+    "evidence",
+    "status"
+  ],
   "properties": {
-    "knowledge_id": { "type": "string" },
+    "knowledge_id": {
+      "type": "string",
+      "description": "Knowledge의 고유 식별자."
+    },
     "knowledge_type": {
       "type": "string",
       "description": "Knowledge의 타입 (Volume 5 §7 Knowledge Manager의 4분류). Resource: Resource의 강점/약점/비용 / Task: Task 유형별 최적 접근 / User: 사용자별 선호와 패턴 / Domain: 도메인별 요구사항",
-      "enum": ["Resource", "Task", "User", "Domain"]
+      "enum": [
+        "Resource",
+        "Task",
+        "User",
+        "Domain"
+      ]
     },
     "statement": {
       "type": "string",
@@ -29,24 +44,31 @@
     "evidence": {
       "type": "object",
       "description": "근거. Knowledge → Memory → Execution까지 역추적 가능해야 한다 (Rule K-004). 반대 근거도 버리지 않고 함께 보관한다.",
-      "required": ["evidence_count"],
+      "required": [
+        "evidence_count"
+      ],
       "properties": {
         "supporting_memory_refs": {
           "type": "array",
           "description": "지지 근거 Memory ID 목록",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "contradicting_memory_refs": {
           "type": "array",
           "description": "반대 근거 Memory ID 목록. 비율이 반증 조건을 넘으면 Challenged 상태로 전환된다.",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "evidence_count": {
           "type": "integer",
           "description": "근거 Memory 총 수. 임계값(기본 N ≥ 5) 미만이면 Knowledge가 될 수 없다 (Rule K-001).",
           "minimum": 0
         }
-      }
+      },
+      "additionalProperties": false
     },
     "falsification_condition": {
       "type": "string",
@@ -55,9 +77,16 @@
     "scope": {
       "type": "string",
       "description": "적용 범위. User-level Knowledge를 Global로 올릴 때는 익명화가 필요하다.",
-      "enum": ["User-level", "Global"]
+      "enum": [
+        "User-level",
+        "Global"
+      ]
     },
-    "created_at": { "type": "string", "format": "date-time" },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Memory에서 Knowledge로 승격된 시각. 최초 관측 시각이 아니다."
+    },
     "last_validated_at": {
       "type": "string",
       "format": "date-time",
@@ -79,5 +108,6 @@
         "Archived"
       ]
     }
-  }
+  },
+  "additionalProperties": false
 }

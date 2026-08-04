@@ -14,7 +14,8 @@
   ],
   "properties": {
     "session_id": {
-      "type": "string"
+      "type": "string",
+      "description": "Session의 고유 식별자."
     },
     "type": {
       "type": "string",
@@ -35,7 +36,8 @@
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "이 Session에 참여하는 주체 목록. 인간과 Agent를 함께 담는다."
     },
     "goal_ids": {
       "type": "array",
@@ -52,21 +54,26 @@
       "description": "autonomous는 스케줄, triggered는 원인 Event를 담는다.",
       "properties": {
         "cron": {
-          "type": "string"
+          "type": "string",
+          "description": "정기 실행으로 시작된 Session의 cron 식."
         },
         "event_id": {
-          "type": "string"
+          "type": "string",
+          "description": "Event로 시작된 Session의 발단 Event id."
         },
         "correlation_id": {
-          "type": "string"
+          "type": "string",
+          "description": "여러 Session을 하나의 흐름으로 묶는 상관 id."
         }
-      }
+      },
+      "additionalProperties": false
     },
     "policy_scope": {
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "이 Session 전체에 적용되는 Policy 목록. Session 안에서 만들어진 모든 Execution이 이 범위를 상속한다."
     },
     "context_ref": {
       "type": [
@@ -89,22 +96,28 @@
           "properties": {
             "amount": {
               "type": "number",
-              "minimum": 0
+              "minimum": 0,
+              "description": "상한 금액."
             },
             "currency": {
-              "type": "string"
+              "type": "string",
+              "description": "통화 코드 (ISO 4217). 예: 'KRW', 'USD'"
             }
-          }
+          },
+          "additionalProperties": false,
+          "description": "이 Session이 쓸 수 있는 비용 상한."
         },
         "max_executions": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "description": "이 Session이 만들 수 있는 Execution 개수 상한. 비용이 없는 폭주도 막아야 하므로 비용과 별도로 둔다."
         },
         "max_duration": {
           "type": "string",
           "description": "ISO 8601 duration. 예: 'PT4H'"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "consumed": {
       "type": "object",
@@ -115,59 +128,73 @@
           "properties": {
             "amount": {
               "type": "number",
-              "minimum": 0
+              "minimum": 0,
+              "description": "소비 금액."
             },
             "currency": {
-              "type": "string"
+              "type": "string",
+              "description": "통화 코드 (ISO 4217). budget과 같은 통화여야 비교가 성립한다."
             }
-          }
+          },
+          "additionalProperties": false,
+          "description": "지금까지 실제로 쓴 비용. 실패한 Execution의 비용도 포함한다."
         },
         "executions": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "description": "지금까지 만들어진 Execution 개수."
         },
         "duration": {
-          "type": "string"
+          "type": "string",
+          "description": "Session이 살아 있던 시간 (ISO 8601 duration)."
         }
-      }
+      },
+      "additionalProperties": false
     },
     "started_at": {
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "description": "Session 시작 시각."
     },
     "last_activity_at": {
       "type": [
         "string",
         "null"
       ],
-      "format": "date-time"
+      "format": "date-time",
+      "description": "마지막 활동 시각. idle_timeout 판정의 기준점이다. 활동이 없었으면 null."
     },
     "ended_at": {
       "type": [
         "string",
         "null"
       ],
-      "format": "date-time"
+      "format": "date-time",
+      "description": "Session 종료 시각. 진행 중이면 null."
     },
     "idle_timeout": {
       "type": "string",
-      "default": "PT30M"
+      "default": "PT30M",
+      "description": "무활동 상태가 이만큼 지속되면 Idle로 전이한다 (ISO 8601 duration)."
     },
     "absolute_timeout": {
       "type": "string",
-      "default": "PT24H"
+      "default": "PT24H",
+      "description": "활동 여부와 무관하게 이 시간이 지나면 Expired로 종료한다 (ISO 8601 duration). 무한히 살아 있는 Session을 막는다."
     },
     "execution_ids": {
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "이 Session에서 생성된 Execution 목록. Session은 이들을 **묶을 뿐** 소유하지 않는다 — 종료해도 참조된 Entity는 남는다."
     },
     "decision_ids": {
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "이 Session에서 내려진 Decision 목록."
     },
     "artifact_ids": {
       "type": "array",
@@ -180,7 +207,8 @@
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "이 Session에서 활동한 Agent 목록."
     },
     "summary": {
       "type": [
@@ -193,7 +221,8 @@
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "이 Session이 만들어낸 Memory 목록."
     },
     "status": {
       "type": "string",
@@ -205,7 +234,8 @@
         "Completed",
         "Expired",
         "Aborted"
-      ]
+      ],
+      "description": "Session의 현재 상태."
     },
     "phase": {
       "type": "string",
@@ -235,7 +265,9 @@
         "policy_violation",
         "operator_abort",
         null
-      ]
+      ],
+      "description": "종료 사유. 같은 Completed라도 사유가 다르면 학습 신호가 다르다. 진행 중이면 null."
     }
-  }
+  },
+  "additionalProperties": false
 }

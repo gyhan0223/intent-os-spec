@@ -5,7 +5,7 @@
 - **Status:** Long-term Research Specification
 - **Depends on:** [Volume 4-D — Autonomous Benchmarking](v4d-autonomous-benchmarking.md)
 
-> ⚠️ **문서 성격 주의**
+> 🔬 **문서 성격 주의**
 >
 > 4-A~4-D는 비교적 현실적인 연구 방향이다. 검색, 추천 시스템, AutoML, Bandit, Bayesian Optimization 같은 기존 연구를 조합해 구현할 수 있다.
 >
@@ -319,7 +319,7 @@ Strategy Graph Engine은 Intent OS를 **"AI 선택기"에서 "AI 운영체제"�
 
 ## Volume 4-E Completion Criteria
 
-> **본 문서는 장기 연구 문서다** ([Volume 4](v4-decision-engine.md) 문서 목록의 ⚠️ 표시). 아래 판정은 설계 의도의 명확성을 본다.
+> **본 문서는 장기 연구 문서다** ([Volume 4](v4-decision-engine.md) 문서 목록의 🔬 표시). 아래 판정은 설계 의도의 명확성을 본다.
 
 | 항목 | 근거 | 판정 |
 |---|---|---|

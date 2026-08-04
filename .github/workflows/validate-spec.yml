@@ -1,0 +1,36 @@
+name: validate-spec
+
+# 명세가 깨진 채로 커밋되는 것을 막는다.
+# 검사 항목은 entities/e000-spec-format.md §11 체크리스트와 같다.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 의존성 설치
+        run: pip install jsonschema referencing
+
+      - name: JSON Schema 파싱
+        run: |
+          python3 -c "import json,glob,sys; [json.load(open(f)) for f in glob.glob('intent-os-spec/schemas/*.json')]"
+
+      - name: 형식 검증 (섹션 · 번호 · 스키마 위생)
+        run: python3 tools/validate-format.py
+
+      - name: 예시 검증 (JSON 예시 ↔ 스키마)
+        run: python3 tools/validate-examples.py
+
+      - name: 상대 링크 검사
+        run: python3 tools/validate-links.py

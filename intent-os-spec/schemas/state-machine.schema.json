@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/intent-os/state-machine.schema.json",
+  "title": "State Machine Document",
+  "description": "Entity의 상태·허용 행동·전이·Guard를 기계가 읽는 형태로 담는 문서의 형식. 이 저장소의 `*-state-machine.json`은 스키마가 아니라 **데이터**이며, 자신을 검증할 스키마로 이 파일을 가리킨다. 해설: entities/e000-spec-format.md §8.",
+  "type": "object",
+  "required": ["entity", "spec_version", "initial_state", "terminal_states", "states"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "이 문서를 검증하는 스키마의 URI. 데이터 문서는 자신의 형식을 스스로 밝힌다."
+    },
+    "$id": {
+      "type": "string",
+      "description": "이 문서의 고유 URI."
+    },
+    "title": {
+      "type": "string",
+      "description": "상태 머신의 이름."
+    },
+    "description": {
+      "type": "string",
+      "description": "이 상태 머신이 무엇을 관장하는가에 대한 한국어 설명과 해설 문서 경로."
+    },
+    "entity": {
+      "type": "string",
+      "description": "이 상태 머신이 관장하는 Entity 이름. 예: 'Goal'"
+    },
+    "spec_version": {
+      "type": "string",
+      "description": "상태 머신 정의의 버전. 상태나 전이가 바뀌면 올린다.",
+      "pattern": "^\\d+\\.\\d+$"
+    },
+    "initial_state": {
+      "type": "string",
+      "description": "Entity 생성 직후의 상태. `states`의 키 중 하나여야 한다."
+    },
+    "terminal_states": {
+      "type": "array",
+      "description": "더 이상 전이가 없는 종료 상태 목록. 각 항목은 `states`의 키여야 하며 해당 상태의 transitions는 비어 있어야 한다.",
+      "items": {
+        "type": "string",
+        "description": "종료 상태 이름."
+      },
+      "minItems": 1
+    },
+    "states": {
+      "type": "object",
+      "description": "상태 이름 → 상태 정의. 상태 이름은 대응 Entity 스키마의 status enum과 1:1로 맞춘다.",
+      "minProperties": 2,
+      "additionalProperties": {
+        "type": "object",
+        "description": "하나의 상태 정의.",
+        "required": ["description", "allowed_actions", "transitions"],
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "이 상태가 무엇을 의미하는가. 진입 조건을 함께 적는다."
+          },
+          "allowed_actions": {
+            "type": "array",
+            "description": "이 상태에서만 허용되는 행동. 목록 밖의 행동 요청은 거부된다.",
+            "items": {
+              "type": "string",
+              "description": "행동 이름 (snake_case)."
+            }
+          },
+          "transitions": {
+            "type": "array",
+            "description": "이 상태에서 나갈 수 있는 전이 목록. 종료 상태는 빈 배열이다.",
+            "items": {
+              "type": "object",
+              "description": "하나의 전이.",
+              "required": ["to", "event"],
+              "properties": {
+                "to": {
+                  "type": "string",
+                  "description": "전이 목적지 상태. `@previous`는 직전 상태로의 복귀를 뜻하는 예약어다."
+                },
+                "event": {
+                  "type": "string",
+                  "description": "이 전이를 촉발하는 사건 이름 (snake_case)."
+                },
+                "guard": {
+                  "type": ["string", "null"],
+                  "description": "전이가 성립하기 위한 조건. 조건이 없으면 null. Guard를 통과하지 못한 전이 요청은 거부된다."
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "global_rules": {
+      "type": "array",
+      "description": "모든 상태에 공통으로 적용되는 규칙. 상태별 정의로 표현할 수 없는 것만 여기 둔다.",
+      "items": {
+        "type": "string",
+        "description": "규칙 한 줄."
+      }
+    }
+  },
+  "additionalProperties": false
+}

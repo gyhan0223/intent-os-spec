@@ -40,7 +40,7 @@ Resource         Claude · 검색 API · 김 카피라이터
 | 호출 | 요청-응답 1회 | 여러 Execution을 연속 수행 |
 | 예 | Claude 5 | 마케팅 담당 Agent |
 
-### ⚠️ Resource Type `agent`와의 구분
+### Resource Type `agent`와의 구분
 
 [e007 §5](e007-resource.md)의 Resource Type 목록에는 `agent`가 있다. **모순처럼 보이지만 아니다.** 판별 기준은 하나다.
 

@@ -18,7 +18,10 @@
     "decided_at"
   ],
   "properties": {
-    "decision_id": { "type": "string" },
+    "decision_id": {
+      "type": "string",
+      "description": "Decision의 고유 식별자."
+    },
     "decision_type": {
       "type": "string",
       "description": "결정의 종류. 모든 Type은 동일한 Canonical 구조를 공유하며 subject/selection의 내용만 달라진다.",
@@ -35,13 +38,26 @@
       "type": "object",
       "description": "결정 대상. subject를 따라가면 결국 하나 이상의 Goal에 도달해야 한다. 예: { plan_id: 'plan_014', task_id: 't3' }",
       "properties": {
-        "goal_id": { "type": "string" },
-        "plan_id": { "type": "string" },
-        "task_id": { "type": "string" }
-      }
+        "goal_id": {
+          "type": "string",
+          "description": "이 결정이 봉사하는 Goal."
+        },
+        "plan_id": {
+          "type": "string",
+          "description": "이 결정이 속한 Plan."
+        },
+        "task_id": {
+          "type": "string",
+          "description": "이 결정이 다루는 Task."
+        }
+      },
+      "additionalProperties": false
     },
     "selection": {
-      "type": ["string", "object"],
+      "type": [
+        "string",
+        "object"
+      ],
       "description": "선택된 것. alternatives_considered에 포함된 후보여야 한다. 예: 'Claude'"
     },
     "alternatives_considered": {
@@ -49,36 +65,67 @@
       "description": "고려한 대안과 각각의 Utility 점수 (Rule D-003). 대안이 없는 선택은 Decision이 아니라 Forced Action이다.",
       "items": {
         "type": "object",
-        "required": ["candidate"],
+        "required": [
+          "candidate"
+        ],
         "properties": {
-          "candidate": { "type": "string" },
-          "utility": { "type": "number" }
-        }
+          "candidate": {
+            "type": "string",
+            "description": "검토했으나 선택하지 않은 후보. 탈락한 후보를 남겨야 '왜 이것을 골랐는가'가 성립한다."
+          },
+          "utility": {
+            "type": "number",
+            "description": "그 후보의 Utility 점수."
+          }
+        },
+        "additionalProperties": false
       }
     },
     "rationale": {
       "type": "array",
       "description": "선택 근거 (Rule D-002). 빈 근거는 금지된다. 예: ['한국어 작문 능력 96', '교육 마케팅 Task 성공률 93%']",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "minItems": 1
     },
     "utility_scores": {
       "type": "object",
       "description": "Utility 공식(Volume 4-A §8) 계산 결과. 당시 가중치(Dynamic Weight)를 함께 동결한다.",
       "properties": {
-        "selected_utility": { "type": "number" },
+        "selected_utility": {
+          "type": "number",
+          "description": "선택된 후보의 Utility 점수."
+        },
         "weights": {
           "type": "object",
           "description": "판단 시점의 가중치. 예: { quality: 0.35, success: 0.25, reliability: 0.15, cost: 0.15, latency: 0.10 }",
           "properties": {
-            "quality": { "type": "number" },
-            "success": { "type": "number" },
-            "reliability": { "type": "number" },
-            "cost": { "type": "number" },
-            "latency": { "type": "number" }
-          }
+            "quality": {
+              "type": "number",
+              "description": "Utility 계산에서 품질이 갖는 가중치."
+            },
+            "success": {
+              "type": "number",
+              "description": "Utility 계산에서 성공 확률이 갖는 가중치."
+            },
+            "reliability": {
+              "type": "number",
+              "description": "Utility 계산에서 안정성이 갖는 가중치."
+            },
+            "cost": {
+              "type": "number",
+              "description": "Utility 계산에서 비용이 갖는 가중치. 비용은 낮을수록 좋으므로 음의 방향으로 작용한다."
+            },
+            "latency": {
+              "type": "number",
+              "description": "Utility 계산에서 지연이 갖는 가중치. 지연은 낮을수록 좋으므로 음의 방향으로 작용한다."
+            }
+          },
+          "additionalProperties": false
         }
-      }
+      },
+      "additionalProperties": false
     },
     "inputs_snapshot": {
       "type": "object",
@@ -97,14 +144,27 @@
     "status": {
       "type": "string",
       "description": "기록의 상태. 상태 전이는 필드 추가만 허용하며 핵심 속성은 수정할 수 없다.",
-      "enum": ["Proposed", "Committed", "Applied", "Evaluated", "Rejected", "Superseded"]
+      "enum": [
+        "Proposed",
+        "Committed",
+        "Applied",
+        "Evaluated",
+        "Rejected",
+        "Superseded"
+      ]
     },
     "supersedes": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "이 Decision이 대체한 이전 Decision ID. 없으면 null."
     },
     "outcome_link": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "사후 평가 연결. Evaluated 상태에서 Outcome(Runtime State) 참조가 기록되며 Learning Engine의 입력이 된다."
     },
     "forced_action": {
@@ -116,6 +176,11 @@
       "type": "string",
       "description": "status가 Rejected일 때 필수. Human의 승인 거부 사유."
     },
-    "decided_at": { "type": "string", "format": "date-time" }
-  }
+    "decided_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "결정이 내려진 시각. 이 시점의 Resource Profile로 판단했다는 기록이며, 사후 재현의 기준점이다."
+    }
+  },
+  "additionalProperties": false
 }

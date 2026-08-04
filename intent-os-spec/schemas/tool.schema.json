@@ -4,21 +4,54 @@
   "title": "Tool",
   "description": "결정론적이고 스키마로 정의된 인터페이스를 가진 Resource. 부수효과·권한·멱등성을 선언한다. Resource의 부분집합이며 Universal Resource Interface를 그대로 따르되, 관리 축이 다르다 — 일반 Resource는 품질 점수를, Tool은 스키마 계약과 권한을 관리한다. Entity 024 명세(entities/e024-tool.md) 참조.",
   "type": "object",
-  "required": ["tool_id", "name", "provider", "category", "capabilities", "operations", "required_scopes", "status"],
+  "required": [
+    "tool_id",
+    "name",
+    "provider",
+    "category",
+    "capabilities",
+    "operations",
+    "required_scopes",
+    "status"
+  ],
   "properties": {
-    "tool_id": { "type": "string" },
-    "name": { "type": "string" },
-    "provider": { "type": "string" },
-    "version": { "type": "string" },
+    "tool_id": {
+      "type": "string",
+      "description": "Tool의 고유 식별자. 'provider:name' 네임스페이스를 권장한다."
+    },
+    "name": {
+      "type": "string",
+      "description": "사람이 읽는 이름. 예: 'Meta 광고 API'"
+    },
+    "provider": {
+      "type": "string",
+      "description": "Tool을 제공하는 외부 주체. 장애와 요금 변경의 귀속 단위다."
+    },
+    "version": {
+      "type": "string",
+      "description": "Tool API의 버전. 외부가 올리는 값이며 이쪽이 통제하지 못한다 — breaking_change_policy가 필요한 이유다."
+    },
     "category": {
       "type": "string",
       "description": "messaging이 가장 위험하다 — 발송은 되돌릴 수 없고 멱등하지도 않다.",
-      "enum": ["search", "browser", "calendar", "messaging", "storage", "analytics", "crm", "code_exec", "external_platform"]
+      "enum": [
+        "search",
+        "browser",
+        "calendar",
+        "messaging",
+        "storage",
+        "analytics",
+        "crm",
+        "code_exec",
+        "external_platform"
+      ]
     },
     "capabilities": {
       "type": "array",
       "description": "Tool도 Capability를 제공한다 (Rule TOL-005). 선언이 없으면 매칭 대상이 되지 못한다.",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "minItems": 1
     },
     "operations": {
@@ -26,57 +59,127 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["name", "effect", "idempotency"],
+        "required": [
+          "name",
+          "effect",
+          "idempotency"
+        ],
         "properties": {
-          "name": { "type": "string" },
+          "name": {
+            "type": "string",
+            "description": "작업 이름. 예: 'create_campaign'"
+          },
           "effect": {
             "type": "string",
             "description": "선언되지 않은 부수효과는 버그가 아니라 사고다 (INV-TOL-02). irreversible/external_visible은 승인이 필수다.",
-            "enum": ["read", "write", "irreversible", "external_visible"]
+            "enum": [
+              "read",
+              "write",
+              "irreversible",
+              "external_visible"
+            ]
           },
           "idempotency": {
             "type": "string",
             "description": "non_idempotent는 자동 재시도가 금지된다 (INV-TOL-03). 재시도하면 메시지가 두 번 발송된다.",
-            "enum": ["idempotent", "idempotent_with_key", "non_idempotent"]
+            "enum": [
+              "idempotent",
+              "idempotent_with_key",
+              "non_idempotent"
+            ]
           },
-          "input_schema": { "type": "object", "description": "JSON Schema. 호출 전 검증한다 (INV-TOL-01)." },
-          "output_schema": { "type": "object", "description": "JSON Schema. 3회 연속 위반하면 Tool이 Degraded로 전이한다 (INV-TOL-06)." },
-          "requires_approval": { "type": "boolean", "default": false }
-        }
-      }
+          "input_schema": {
+            "type": "object",
+            "description": "JSON Schema. 호출 전 검증한다 (INV-TOL-01)."
+          },
+          "output_schema": {
+            "type": "object",
+            "description": "JSON Schema. 3회 연속 위반하면 Tool이 Degraded로 전이한다 (INV-TOL-06)."
+          },
+          "requires_approval": {
+            "type": "boolean",
+            "default": false,
+            "description": "이 작업을 실행하기 전 인간 승인이 필요한가. 되돌릴 수 없는 부수효과(effect)를 가진 작업은 true여야 한다."
+          }
+        },
+        "additionalProperties": false
+      },
+      "description": "이 Tool이 제공하는 작업 목록. Tool은 Capability가 아니라 **호출 가능한 작업**의 집합이다."
     },
     "error_codes": {
       "type": "array",
       "description": "Tool 오류를 Execution의 failure_class로 매핑한다 (Rule TOL-008). 재시도 전략이 여기서 결정된다.",
       "items": {
         "type": "object",
-        "required": ["code", "failure_class"],
+        "required": [
+          "code",
+          "failure_class"
+        ],
         "properties": {
-          "code": { "type": "string" },
+          "code": {
+            "type": "string",
+            "description": "외부 API가 반환하는 원본 오류 코드."
+          },
           "failure_class": {
             "type": "string",
-            "enum": ["resource_unavailable", "resource_incapable", "input_insufficient", "timeout", "constraint_violation", "policy_violation", "internal_error"]
+            "enum": [
+              "resource_unavailable",
+              "resource_incapable",
+              "input_insufficient",
+              "timeout",
+              "constraint_violation",
+              "policy_violation",
+              "internal_error"
+            ],
+            "description": "원본 코드를 Intent OS의 표준 실패 분류로 옮긴 값. 재시도할지 다른 Resource로 갈아탈지가 이 값으로 갈린다."
           },
-          "retryable": { "type": "boolean" }
-        }
+          "retryable": {
+            "type": "boolean",
+            "description": "같은 조건으로 다시 호출할 가치가 있는가. false면 재시도 없이 대체 경로를 찾는다."
+          }
+        },
+        "additionalProperties": false
       }
     },
     "rate_limit": {
       "type": "object",
       "properties": {
-        "per_minute": { "type": "integer", "minimum": 0 },
-        "per_day": { "type": "integer", "minimum": 0 }
-      }
+        "per_minute": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "분당 호출 상한."
+        },
+        "per_day": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "일당 호출 상한."
+        }
+      },
+      "additionalProperties": false,
+      "description": "호출 상한. 초과하면 resource_unavailable로 실패하므로 Decision이 후보 판정에 쓴다."
     },
-    "timeout_ms": { "type": "integer", "minimum": 0 },
+    "timeout_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "응답 대기 상한 (밀리초). 초과하면 Execution이 TimedOut으로 종료된다."
+    },
     "required_scopes": {
       "type": "array",
       "description": "최소 권한 원칙 (Rule TOL-003). 와일드카드(*)는 허용하지 않는다. 연결 자격이 이 범위를 넘을 수 없다 (INV-TOL-04).",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "auth_type": {
       "type": "string",
-      "enum": ["none", "api_key", "oauth2", "mtls", "internal"]
+      "enum": [
+        "none",
+        "api_key",
+        "oauth2",
+        "mtls",
+        "internal"
+      ],
+      "description": "인증 방식. 자격 증명 자체는 스키마에 담지 않는다 — 참조만 한다."
     },
     "data_residency": {
       "type": "string",
@@ -84,20 +187,49 @@
     },
     "breaking_change_policy": {
       "type": "string",
-      "enum": ["schema_check_on_every_call", "schema_check_daily", "version_pinned"]
+      "enum": [
+        "schema_check_on_every_call",
+        "schema_check_daily",
+        "version_pinned"
+      ],
+      "description": "외부 API의 스키마 변경을 언제 감지할 것인가. Tool은 통제 밖에서 바뀌므로 감지 주기를 명시한다."
     },
     "status": {
       "type": "string",
       "description": "Degraded는 스키마 불일치·가용성 저하로 신규 배정을 중단한 상태. Quarantined는 미선언 부수효과가 감지된 격리 상태.",
-      "enum": ["Registered", "Evaluating", "Active", "Degraded", "Quarantined", "Deprecated", "Removed"]
+      "enum": [
+        "Registered",
+        "Evaluating",
+        "Active",
+        "Degraded",
+        "Quarantined",
+        "Deprecated",
+        "Removed"
+      ]
     },
     "health": {
       "type": "object",
       "properties": {
-        "success_rate_24h": { "type": "number", "minimum": 0, "maximum": 1 },
-        "p95_latency_ms": { "type": "integer", "minimum": 0 },
-        "consecutive_schema_violations": { "type": "integer", "minimum": 0 }
-      }
+        "success_rate_24h": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "최근 24시간 호출 성공률 (0~1)."
+        },
+        "p95_latency_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "최근 24시간 응답 지연의 95백분위수 (밀리초). 평균이 아니라 p95를 보는 이유는 꼬리 지연이 Task 완료를 막기 때문이다."
+        },
+        "consecutive_schema_violations": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "응답이 output_schema를 연속으로 어긴 횟수. 외부 API가 말없이 바뀌었다는 신호이며, 임계값을 넘으면 Tool을 Deprecated로 내린다."
+        }
+      },
+      "additionalProperties": false,
+      "description": "최근 관측된 건강 상태. Drift 판정과 후보 제외의 입력이다."
     }
-  }
+  },
+  "additionalProperties": false
 }

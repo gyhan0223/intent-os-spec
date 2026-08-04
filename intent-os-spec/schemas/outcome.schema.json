@@ -4,35 +4,90 @@
   "title": "Outcome",
   "description": "하나의 Execution이 실제로 무엇을 만들어냈는가에 대한 불변 기록. 측정값만 담고 판단은 담지 않는다(Rule OUT-002) — 판단은 Evaluation의 몫이다. 종료된 모든 Execution은 성공/실패/취소와 무관하게 정확히 하나의 Outcome을 낳는다(INV-04). Entity 014 명세(entities/e014-outcome.md) 참조.",
   "type": "object",
-  "required": ["outcome_id", "execution_id", "status", "cost", "measured_at"],
+  "required": [
+    "outcome_id",
+    "execution_id",
+    "status",
+    "cost",
+    "measured_at"
+  ],
   "properties": {
-    "outcome_id": { "type": "string" },
-    "execution_id": { "type": "string" },
-    "task_id": { "type": "string", "description": "조회 편의용 캐시. 진실의 원천은 execution_id 경유 참조다." },
+    "outcome_id": {
+      "type": "string",
+      "description": "Outcome의 고유 식별자."
+    },
+    "execution_id": {
+      "type": "string",
+      "description": "이 결과를 낳은 Execution. 종료된 Execution은 정확히 하나의 Outcome을 갖는다."
+    },
+    "task_id": {
+      "type": "string",
+      "description": "조회 편의용 캐시. 진실의 원천은 execution_id 경유 참조다."
+    },
     "status": {
       "type": "string",
       "description": "succeeded=기대 산출물 전부, partial=일부, failed=산출물 없이 종료, void=실행 무효(취소·Shadow 폐기). failed/void도 비용은 발생한다.",
-      "enum": ["succeeded", "partial", "failed", "void"]
+      "enum": [
+        "succeeded",
+        "partial",
+        "failed",
+        "void"
+      ]
     },
     "artifacts": {
       "type": "array",
       "description": "산출물 참조 목록. 본문을 인라인으로 담지 않는다 (Rule OUT-005).",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
-    "output_summary": { "type": "string", "maxLength": 200 },
-    "output_count": { "type": "integer", "minimum": 0 },
+    "output_summary": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "산출물의 요약. 본문은 Artifact에 있고 여기에는 담지 않는다."
+    },
+    "output_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "산출물 개수. 예: 카피 3종이면 3."
+    },
     "cost": {
       "type": "object",
       "description": "정산된 실측 비용 (Rule OUT-004). null 금지 — 비용 0으로 오인되면 Utility가 왜곡된다.",
-      "required": ["amount", "currency"],
+      "required": [
+        "amount",
+        "currency"
+      ],
       "properties": {
-        "amount": { "type": "number", "minimum": 0 },
-        "currency": { "type": "string" },
-        "estimated": { "type": "boolean", "default": false }
-      }
+        "amount": {
+          "type": "number",
+          "minimum": 0,
+          "description": "실제로 발생한 비용."
+        },
+        "currency": {
+          "type": "string",
+          "description": "통화 코드 (ISO 4217)."
+        },
+        "estimated": {
+          "type": "boolean",
+          "default": false,
+          "description": "안분·추정으로 계산한 값인가. 정액 계약 인간이나 사내 도구가 여기 해당한다. null 대신 추정값을 쓰는 이유는 비용 0으로 오인되면 Utility가 왜곡되기 때문이다."
+        }
+      },
+      "additionalProperties": false
     },
-    "latency_ms": { "type": ["integer", "null"], "minimum": 0 },
-    "usage": { "type": "object" },
+    "latency_ms": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "실행에 걸린 시간 (밀리초). 측정하지 못했으면 null이며, 0으로 두지 않는다."
+    },
+    "usage": {
+      "type": "object",
+      "description": "자원 사용량. 단위가 Resource 종류마다 다르므로(토큰 / 호출 / 인시 / GPU 초) 자유 객체로 둔다."
+    },
     "measured_at": {
       "type": "string",
       "format": "date-time",
@@ -43,18 +98,38 @@
       "description": "Goal 지표의 관측된 델타 (Rule OUT-006). 측정했으나 변화가 없으면 delta:0을 기록한다. 비워두는 것과 0은 다르다.",
       "items": {
         "type": "object",
-        "required": ["goal_id", "metric", "delta"],
+        "required": [
+          "goal_id",
+          "metric",
+          "delta"
+        ],
         "properties": {
-          "goal_id": { "type": "string" },
-          "metric": { "type": "string" },
-          "before": { "type": "number" },
-          "after": { "type": "number" },
-          "delta": { "type": "number" },
+          "goal_id": {
+            "type": "string",
+            "description": "이 결과가 진척시킨 Goal."
+          },
+          "metric": {
+            "type": "string",
+            "description": "측정한 지표 이름. Goal의 success metric과 같은 이름을 쓴다."
+          },
+          "before": {
+            "type": "number",
+            "description": "실행 이전의 지표 값."
+          },
+          "after": {
+            "type": "number",
+            "description": "실행 이후의 지표 값."
+          },
+          "delta": {
+            "type": "number",
+            "description": "after − before. 음수일 수 있으며, 음수는 이 실행이 목표를 후퇴시켰다는 뜻이다."
+          },
           "measurement_lag": {
             "type": "string",
             "description": "지표가 반영되기까지의 지연 (ISO 8601 duration). 예: 'P14D'. Deferred Evaluation의 예약 근거가 된다."
           }
-        }
+        },
+        "additionalProperties": false
       }
     },
     "contributes_to_goal": {
@@ -67,14 +142,28 @@
       "items": {
         "type": "object",
         "properties": {
-          "code": { "type": "string" },
-          "message": { "type": "string" },
-          "retryable": { "type": "boolean" }
-        }
-      }
+          "code": {
+            "type": "string",
+            "description": "오류 코드. Resource가 반환한 원본 코드를 그대로 둔다."
+          },
+          "message": {
+            "type": "string",
+            "description": "오류 메시지."
+          },
+          "retryable": {
+            "type": "boolean",
+            "description": "같은 조건으로 재시도할 가치가 있는가."
+          }
+        },
+        "additionalProperties": false
+      },
+      "description": "실행 중 발생한 오류 목록. Completed로 끝난 실행도 경고성 오류를 가질 수 있다."
     },
     "partial_reason": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "status가 partial일 때 필수."
     },
     "late_arrival": {
@@ -85,16 +174,28 @@
     "evaluation_ids": {
       "type": "array",
       "description": "이 Outcome에 대한 Evaluation 목록. 사후 링크 추가만 허용되는 예외 필드다.",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "supersedes": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "보정 Outcome이 대체한 원본. 원본은 지우지 않는다 — 결정 품질 평가는 '그 시점에 알던 값'으로 해야 한다."
     },
     "status_lifecycle": {
       "type": "string",
-      "enum": ["Produced", "Evaluated", "Superseded", "Archived"],
-      "default": "Produced"
+      "enum": [
+        "Produced",
+        "Evaluated",
+        "Superseded",
+        "Archived"
+      ],
+      "default": "Produced",
+      "description": "Outcome 레코드 자체의 상태. Superseded는 재실행으로 대체된 것이며 삭제하지 않는다."
     }
-  }
+  },
+  "additionalProperties": false
 }

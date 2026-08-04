@@ -39,7 +39,7 @@ graph TD
 
 ## 3. Runtime Object Model
 
-> **⚠️ v0.1 명세 정정 (2026-08-04)**
+> **📌 v0.1 명세 정정 (2026-08-04)**
 >
 > 초안에서 "Execution Instance"라 부르던 **Goal 단위 실행 객체**는 실제로는 [Session](entities/e021-session.md)(Entity 021)이다.
 > 이름이 [Execution](entities/e013-execution.md)(Entity 013, Task 한 번의 시도)과 겹쳐 계층 혼동을 낳았으므로 분리했다.

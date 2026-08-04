@@ -24,7 +24,7 @@ Intent OS도 같은 방식을 따른다. 시스템 안에 **"존재하는 것(En
 
 > **1년 뒤에 조회해야 하는가?** 그렇다면 Entity다.
 
-### ⚠️ v1.0 분류의 정정
+### 📌 v1.0 분류의 정정
 
 v1.0에서는 **Execution을 Process, Outcome을 Runtime State**로 분류했다. **v2.0에서 이를 정정한다.**
 

@@ -4,9 +4,16 @@
   "title": "Task",
   "description": "Goal 달성을 위해 수행해야 하는 작업 단위. 독립적으로 실행 가능해야 한다. Entity 005 명세(entities/e005-task.md) 참조.",
   "type": "object",
-  "required": ["id", "objective", "required_capabilities"],
+  "required": [
+    "id",
+    "objective",
+    "required_capabilities"
+  ],
   "properties": {
-    "id": { "type": "string" },
+    "id": {
+      "type": "string",
+      "description": "Task의 고유 식별자."
+    },
     "goal_id": {
       "type": "string",
       "description": "이 Task가 기여하는 Goal의 id (Rule T-005 — 고립된 Task는 관리하지 않는다)"
@@ -34,10 +41,14 @@
       "description": "Task의 가장 중요한 속성 (Rule T-003). canonical capability id 문자열, 또는 요구 수준을 포함한 객체.",
       "items": {
         "anyOf": [
-          { "type": "string" },
+          {
+            "type": "string"
+          },
           {
             "type": "object",
-            "required": ["capability_id"],
+            "required": [
+              "capability_id"
+            ],
             "properties": {
               "capability_id": {
                 "type": "string",
@@ -46,7 +57,13 @@
               "min_level": {
                 "type": "string",
                 "description": "요구 숙련도 (Entity 006 §7 Capability Level)",
-                "enum": ["L1", "L2", "L3", "L4", "L5"]
+                "enum": [
+                  "L1",
+                  "L2",
+                  "L3",
+                  "L4",
+                  "L5"
+                ]
               },
               "weight": {
                 "type": "number",
@@ -62,7 +79,9 @@
     "dependencies": {
       "type": "array",
       "description": "선행되어야 하는 Task id 목록 (Task Graph 구성. 순환 금지 — DAG)",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "expected_output": {
       "type": "string",
@@ -70,28 +89,52 @@
     },
     "execution_mode": {
       "type": "string",
-      "enum": ["sequential", "parallel", "conditional"]
+      "enum": [
+        "sequential",
+        "parallel",
+        "conditional"
+      ],
+      "description": "이 Task를 형제 Task와 어떻게 실행할 것인가. 순서 자체는 Task Graph의 edge가 정한다."
     },
     "constraints": {
       "type": "array",
       "description": "Task 수준 제약. Goal의 Constraint에서 상속·전파된다. 예: '건당 비용 5,000원 이하'",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "priority": {
       "type": "string",
-      "enum": ["Low", "Medium", "High", "Critical"]
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "description": "Task의 우선순위. 자원이 부족할 때 무엇을 먼저 실행할지 정한다."
     },
     "retry_policy": {
       "type": "object",
       "description": "실패 시 행동 (Entity 005 §7 실패 처리와 재시도)",
       "properties": {
-        "max_retries": { "type": "integer", "minimum": 0 },
+        "max_retries": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "재시도 상한. 초과하면 Failed로 확정한다."
+        },
         "on_failure": {
           "type": "string",
           "description": "retry: 같은 Resource로 재시도, reassign: 다른 Resource 선택, decompose: Planner가 재분해, escalate: 사용자/상위 Task로 이관, abort: 중단 후 Goal Graph에 전파",
-          "enum": ["retry", "reassign", "decompose", "escalate", "abort"]
+          "enum": [
+            "retry",
+            "reassign",
+            "decompose",
+            "escalate",
+            "abort"
+          ]
         }
-      }
+      },
+      "additionalProperties": false
     },
     "assigned_resource_id": {
       "type": "string",
@@ -104,7 +147,16 @@
     },
     "state": {
       "type": "string",
-      "enum": ["Pending", "Assigned", "Running", "Completed", "Evaluated", "Failed"]
+      "enum": [
+        "Pending",
+        "Assigned",
+        "Running",
+        "Completed",
+        "Evaluated",
+        "Failed"
+      ],
+      "description": "Task의 현재 상태. Completed는 '실행이 끝났다'는 뜻이지 '잘 됐다'는 뜻이 아니다 — 성패 판정은 Evaluated에서 갈린다."
     }
-  }
+  },
+  "additionalProperties": false
 }

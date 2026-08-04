@@ -50,8 +50,8 @@ Answer                      Resource → Execution → Outcome
 | 4-B | ↳ Resource Intelligence — Capability DNA, Drift 감지 | [v4b-resource-intelligence.md](v4b-resource-intelligence.md) | Specification |
 | 4-C | ↳ Resource Genome — 행동 기반 AI 표현, Meta Prediction | [v4c-resource-genome.md](v4c-resource-genome.md) | Research Design |
 | 4-D | ↳ Autonomous Benchmarking — AI를 자동으로 연구·평가 | [v4d-autonomous-benchmarking.md](v4d-autonomous-benchmarking.md) | Research Design |
-| 4-E | ↳ Strategy Graph — 전략 자체를 학습·재사용 ⚠️연구 | [v4e-strategy-graph.md](v4e-strategy-graph.md) | Research Design ⚠️ |
-| 4-F | ↳ World Model — 사용자의 현실을 모델링 ⚠️연구 | [v4f-world-model.md](v4f-world-model.md) | Research Design ⚠️ |
+| 4-E | ↳ Strategy Graph — 전략 자체를 학습·재사용 🔬연구 | [v4e-strategy-graph.md](v4e-strategy-graph.md) | Research Design 🔬 |
+| 4-F | ↳ World Model — 사용자의 현실을 모델링 🔬연구 | [v4f-world-model.md](v4f-world-model.md) | Research Design 🔬 |
 | 5 | Learning Engine — 경험 축적과 개선 | [v5-learning-engine.md](v5-learning-engine.md) | Specification |
 | 6 | Developer Platform — 외부 Resource 연결 | [v6-developer-platform.md](v6-developer-platform.md) | Specification |
 | 7 | Reference Implementation — MVP 및 로드맵 | [v7-reference-implementation.md](v7-reference-implementation.md) | Blueprint |

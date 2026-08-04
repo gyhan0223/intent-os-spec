@@ -41,6 +41,13 @@ RFC 수준 명세의 핵심 10개 섹션에, 이 저장소의 관례 2개(Attrib
 
 **§1~§12의 번호는 고정이다.** Entity마다 섹션 번호가 달라지면 문서 간 상호 참조(`e013 §5`)가 성립하지 않기 때문이다.
 
+§13 이상을 만들지 않는다. §0도 만들지 않는다. **"왜 이 Entity가 따로 필요한가"를 먼저 말해야 하는 문서는 §1 앞에 번호 없는 도입부를 하나 둔다.**
+
+```markdown
+## Why Not Just a List        ← 번호 없음. 도입부는 1개까지
+## 1. Definition
+```
+
 **Types**, **Algorithm**, **Metrics**, **Taxonomy** 처럼 Entity 성격에 따라 필요한 내용은 새 섹션을 만들지 않고 **가장 가까운 필수 섹션의 하위 절**로 넣는다.
 
 | 추가 내용 | 들어갈 위치 |
@@ -110,7 +117,7 @@ RFC 수준 명세의 핵심 10개 섹션에, 이 저장소의 관례 2개(Attrib
 | 011 Knowledge | `K` | 025 Resource Profile | `RPF` |
 | 012 Feedback | `F` | 005-A Task Graph | `TG` |
 | 013 Execution | `EXE` | 006-A Capability Taxonomy | `CT` |
-| 014 Outcome | `OUT` | | |
+| 014 Outcome | `OUT` | 000-A Entity Relationships | `REL` |
 
 **Prefix는 영구 예약이다.** Entity가 폐기되어도 Prefix는 재사용하지 않는다. 옛 문서를 참조하는 링크가 다른 의미로 해석되면 안 되기 때문이다.
 
@@ -187,6 +194,30 @@ Entity 문서 안에서 Entity 간 불변식을 새로 만들지 않는다. 참�
 
 분할 후 파일명은 `eNNN<a-z>-<subject>.md`, 원본 문서는 **정의와 목차만 남기고** 나머지를 하위 문서로 이관한다.
 
+### 7.1 부속 문서(Annex)의 형식 예외
+
+분할로 갈라져 나온 문서에는 두 갈래가 있다.
+
+| 갈래 | 성격 | 형식 |
+|---|---|---|
+| **독립 Entity** | 자기 식별자를 갖고 저장·조회된다 | 12개 섹션 **전부 준수**. Prefix를 §3에 등록한다 |
+| **부속 문서(Annex)** | 상위 Entity의 한 측면을 펼쳐 쓴 것. 자기 식별자가 없다 | 12개 섹션 **면제** |
+
+Task Graph(005-A)와 Capability Taxonomy(006-A)는 독립 Entity다. 각각 `graph_id`, `taxonomy_id`를 갖는다.
+Goal의 하위 문서 4개(001-A~001-D)는 Annex다. `goal_id` 말고 자기 식별자가 없다.
+
+**Annex는 헤더에 이를 선언한다.** 선언 없이 형식을 벗어난 문서는 검증에서 실패로 잡힌다.
+
+```markdown
+- **Version:** v2.0 Draft
+- **Status:** Core Entity
+- **Format:** Annex — e001 Goal의 부속 문서 (e000 §7.1)
+- **Last Updated:** 2026-08-04
+- **Schema:** [`goal.schema.json`](../intent-os-spec/schemas/goal.schema.json)
+```
+
+면제되는 것은 **섹션 번호 규격뿐이다.** 헤더 블록과 스키마 링크는 Annex도 지킨다. Annex가 Rule/Invariant를 정의할 때는 상위 Entity의 Prefix를 쓴다 — `Rule G-012`이지 `Rule GG-001`이 아니다.
+
 ---
 
 ## 8. 스키마 연결 규칙
@@ -209,6 +240,20 @@ Entity 문서 안에서 Entity 간 불변식을 새로 만들지 않는다. 참�
 | 예시 표기 | ✅ 올바른 예 / ❌ 잘못된 예 |
 | 강조 | **굵게**는 문단당 2회 이하 |
 | 링크 | 다른 Entity 최초 언급 시 상대 링크를 건다 |
+
+### 9.1 기호의 의미 (겹쳐 쓰지 않는다)
+
+기호 하나가 여러 뜻을 겸하면 독자가 "이건 아직 안 된 것인가, 원래 그런 것인가"를 구분하지 못한다. 각 기호는 뜻이 하나다.
+
+| 기호 | 의미 | 쓰는 곳 |
+|---|---|---|
+| ✅ | 충족 / 올바른 예 | Completion Criteria 판정, 예시 |
+| ⚠️ | **부분 충족 · 조건부 · 애매** | Completion Criteria 판정, 삼치 판정 예시, §2의 혼동 주의 |
+| ❌ | 미충족 / 잘못된 예 | Completion Criteria 판정, §2 반례 |
+| 🔬 | **연구 단계** — 검증되지 않은 설계 가설이다. 완성도가 아니라 **성격**의 표시다 | 문서 헤더, Volume 목록 |
+| 📌 | **명세 정정** — 이전 버전의 서술을 뒤집는다 | 정정 blockquote |
+
+🔬와 ⚠️의 차이가 핵심이다. **🔬는 "지금 채울 수 없는 것"**(데이터가 없어 검증 불가), **⚠️는 "채워야 하는데 안 채운 것"**이다. 4-E·4-F 전체는 🔬이고, 그 안의 개별 미정의 항목은 ⚠️다.
 
 ---
 

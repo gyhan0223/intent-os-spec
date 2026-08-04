@@ -5,7 +5,7 @@
 - **Status:** Long-term Research Architecture
 - **Depends on:** [Volume 4-E — Strategy Graph Engine](v4e-strategy-graph.md)
 
-> ⚠️ **문서 성격 주의** — 4-E와 마찬가지로 기존 연구가 거의 없는 영역이며, 설계자의 가설이 다수 포함된 **장기 연구 비전** 문서다.
+> 🔬 **문서 성격 주의** — 4-E와 마찬가지로 기존 연구가 거의 없는 영역이며, 설계자의 가설이 다수 포함된 **장기 연구 비전** 문서다.
 
 ---
 
@@ -425,7 +425,7 @@ AI 모델은 계속 바뀌지만, **세상을 이해하고 목표 달성을 최�
 
 ## Volume 4-F Completion Criteria
 
-> **본 문서는 장기 연구 문서다** ([Volume 4](v4-decision-engine.md) 문서 목록의 ⚠️ 표시).
+> **본 문서는 장기 연구 문서다** ([Volume 4](v4-decision-engine.md) 문서 목록의 🔬 표시).
 
 | 항목 | 근거 | 판정 |
 |---|---|---|
@@ -452,8 +452,8 @@ AI 모델은 계속 바뀌지만, **세상을 이해하고 목표 달성을 최�
 | [4-B Resource Intelligence](v4b-resource-intelligence.md) | Specification |
 | [4-C Resource Genome](v4c-resource-genome.md) | Research Design |
 | [4-D Autonomous Benchmarking](v4d-autonomous-benchmarking.md) | Research Design |
-| [4-E Strategy Graph](v4e-strategy-graph.md) | Research Design ⚠️ |
-| [4-F World Model](v4f-world-model.md) | Research Design ⚠️ |
+| [4-E Strategy Graph](v4e-strategy-graph.md) | Research Design 🔬 |
+| [4-F World Model](v4f-world-model.md) | Research Design 🔬 |
 
 
 ---

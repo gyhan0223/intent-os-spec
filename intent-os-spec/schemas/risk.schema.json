@@ -4,21 +4,50 @@
   "title": "Risk",
   "description": "Goal 달성을 해칠 수 있는 나쁜 사건의 가능성으로서 식별된 것. Assumption(참이라고 믿는 것)의 부정형이며, 발생확률·영향도·조기 경보·대응책을 함께 갖는다. 발생한 Risk는 삭제하지 않는다 — 확률 추정 보정의 근거 데이터다(Rule RSK-007). Entity 018 명세(entities/e018-risk.md) 참조.",
   "type": "object",
-  "required": ["risk_id", "scope", "type", "statement", "likelihood", "impact", "strategy", "owner", "status"],
+  "required": [
+    "risk_id",
+    "scope",
+    "type",
+    "statement",
+    "likelihood",
+    "impact",
+    "strategy",
+    "owner",
+    "status"
+  ],
   "properties": {
-    "risk_id": { "type": "string" },
+    "risk_id": {
+      "type": "string",
+      "description": "Risk의 고유 식별자."
+    },
     "scope": {
       "type": "object",
       "description": "떠다니는 Risk는 없다 (Rule RSK-006). Plan이 폐기되면 그 Plan에만 속한 Risk도 Closed가 된다.",
       "properties": {
-        "goal_id": { "type": "string" },
-        "plan_id": { "type": "string" }
-      }
+        "goal_id": {
+          "type": "string",
+          "description": "이 Risk가 위협하는 Goal."
+        },
+        "plan_id": {
+          "type": "string",
+          "description": "이 Risk가 위협하는 Plan."
+        }
+      },
+      "additionalProperties": false
     },
     "type": {
       "type": "string",
       "description": "irreversible은 되돌릴 수 없는 작업의 위험. impact를 한 단계 상향해 평가한다 (Rule RSK-008).",
-      "enum": ["resource", "cost", "schedule", "quality", "dependency", "compliance", "external", "irreversible"]
+      "enum": [
+        "resource",
+        "cost",
+        "schedule",
+        "quality",
+        "dependency",
+        "compliance",
+        "external",
+        "irreversible"
+      ]
     },
     "statement": {
       "type": "string",
@@ -30,7 +59,12 @@
       "minimum": 0,
       "maximum": 1
     },
-    "impact": { "type": "number", "minimum": 0, "maximum": 1 },
+    "impact": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "발생했을 때의 타격 크기 (0~1). 확률과 곱해 severity를 산출한다."
+    },
     "severity": {
       "type": "number",
       "description": "likelihood × impact (자동 계산). 곱만 남기지 않고 두 값을 각각 보존한다.",
@@ -39,22 +73,50 @@
     },
     "severity_band": {
       "type": "string",
-      "enum": ["Low", "Medium", "High", "Critical"]
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "description": "probability × impact를 구간으로 나눈 등급. 수치보다 이 등급으로 대응 수준을 정한다."
     },
     "estimation_basis": {
       "type": "string",
       "description": "likelihood 추정의 근거. 'no_data'면 임의의 낮은 값 대신 0.5를 쓴다.",
-      "enum": ["historical", "expert", "assumption_derived", "no_data"]
+      "enum": [
+        "historical",
+        "expert",
+        "assumption_derived",
+        "no_data"
+      ]
     },
-    "assessed_at": { "type": "string", "format": "date-time" },
+    "assessed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "마지막으로 평가한 시각. 오래된 평가는 현재 상황을 반영하지 못한다."
+    },
     "early_warning": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "description": "조기 경보 지표 (Rule RSK-004). 없으면 Risk는 문서로만 존재하고 아무도 보지 않는다.",
       "properties": {
-        "metric": { "type": "string" },
-        "threshold": { "type": "number" },
-        "window": { "type": "string" }
-      }
+        "metric": {
+          "type": "string",
+          "description": "현실화를 미리 알리는 선행 지표 이름."
+        },
+        "threshold": {
+          "type": "number",
+          "description": "경보를 울리는 임계값."
+        },
+        "window": {
+          "type": "string",
+          "description": "임계값을 판정하는 관측 구간 (ISO 8601 duration). 한 번의 이상치로 경보가 울리는 것을 막는다."
+        }
+      },
+      "additionalProperties": false
     },
     "trigger_condition": {
       "type": "string",
@@ -63,15 +125,33 @@
     "strategy": {
       "type": "string",
       "description": "accept는 명시적 승인이 필요하다 (INV-RSK-03). 시스템이 스스로 감수를 결정할 수 없다.",
-      "enum": ["avoid", "mitigate", "transfer", "accept", "contingency"]
+      "enum": [
+        "avoid",
+        "mitigate",
+        "transfer",
+        "accept",
+        "contingency"
+      ]
     },
     "response_plan": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "severity_band가 High 이상이면 필수 (INV-RSK-02)."
     },
-    "contingency_ref": { "type": ["string", "null"] },
+    "contingency_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "현실화됐을 때 실행할 대비책. 없으면 null이며, High 이상인데 null이면 그 자체가 관리 실패다."
+    },
     "residual_severity": {
-      "type": ["number", "null"],
+      "type": [
+        "number",
+        "null"
+      ],
       "description": "대응 후 잔여 위험. severity 이하여야 한다 (INV-RSK-06). accept 전략에서는 severity와 같다.",
       "minimum": 0,
       "maximum": 1
@@ -80,22 +160,65 @@
       "type": "string",
       "description": "주인 없는 Risk는 관리되지 않는다 (Rule RSK-003)."
     },
-    "accepted_by": { "type": ["string", "null"] },
-    "accepted_at": { "type": ["string", "null"], "format": "date-time" },
+    "accepted_by": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "이 Risk를 감수하기로 결정한 주체. 수용은 판단이므로 주체가 남아야 한다. 수용하지 않았으면 null."
+    },
+    "accepted_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "수용 결정 시각. 수용하지 않았으면 null."
+    },
     "source_assumption_id": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "대응하는 Assumption. Materialized 시 해당 Assumption을 Invalidated로 먼저 전이시킨다."
     },
-    "related_risk_ids": { "type": "array", "items": { "type": "string" } },
-    "materialized_event_id": { "type": ["string", "null"] },
+    "related_risk_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "연관된 Risk 목록. 하나가 현실화되면 함께 커지는 것들을 묶는다."
+    },
+    "materialized_event_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "현실화를 알린 Event. 예측이 실제가 된 시점의 증거다. 아직 현실화되지 않았으면 null."
+    },
     "monitoring_mode": {
       "type": "string",
-      "enum": ["active", "passive"],
-      "default": "active"
+      "enum": [
+        "active",
+        "passive"
+      ],
+      "default": "active",
+      "description": "active는 지표를 주기적으로 확인하고, passive는 Event가 올 때만 반응한다."
     },
     "status": {
       "type": "string",
-      "enum": ["Identified", "Assessed", "Accepted", "Mitigating", "Monitored", "Materialized", "Resolved", "Closed"]
+      "enum": [
+        "Identified",
+        "Assessed",
+        "Accepted",
+        "Mitigating",
+        "Monitored",
+        "Materialized",
+        "Resolved",
+        "Closed"
+      ],
+      "description": "Risk의 현재 상태. Resolved는 해소된 것, Closed는 더 이상 관리하지 않기로 한 것이다."
     }
-  }
+  },
+  "additionalProperties": false
 }
