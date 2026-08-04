@@ -1,8 +1,9 @@
 # Entity 008: Plan
 
-- **Version:** v1.0 Draft
+- **Version:** v2.0 Draft
 - **Status:** Core Entity
 - **Last Updated:** 2026-08-04
+- **Schema:** [`plan.schema.json`](../intent-os-spec/schemas/plan.schema.json)
 
 ---
 
@@ -50,7 +51,7 @@ Planning은 **Process**(시스템이 수행하는 것)이고, Plan은 그 Proces
 
 ---
 
-## 3. Plan의 조건
+## 3. Design Principles
 
 Plan은 반드시 아래 조건을 만족해야 한다.
 
@@ -86,34 +87,7 @@ Plan은 Task별 **Capability 요구**까지만 기술한다. 어떤 Resource(Cla
 
 ---
 
-## 4. Goal Graph → Planner → Plan
-
-[Entity 001-A §16](e001a-goal-graph.md)의 관점을 그대로 유지한다.
-
-```
-Goal Graph
-  ↓
-Planner  (= 컴파일러)
-  ↓
-Plan     (= 컴파일 산출물)
-  ↓
-Execution Graph (Runtime에 로드된 형태)
-```
-
-Planner는 Goal 하나를 보고 계획을 세우지 않는다. **Goal Graph 전체를 입력으로 받아** 목표 간 의존성·충돌·우선순위를 함께 고려한 Plan을 생성한다.
-
-비유하면:
-
-| 컴파일러 세계 | Intent OS |
-|---|---|
-| Source Code | Goal Graph |
-| Compiler | Planner |
-| Object Code | Plan |
-| Loader/Runtime | Runtime Engine ([Volume 3](../v3-runtime.md)) |
-
----
-
-## 5. Plan Attributes
+## 4. Attributes
 
 Plan은 최소한 아래 속성을 가진다.
 
@@ -146,9 +120,7 @@ Plan
 | **Alternatives** | 고려된 대안 Plan | `plan_014_alt1` (SEO 중심안) |
 | **Status** | Plan의 상태 | Draft / Approved / Active / … |
 
----
-
-## 6. Plan 구성 예시
+### 4.1 Plan 구성 예시
 
 Goal: `2026년 11월까지 윈터캠프 학생 100명 모집, 예산 300만원 이하`
 
@@ -172,67 +144,7 @@ Alternatives:       plan_014_alt1 (SEO 중심, 저비용·장기)
 
 T3와 T4는 의존이 없으므로 **병렬 실행 가능**하다. 이 정보가 Runtime의 Parallel Execution([Volume 3 §5.2](../v3-runtime.md)) 판단 근거가 된다.
 
----
-
-## 7. Plan Lifecycle
-
-```
-Draft → Approved → Active → Completed
-                     │
-                     ├──→ Superseded   (새 버전으로 대체)
-                     └──→ Aborted      (Goal 취소/실패)
-```
-
-| 상태 | 의미 |
-|---|---|
-| **Draft** | Planner가 생성했으나 아직 검증/승인 전 |
-| **Approved** | 검증 통과. 실행 대기 (High Impact Plan은 Human 승인 포함) |
-| **Active** | Runtime이 실행 중인 유일한 버전 |
-| **Superseded** | Replanning으로 새 버전에 자리를 내줌. 기록은 보존 |
-| **Completed** | 모든 Task 완료, Goal 평가로 이관 |
-| **Aborted** | 실행 중단. 사유가 반드시 기록되어야 한다 |
-
-`Superseded`와 `Aborted`는 다르다. Superseded는 **Goal은 그대로, 방법만 교체**된 것이고, Aborted는 **Goal 자체가 취소되거나 실패**한 것이다.
-
----
-
-## 8. Plan Versioning
-
-Plan은 수정하지 않는다. **새 버전을 만든다.**
-
-```
-plan_014 v1 (Active)
-  ↓  광고 예산 300만원 → 100만원 (Goal Propagation)
-plan_014 v1 (Superseded)
-plan_014 v2 (Active)  ← 저비용 채널 중심으로 재컴파일
-```
-
-이 규칙이 중요한 이유:
-
-1. **감사 가능성** — "그때 왜 그렇게 계획했는가"를 답할 수 있다.
-2. **Learning Engine의 입력** — 버전 간 차이와 결과 차이가 학습 데이터가 된다.
-3. **Goal Graph Invariant와의 일관성** — Completed Goal을 수정하지 않는 것([e001a §15](e001a-goal-graph.md))과 같은 원칙이다.
-
----
-
-## 9. Replanning Triggers
-
-Plan은 고정되지 않는다([Volume 3 §Stage 3 — Dynamic Planning](../v3-runtime.md)). 다음 조건에서 Planner가 새 버전을 생성한다.
-
-| Trigger | 예 |
-|---|---|
-| **Assumption Violation** | 광고 예산 300만원 → 100만원 |
-| **Goal Propagation** | 상위 Goal 변경이 하위 Goal 목표치를 바꿈 (모집 100명 → 65명) |
-| **Execution Deviation** | 예상 CTR 8% 대비 실제 3% — 허용 편차 초과 |
-| **Resource Failure Cascade** | 대체 Resource로도 Task를 수행할 수 없음 |
-| **Low Confidence** | 남은 구간의 예상 성공 확률이 임계값 이하로 하락 |
-| **User Request** | 사용자가 방향 전환을 요청 |
-
-Replanning은 전체 재컴파일이 아닐 수 있다. 영향받는 부분 그래프만 다시 계획하는 **Partial Replanning**이 기본이다.
-
----
-
-## 10. Plan Quality Metrics
+### 4.2 Plan Quality Metrics
 
 Planner는 Plan을 하나만 만들지 않는다. 후보 Plan들을 품질 지표로 비교하고, 최종 선택은 Decision Engine의 **Plan Selection Decision**([e009 §5](e009-decision.md))으로 기록된다.
 
@@ -257,7 +169,172 @@ Planner는 Plan을 하나만 만들지 않는다. 후보 Plan들을 품질 지�
 
 ---
 
-## 11. Canonical Plan Representation
+## 5. Invariants
+
+### INV-P-01 — Goal당 Active Plan은 정확히 하나다
+
+Rule P-006이 생성 시점의 검사라면 이쪽은 항상 성립해야 하는 상태다. 두 Plan이 동시에 Active면 같은 Task가 두 번 실행되고 예산이 두 배로 나간다.
+
+| | |
+|---|---|
+| **위반 시** | 나중에 활성화된 Plan을 `Superseded`로 내리고 그쪽에서 파생된 Execution을 `Aborted`로 종료한다. 발생 비용은 기록한다 |
+| **탐지** | 활성화 전이 훅, 재계획 완료 시점 |
+
+### INV-P-02 — Plan의 Task 의존 구조는 DAG다
+
+Rule P-002의 상태 표현이다. 그래프 차원의 정본은 [e005a §5](e005a-task-graph.md)이며 여기서는 Plan 측 표현만 둔다.
+
+| | |
+|---|---|
+| **위반 시** | Plan을 `Draft`로 되돌리고 순환 경로를 반환한다. 실행 중 발견되면 즉시 중단한다 — 교착 상태에서는 아무 Task도 진행되지 않는다 |
+
+### INV-P-03 — Plan은 Resource를 확정하지 않는다
+
+Rule P-005의 상태 표현이다. Plan이 Resource를 못박으면 실행 시점의 가용성·가격 변화를 반영할 수 없고, Decision Engine이 할 일이 사라진다.
+
+| | |
+|---|---|
+| **위반 시** | Resource 지정을 제거하고 Capability 요구로 환원한다. 환원할 수 없으면 Plan 생성 오류로 반려한다 |
+
+### INV-P-04 — 무효화된 가정 위에서 Plan이 계속 실행되지 않는다
+
+Plan은 가정 위에 서 있다. 가정이 깨졌는데 실행이 이어지면, 시스템은 이미 틀린 줄 아는 계획에 돈을 쓴다.
+
+| | |
+|---|---|
+| **위반 시** | Plan을 `Suspended`로 전이하고 재계획 여부를 판정한다. 진행 중 Task는 §6.2 Graph Diff의 승계 판정을 따른다 |
+| **탐지** | [Assumption](e017-assumption.md) 상태 전이 훅 |
+
+### INV-P-05 — 버전 사슬은 끊기지 않는다
+
+`previous_version`을 따라가면 반드시 `version: 1`에 도달해야 한다. 중간이 지워지면 "왜 이렇게 바뀌었는가"를 복원할 수 없다.
+
+| | |
+|---|---|
+| **위반 시** | 삭제를 거부한다. 탈락한 Plan도 `Superseded`로 남기고 지우지 않는다 |
+
+### INV-P-06 — Plan의 예상 비용은 Goal의 예산 제약을 넘지 않는다
+
+넘는 Plan은 애초에 실행 불가능하므로 후보가 될 수 없다.
+
+| | |
+|---|---|
+| **위반 시** | Plan을 후보에서 제외하고 Infeasible 절차([e004 §6.1](e004-constraint.md))로 넘긴다. Hard Constraint는 점수로 우회되지 않는다 |
+
+Entity 간 불변식은 [e000a-entity-relationships.md](e000a-entity-relationships.md)가 단일 권위다.
+
+---
+
+## 6. Lifecycle
+
+```
+Draft → Approved → Active → Completed
+                     │
+                     ├──→ Superseded   (새 버전으로 대체)
+                     └──→ Aborted      (Goal 취소/실패)
+```
+
+| 상태 | 의미 |
+|---|---|
+| **Draft** | Planner가 생성했으나 아직 검증/승인 전 |
+| **Approved** | 검증 통과. 실행 대기 (High Impact Plan은 Human 승인 포함) |
+| **Active** | Runtime이 실행 중인 유일한 버전 |
+| **Superseded** | Replanning으로 새 버전에 자리를 내줌. 기록은 보존 |
+| **Completed** | 모든 Task 완료, Goal 평가로 이관 |
+| **Aborted** | 실행 중단. 사유가 반드시 기록되어야 한다 |
+
+`Superseded`와 `Aborted`는 다르다. Superseded는 **Goal은 그대로, 방법만 교체**된 것이고, Aborted는 **Goal 자체가 취소되거나 실패**한 것이다.
+
+### 6.1 Plan Versioning
+
+Plan은 수정하지 않는다. **새 버전을 만든다.**
+
+```
+plan_014 v1 (Active)
+  ↓  광고 예산 300만원 → 100만원 (Goal Propagation)
+plan_014 v1 (Superseded)
+plan_014 v2 (Active)  ← 저비용 채널 중심으로 재컴파일
+```
+
+이 규칙이 중요한 이유:
+
+1. **감사 가능성** — "그때 왜 그렇게 계획했는가"를 답할 수 있다.
+2. **Learning Engine의 입력** — 버전 간 차이와 결과 차이가 학습 데이터가 된다.
+3. **Goal Graph Invariant와의 일관성** — Completed Goal을 수정하지 않는 것([e001a §15](e001a-goal-graph.md))과 같은 원칙이다.
+
+### 6.2 Replanning Triggers
+
+Plan은 고정되지 않는다([Volume 3 §Stage 3 — Dynamic Planning](../v3-runtime.md)). 다음 조건에서 Planner가 새 버전을 생성한다.
+
+| Trigger | 예 |
+|---|---|
+| **Assumption Violation** | 광고 예산 300만원 → 100만원 |
+| **Goal Propagation** | 상위 Goal 변경이 하위 Goal 목표치를 바꿈 (모집 100명 → 65명) |
+| **Execution Deviation** | 예상 CTR 8% 대비 실제 3% — 허용 편차 초과 |
+| **Resource Failure Cascade** | 대체 Resource로도 Task를 수행할 수 없음 |
+| **Low Confidence** | 남은 구간의 예상 성공 확률이 임계값 이하로 하락 |
+| **User Request** | 사용자가 방향 전환을 요청 |
+
+Replanning은 전체 재컴파일이 아닐 수 있다. 영향받는 부분 그래프만 다시 계획하는 **Partial Replanning**이 기본이다.
+
+---
+
+## 7. Relationships
+
+```
+Goal Graph (e001a)
+  ↓ 입력
+Planner ──생성──→ Plan (e008)
+                    ├── 포함 ──→ Task (e005)
+                    ├── 요구 ──→ Capability (e006)
+                    ├── 전제 ──→ Constraint (e004), Assumptions
+                    └── 선택/기록 ──→ Decision (e009)
+                                        ↓
+                                     Resource (e007)
+```
+
+| Entity | 관계 | Cardinality |
+|---|---|---|
+| [Goal](e001-goal.md) / [Goal Graph](e001a-goal-graph.md) | Plan의 입력이자 존재 이유. Goal 변경 → Goal Propagation → Replanning | `Goal 1:0..N Plan` (Active는 1개, INV-P-01) |
+| [Task](e005-task.md) | Plan의 구성 단위. Task는 Plan 밖에서 독립적으로 실행되지 않는다 | `Plan 1:N Task` |
+| [Task Graph](e005a-task-graph.md) | 실행 순서의 정본. Plan 하나가 그래프 하나를 갖는다 | `Plan 1:1 Task Graph` |
+| [Capability](e006-capability.md) | Task별 요구 능력. Decision Engine의 Candidate Filtering 기준 | `Plan N:M Capability` (Task 경유) |
+| [Constraint](e004-constraint.md) | 탐색 공간의 경계. Plan은 제약을 만들지 않고 지킨다 | `Constraint N:M Plan` |
+| [Assumption](e017-assumption.md) | Plan이 서 있는 전제. 무효화되면 INV-P-04가 발동한다 | `Plan 1:0..N Assumption` |
+| [Decision](e009-decision.md) | "어느 Plan을 채택했는가", "각 Task에 어떤 Resource를 쓰는가"의 기록 | `Plan 1:0..N Decision` |
+| [Risk](e018-risk.md) | `spof`와 critical path가 Risk 식별의 자동 입력이 된다 | `Plan 1:0..N Risk` |
+| [Feedback](e012-feedback.md) | 실행 결과와 예측(성공 확률, 비용)의 차이가 Planner 학습 데이터가 된다 | `Plan 1:0..N Feedback` |
+
+**Plan은 Goal을 참조하고 Goal은 Plan을 모른다**([Rule REL-001](e000a-entity-relationships.md)).
+
+### 7.1 Goal Graph → Planner → Plan
+
+[Entity 001-A §16](e001a-goal-graph.md)의 관점을 그대로 유지한다.
+
+```
+Goal Graph
+  ↓
+Planner  (= 컴파일러)
+  ↓
+Plan     (= 컴파일 산출물)
+  ↓
+Execution Graph (Runtime에 로드된 형태)
+```
+
+Planner는 Goal 하나를 보고 계획을 세우지 않는다. **Goal Graph 전체를 입력으로 받아** 목표 간 의존성·충돌·우선순위를 함께 고려한 Plan을 생성한다.
+
+비유하면:
+
+| 컴파일러 세계 | Intent OS |
+|---|---|
+| Source Code | Goal Graph |
+| Compiler | Planner |
+| Object Code | Plan |
+| Loader/Runtime | Runtime Engine ([Volume 3](../v3-runtime.md)) |
+
+---
+
+## 8. Canonical Representation
 
 모든 Plan은 내부적으로 동일한 구조를 가진다.
 
@@ -292,7 +369,7 @@ Planner는 Plan을 하나만 만들지 않는다. 후보 Plan들을 품질 지�
 
 ---
 
-## 12. Plan Validation Algorithm
+## 9. Validation Rules
 
 Plan이 `Draft → Approved`로 넘어가려면 다음 검증을 통과해야 한다.
 
@@ -320,31 +397,71 @@ Approved
 
 ---
 
-## 13. 다른 Entity와의 관계
+## 10. Examples
+
+### 예시 1 — 채택된 Plan과 탈락한 대안
 
 ```
-Goal Graph (e001a)
-  ↓ 입력
-Planner ──생성──→ Plan (e008)
-                    ├── 포함 ──→ Task (e005)
-                    ├── 요구 ──→ Capability (e006)
-                    ├── 전제 ──→ Constraint (e004), Assumptions
-                    └── 선택/기록 ──→ Decision (e009)
-                                        ↓
-                                     Resource (e007)
+goal_001  윈터캠프 100명 모집 (예산 300만원, 마감 11-30)
+
+plan_003  ✅ 채택   Task 7개  예상 268만원 / 6주  성공확률 0.72
+plan_002  ❌ 탈락   Task 5개  예상 190만원 / 4주  성공확률 0.51  — 도달량 부족
+plan_001  ❌ 탈락   Task 9개  예상 340만원 / 7주  성공확률 0.79  — 예산 초과 (INV-P-06)
 ```
 
-| Entity | 관계 |
-|---|---|
-| **Goal / Goal Graph** | Plan의 입력이자 존재 이유. Goal 변경 → Goal Propagation → Replanning |
-| **Task** | Plan의 구성 단위. Task는 Plan 밖에서 독립적으로 실행되지 않는다 |
-| **Capability** | Task별 요구 능력. Decision Engine의 Candidate Filtering 기준 |
-| **Decision** | "어느 Plan을 채택했는가", "각 Task에 어떤 Resource를 쓰는가"의 기록 |
-| **Feedback** | 실행 결과와 예측(성공 확률, 비용)의 차이가 Planner 학습 데이터가 된다 |
+`plan_001`은 성공 확률이 가장 높지만 예산 제약을 넘어 **점수 경쟁에 참여하지 못한다.** 탈락한 두 Plan은 삭제하지 않는다 — 예산이 완화되면 `plan_001`이 먼저 재검토된다.
+
+### 예시 2 — 가정 무효화로 인한 재계획
+
+```
+plan_003  v1  Active
+  가정: asm_002 "광고 예산 300만원이 유지된다"
+     ↓ 08-20 김 원장: 예산 100만원으로 축소
+  asm_002  Invalidated
+     ↓ INV-P-04
+plan_003  v1 → Suspended
+     ↓ Graph Diff (e005a §6.1)
+  Preserved     task_001, task_002, task_003  (완료됨, 산출물 재사용)
+  Invalidated   task_004                       (예산 전제가 바뀜, 재실행)
+  Removed       task_005, task_006             (Superseded 표시, 삭제 아님)
+  Added         task_008 (저비용 채널 탐색)
+     ↓
+plan_004  v2  Active   previous_version: plan_003
+```
+
+이미 쓴 비용과 산출물은 버리지 않는다. **재계획은 처음부터 다시가 아니다.**
+
+### 예시 3 — Plan 품질 지표의 실제 값
+
+```
+plan_003
+  expected_cost                268만원  (Goal 예산 300만원의 89%)
+  expected_duration            6주      (마감까지 8주)
+  expected_success_probability 0.72
+  critical_path                task_003 → task_004 → task_006 → task_007
+  spof                         task_004  (하류 3개를 막는다)
+  assumptions                  asm_001, asm_002, asm_003
+```
+
+`spof: task_004`는 [Risk](e018-risk.md) 식별의 자동 입력이 된다. 계획 단계에서 이미 "여기가 막히면 전체가 막힌다"를 알고 있다는 뜻이다.
 
 ---
 
-## 14. Open Issues (v1.0)
+## 11. Edge Cases
+
+| 상황 | 판정 |
+|---|---|
+| **실행 가능한 Plan이 하나도 없음 (Infeasible)** | Plan을 억지로 만들지 않는다. 최소 충돌 집합을 식별해 사용자에게 트레이드오프를 제시한다([e004 §6.1](e004-constraint.md)). "일단 해보자"는 Plan은 예산만 쓴다 |
+| **재계획이 연쇄적으로 발생** (Replanning Storm) | 재계획 자체에 비용이 든다. 같은 Goal에서 짧은 기간에 재계획이 반복되면 감쇠를 걸고 원인 가정을 먼저 확정한다 (→ §12) |
+| **Plan 실행 중 Goal이 바뀜** | Goal의 `objective`가 바뀌면 그것은 수정이 아니라 **새 Goal**이다. 기존 Plan은 `Superseded`로 종료하고 새 Goal에서 새 Plan을 만든다 |
+| **예상 비용이 실제와 크게 어긋남** | Plan을 사후 수정하지 않는다. 예측과 실측의 차이 자체가 Prediction Model의 보정 신호다([Volume 4-A](../v4a-decision-engine-detail.md)). 예측을 고쳐 맞추면 학습할 것이 사라진다 |
+| **Task 하나가 계속 실패해 Plan이 진행 불가** | Plan 전체를 실패시키기 전에 그 Task의 재분해를 시도한다. 그래도 안 되면 `Suspended` + 사용자 판단 요청. **Plan의 실패와 Task의 실패는 다르다** |
+| **대안 Plan이 실행 중 더 좋아 보임** | 실행 중 Plan을 갈아타지 않는다. 전환 비용과 이미 쓴 비용을 계산해 재계획 절차를 정식으로 밟는다. 조용한 전환은 INV-P-01을 깬다 |
+| **가정이 깨졌는데 이미 Goal을 달성함** | Plan을 `Completed`로 둔다. 다만 "틀린 가정 위에서 성공했다"를 Learning 입력으로 남긴다 — **운으로 성공한 계획을 좋은 계획으로 기록하면 다음에 같은 계획을 다시 세운다** |
+
+---
+
+## 12. Open Issues (v1.0)
 
 ### Partial Replanning의 경계 문제
 
@@ -364,3 +481,4 @@ Expected Success Probability는 초기에는 Rule + Benchmark 기반이고, 장�
 - Partial Replanning 알고리즘 상세
 - Plan 간 비교(diff) 표준 포맷
 - 실제 예시 30~50개
+
