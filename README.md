@@ -63,8 +63,11 @@ Answer                      Resource → Execution → Outcome
 | Entity | 이름 | 문서 | 상태 |
 |---|---|---|---|
 | — | Entity 개요 — 12개 Core Entity, Entity/Process/Runtime State 구분 | [entities/README.md](entities/README.md) | v1.0 Draft |
-| 001 | Goal — 정의, 규칙, Formal Grammar, CGR, 검증 알고리즘 | [entities/e001-goal.md](entities/e001-goal.md) | v1.0 Draft |
+| 001 | Goal — 정의, 규칙, Formal Grammar, Goal Types | [entities/e001-goal.md](entities/e001-goal.md) | v2.0 Draft |
 | 001-A | Goal Graph — 관계, 계층, Score, Propagation, Invariants | [entities/e001a-goal-graph.md](entities/e001a-goal-graph.md) | v1.0 Draft |
+| 001-B | Goal JSON Schema — CGR v2 필드 정의, v1→v2 마이그레이션 | [entities/e001b-goal-schema.md](entities/e001b-goal-schema.md) | v2.0 Draft |
+| 001-C | Goal State Machine — 12개 상태, 상태별 Action, Guard | [entities/e001c-goal-state-machine.md](entities/e001c-goal-state-machine.md) | v2.0 Draft |
+| 001-D | Goal Validation Rules — 검증 파이프라인, Completeness, Confidence | [entities/e001d-goal-validation.md](entities/e001d-goal-validation.md) | v2.0 Draft |
 | 002 | Intent — Goal과 Task 사이의 중간 계층, 해결 영역, Confidence | [entities/e002-intent.md](entities/e002-intent.md) | v1.0 Draft |
 | 003 | Context — Scope 계층, Freshness와 TTL, 수집·갱신 규칙 | [entities/e003-context.md](entities/e003-context.md) | v1.0 Draft |
 | 004 | Constraint — Hard/Soft 구분, 7개 유형, 충돌과 완화 | [entities/e004-constraint.md](entities/e004-constraint.md) | v1.0 Draft |
@@ -85,7 +88,8 @@ Answer                      Resource → Execution → Outcome
 
 | 스키마 | 대응 Entity |
 |---|---|
-| [`goal.schema.json`](intent-os-spec/schemas/goal.schema.json) | Entity 001 — Canonical Goal Representation |
+| [`goal.schema.json`](intent-os-spec/schemas/goal.schema.json) | Entity 001-B — Canonical Goal Representation v2 |
+| [`goal-state-machine.json`](intent-os-spec/schemas/goal-state-machine.json) | Entity 001-C — Goal State Machine |
 | [`goal-graph.schema.json`](intent-os-spec/schemas/goal-graph.schema.json) | Entity 001-A — Goal Graph |
 | [`intent.schema.json`](intent-os-spec/schemas/intent.schema.json) | Entity 002 |
 | [`context.schema.json`](intent-os-spec/schemas/context.schema.json) | Entity 003 |

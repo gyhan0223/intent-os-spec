@@ -83,8 +83,11 @@ Entity 명세는 PRD 수준이 아니라 **RFC / ISO 표준** 수준으로 작�
 
 | Entity | 이름 | 문서 | 상태 |
 |---|---|---|---|
-| 001 | Goal | [e001-goal.md](e001-goal.md) | v1.0 Draft |
+| 001 | Goal — Definition | [e001-goal.md](e001-goal.md) | v2.0 Draft |
 | 001-A | Goal Graph | [e001a-goal-graph.md](e001a-goal-graph.md) | v1.0 Draft |
+| 001-B | Goal JSON Schema (CGR v2) | [e001b-goal-schema.md](e001b-goal-schema.md) | v2.0 Draft |
+| 001-C | Goal State Machine | [e001c-goal-state-machine.md](e001c-goal-state-machine.md) | v2.0 Draft |
+| 001-D | Goal Validation Rules | [e001d-goal-validation.md](e001d-goal-validation.md) | v2.0 Draft |
 | 002 | Intent | [e002-intent.md](e002-intent.md) | v1.0 Draft |
 | 003 | Context | [e003-context.md](e003-context.md) | v1.0 Draft |
 | 004 | Constraint | [e004-constraint.md](e004-constraint.md) | v1.0 Draft |
@@ -149,3 +152,5 @@ graph TD
 | **Runtime State 명세** | Outcome은 Runtime State다. Execution 명세와 함께 정의한다 |
 | **예시 확충** | 각 Entity마다 실제 예시 30~50개 (현재는 핵심 예시 위주) |
 | **Reference Implementation** | 스키마 기반 검증기(Validator) 구현 → [Volume 7](../v7-reference-implementation.md) |
+
+Entity 001(Goal)은 v2.0에서 정의·스키마·상태 머신·검증 규칙 4개 문서로 분할되었다. 나머지 Entity도 명세가 깊어지면 같은 방식으로 분할한다.
