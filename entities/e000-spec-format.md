@@ -278,33 +278,57 @@ Goal의 하위 문서 4개(001-A~001-D)는 Annex다. `goal_id` 말고 자기 식
 
 새 Entity 문서를 커밋하기 전에 확인한다.
 
-```
-[ ] 12개 필수 섹션이 모두 있는가
-[ ] §2에 인접 개념 3개 이상, 각각 ❌ 반례가 있는가
-[ ] Rule Prefix가 §3 표에 등록되어 있는가
-[ ] §5의 각 Invariant에 "위반 시 시스템 반응"이 있는가
-[ ] §7에 Cardinality가 표기되어 있는가
-[ ] §8의 JSON 예시가 실제 스키마를 통과하는가   → python3 tools/validate-examples.py
-[ ] 예시가 §10 고정 도메인을 쓰는가
-[ ] e000a §3 Cardinality 전체표에 행을 추가했는가
-[ ] entities/README.md 목차와 §6 준수 현황표를 갱신했는가
-[ ] 루트 README.md 목차를 갱신했는가
-[ ] 상대 링크가 깨지지 않았는가
+대부분은 기계가 대신 돈다. 세 스크립트를 순서대로 실행한다.
+
+```bash
+python3 tools/validate-format.py     # 형식: 섹션·번호·헤더·스키마 위생·상호 참조
+python3 tools/validate-examples.py   # 예시: JSON 블록 ↔ 스키마
+python3 tools/validate-links.py      # 상대 링크
 ```
 
-`tools/validate-examples.py`는 §8 예시뿐 아니라 문서 전체의 JSON 블록을 검사한다. 새 Entity를 추가하면 그 스크립트의 `DOC_TO_SCHEMA`에도 항목을 추가한다.
+| 항목 | 검사 주체 |
+|---|---|
+| 12개 필수 섹션이 번호대로 있는가 | `validate-format.py` |
+| Rule 4개 이상, INV 3개 이상인가 | `validate-format.py` |
+| Rule Prefix가 §3 표에 등록되어 있는가 | `validate-format.py` (표를 직접 파싱한다) |
+| 헤더 3필드와 허용값이 맞는가 | `validate-format.py` |
+| 스키마 링크가 실재하는 파일을 가리키는가 | `validate-format.py` |
+| `[e007 §6]` 같은 상호 참조가 실재하는 섹션인가 | `validate-format.py` |
+| 스키마에 `additionalProperties: false`와 `description`이 있는가 | `validate-format.py` |
+| §8의 JSON 예시가 실제 스키마를 통과하는가 | `validate-examples.py` |
+| 상대 링크가 깨지지 않았는가 | `validate-links.py` |
+
+**기계가 못 보는 것은 직접 확인한다.**
+
+```
+[ ] §2에 인접 개념 3개 이상, 각각 ❌ 반례가 있는가
+[ ] §5의 각 Invariant에 "위반 시 시스템 반응"이 있는가
+[ ] §7에 Cardinality가 표기되어 있는가
+[ ] 예시가 §10 고정 도메인을 쓰는가
+[ ] e000a §3 Cardinality 전체표와 §2 Entity 지도에 행을 추가했는가
+[ ] entities/README.md 목차와 §6 준수 현황표를 갱신했는가
+[ ] 루트 README.md 목차를 갱신했는가
+```
+
+`validate-examples.py`는 §8 예시뿐 아니라 문서 전체의 JSON 블록을 검사한다. 새 Entity를 추가하면 그 스크립트의 `DOC_TO_SCHEMA`에도 항목을 추가한다.
 
 ---
 
 ## 12. Open Issues (v1.0)
 
-### 기존 Entity 001~012의 형식 소급 적용
+### ~~기존 Entity 001~012의 형식 소급 적용~~ (해소)
 
-Entity 001~012는 이 형식이 정해지기 전에 작성되었다. 대부분 §5 Invariants와 §11 Edge Cases가 없다. 소급 적용 계획은 [entities/README.md](README.md) §6의 준수 현황표에서 관리한다.
+2026-08-04에 12개 문서를 일괄 재배치하고 Invariants·Examples·Edge Cases를 신설했다. 결과는 [entities/README.md](README.md) §6에 있다.
 
-### 형식 검증의 자동화
+### ~~형식 검증의 자동화~~ (해소)
 
-체크리스트(§11)는 현재 수동이다. Markdown 구조를 파싱해 필수 섹션 존재 여부를 검사하는 린터가 필요하다. → [Volume 7](../v7-reference-implementation.md)
+`tools/validate-format.py`가 §11 체크리스트를 대신 돈다. 검사 항목은 12개 섹션 순서, Rule·INV 최소 개수, Prefix 등록 일치, 헤더 3필드, 스키마 링크 실재, 상호 참조(§N) 유효성, 스키마 위생이다. `.github/workflows/validate-spec.yml`이 push마다 실행한다.
+
+**남은 것:** [e000a §5](e000a-entity-relationships.md)의 전역 불변식 16개는 문서를 읽어서는 검사할 수 없다. 실행 중인 데이터가 있어야 하므로 [Volume 7](../v7-reference-implementation.md)의 구현 과제로 남는다.
+
+### 섹션 내용의 품질은 검사하지 못한다
+
+린터는 §11 Edge Cases가 **있는지**는 보지만 거기 적힌 판정이 **옳은지**는 보지 못한다. 형식 준수와 내용 품질은 다른 문제이며, 후자를 기계가 판정할 방법은 현재 없다.
 
 ### 앞으로 보강해야 할 항목
 
