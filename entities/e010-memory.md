@@ -1,8 +1,9 @@
 # Entity 010: Memory
 
-- **Version:** v1.0 Draft
+- **Version:** v2.0 Draft
 - **Status:** Core Entity
 - **Last Updated:** 2026-08-04
+- **Schema:** [`memory.schema.json`](../intent-os-spec/schemas/memory.schema.json)
 
 ---
 
@@ -76,7 +77,7 @@ Memory는 **개별 사례**다. `2026-08-01, A 미술학원 윈터캠프 광고,
 
 ---
 
-## 3. Memory의 조건
+## 3. Design Principles
 
 Memory는 반드시 아래 규칙을 만족해야 한다.
 
@@ -119,7 +120,7 @@ Memory는 "그때 실제로 일어난 일"의 기록이다. 내용이 틀렸다�
 
 ---
 
-## 4. Memory Attributes
+## 4. Attributes
 
 Memory는 최소한 아래 속성을 가진다.
 
@@ -161,9 +162,7 @@ Memory
 
 Recall Count는 의외로 중요하다. **자주 회상되고 결과가 좋았던 Memory는 Knowledge 승격의 1차 후보**가 된다.
 
----
-
-## 5. Memory Types
+### 4.1 Memory Types
 
 모든 Memory는 정확히 하나의 Type을 가진다.
 
@@ -192,9 +191,7 @@ Knowledge (Entity 011)로 승격
 
 Semantic Memory와 Knowledge의 차이에 주의한다. Semantic Memory는 **아직 검증 전의 일반화 후보**이고, 검증을 통과해야 Knowledge가 된다. (→ [e011-knowledge.md §7](e011-knowledge.md))
 
----
-
-## 6. Memory Scope
+### 4.2 Memory Scope
 
 Memory는 적용 범위가 다르다.
 
@@ -204,7 +201,7 @@ Memory는 적용 범위가 다르다.
 | **User-level** | 특정 사용자에게만 유효 | `이 학원 대표는 속도보다 품질을 선호한다` |
 | **Global** | 익명화되어 전체 시스템에 유효 | `교육 마케팅 카피 작업의 평균 만족도 데이터` |
 
-### Scope Rule
+#### Scope Rule
 
 1. Memory는 생성 시 **가장 좁은 Scope**로 시작한다. (기본: Goal-level)
 2. Scope 확장(Goal → User → Global)은 자동으로 일어나지 않는다. 패턴 검증과 **익명화**를 거쳐야 한다.
@@ -212,7 +209,63 @@ Memory는 적용 범위가 다르다.
 
 ---
 
-## 7. Memory Lifecycle
+## 5. Invariants
+
+### INV-M-01 — Memory는 생성 후 내용이 바뀌지 않는다
+
+Rule M-002의 상태 표현이다. 기록을 고치면 그것은 기억이 아니라 재해석이며, 재해석된 기억으로 학습하면 시스템은 자기가 바꾼 과거를 배운다.
+
+| | |
+|---|---|
+| **위반 시** | 변경을 거부한다. 해석이 달라졌으면 **새 Memory를 만들고** 이전 것을 참조한다. 평가가 달라졌으면 [Feedback](e012-feedback.md)으로 덧붙인다 |
+| **탐지** | 쓰기 시점 |
+
+### INV-M-02 — 맥락 없는 Memory는 존재하지 않는다
+
+Rule M-001의 상태 표현이다. "카피 A가 잘 됐다"만 남고 대상·시점·조건이 없으면, 다음에 어떤 상황에서 그걸 꺼내야 할지 판단할 수 없다.
+
+| | |
+|---|---|
+| **위반 시** | 해당 Memory를 회상 대상에서 제외한다. 삭제하지는 않는다 — 맥락을 복원할 단서가 남아야 한다 |
+
+### INV-M-03 — 출처를 따라가면 실제 Execution에 도달한다
+
+`provenance`가 가리키는 Execution·Outcome이 없으면, 그 기억은 무엇에서 나왔는지 알 수 없는 값이다.
+
+| | |
+|---|---|
+| **위반 시** | 고아 Memory로 표시하고 Knowledge 승격 후보에서 제외한다. **근거를 못 대는 기억은 일반화의 재료가 될 수 없다** |
+| **탐지** | 생성 시점, 야간 정합성 검사 |
+
+### INV-M-04 — 단일 Memory가 Knowledge로 바로 승격되지 않는다
+
+Rule M-005의 상태 표현이다. 한 번의 성공은 사건이지 법칙이 아니다.
+
+| | |
+|---|---|
+| **위반 시** | 승격을 취소하고 Knowledge를 `Provisional`로 되돌린다. 승격에 필요한 최소 사례 수는 [e011 §9](e011-knowledge.md)가 정한다 |
+
+### INV-M-05 — Decay는 값을 지우지 않고 가중치만 낮춘다
+
+오래된 기억의 영향력이 줄어드는 것과 기억이 사라지는 것은 다르다. 지워버리면 "예전에는 이랬다"를 복원할 수 없다.
+
+| | |
+|---|---|
+| **위반 시** | 삭제를 되돌린다. 저장 비용 때문에 실제로 지워야 한다면 요약본을 남기고 원본 참조를 보존한다 |
+
+### INV-M-06 — Scope를 넘는 회상은 일어나지 않는다
+
+한 사용자의 Memory가 다른 사용자의 추론에 끌려오면 개인정보와 판단 근거가 동시에 새어 나간다.
+
+| | |
+|---|---|
+| **위반 시** | 회상 결과에서 즉시 제외하고 접근 위반으로 기록한다. 이미 그 Memory로 내려진 Decision이 있으면 무효화 대상으로 표시한다 |
+
+Entity 간 불변식은 [e000a-entity-relationships.md](e000a-entity-relationships.md)가 단일 권위다.
+
+---
+
+## 6. Lifecycle
 
 ```
 Created → Active → Decaying → Dormant → (Expired | Archived | Deleted)
@@ -230,13 +283,11 @@ Created → Active → Decaying → Dormant → (Expired | Archived | Deleted)
 | **Archived** | 보존은 하되 회상 불가 |
 | **Deleted** | 사용자 요구 등으로 완전 삭제 |
 
----
-
-## 8. Retention & Decay
+### 6.1 Retention & Decay
 
 오래된 경험은 현재를 덜 대표한다. AI 생태계는 빠르게 변하기 때문이다.
 
-### Decay 원칙
+#### Decay 원칙
 
 $$Effective\ Confidence = Confidence \times DecayFactor(age, domain)$$
 
@@ -256,7 +307,35 @@ Status: Decaying → Dormant
 
 ---
 
-## 9. Canonical Memory Representation
+## 7. Relationships
+
+```
+Decision (e009) ──실행──→ Execution (Process) ──→ Outcome (Runtime State)
+                                                      ↓ 영속화
+Feedback (e012) ──평가 신호 첨부──────────────→  Memory (e010)
+                                                      ↓ 패턴 발견 + 검증
+                                                  Knowledge (e011)
+                                                      ↓ 참조
+                                          Decision Engine / Planner
+```
+
+| Entity | 관계 | Cardinality |
+|---|---|---|
+| [Goal](e001-goal.md) | 모든 Memory는 특정 Goal의 맥락에서 생성된다 | `Goal 1:0..N Memory` |
+| [Execution](e013-execution.md) / [Outcome](e014-outcome.md) | `provenance`가 가리키는 실체. 여기 도달하지 못하면 INV-M-03 위반이다 | `Outcome 1:0..N Memory` |
+| [Decision](e009-decision.md) | Memory는 Decision의 근거와 결과를 기록한다 | `Decision 1:0..N Memory` |
+| [Knowledge](e011-knowledge.md) | Memory가 승격되어 Knowledge가 된다. 단일 Memory로는 승격되지 않는다 | `Memory N:M Knowledge` |
+| [Feedback](e012-feedback.md) | Feedback은 Memory에 평가 신호를 덧붙인다. 여러 건이 시차를 두고 붙을 수 있다 | `Memory 1:0..N Feedback` |
+| [Context](e003-context.md) | Context는 Memory에서 선별해 로드한 현재 추론용 스냅샷이다 | `Memory 1:0..N Context` |
+| [Resource Profile](e025-resource-profile.md) | Resource 성능 프로필은 Memory 집합에서 계산된다 | `Memory N:M Resource Profile` |
+
+**Memory는 시간상 앞선 것들을 참조하고, 아무도 Memory를 되가리키지 않는다**([Rule REL-002](e000a-entity-relationships.md)).
+
+Learning Engine 관점의 전체 흐름은 [Volume 5](../v5-learning-engine.md), World 수준의 장기 기억은 [Volume 4-F §20 World Memory](../v4f-world-model.md)를 참조한다.
+
+---
+
+## 8. Canonical Representation
 
 모든 Memory는 내부적으로 동일한 구조를 가진다.
 
@@ -286,7 +365,7 @@ Status: Decaying → Dormant
 
 ---
 
-## 10. Memory Algorithms
+## 9. Validation Rules
 
 ### 10.1 저장 (Memorization)
 
@@ -326,27 +405,66 @@ Recall Count 갱신
 
 ---
 
-## 11. 다른 Entity와의 관계
+## 10. Examples
+
+### 예시 1 — 하나의 실행이 Memory가 되는 과정
 
 ```
-Decision (e009) ──실행──→ Execution (Process) ──→ Outcome (Runtime State)
-                                                      ↓ 영속화
-Feedback (e012) ──평가 신호 첨부──────────────→  Memory (e010)
-                                                      ↓ 패턴 발견 + 검증
-                                                  Knowledge (e011)
-                                                      ↓ 참조
-                                          Decision Engine / Planner
+exe_220  claude-5로 인스타그램 광고 카피 3종 작성  1,820ms / 0.42 USD
+out_331  카피 3종 (art_450)
+eval_055 quality 0.88 / goal_alignment 0.91 → accept
+   ↓ 영속화
+mem_612
+  what      "예비 고3 학부모 대상 인스타 카피는 '입시 불안'보다
+             '구체적 일정 제시'가 클릭률이 높았다"
+  context   goal_001 / 홍대 / 겨울방학 / 예비 고3 학부모 / 인스타그램
+  provenance exe_220, out_331, eval_055
+  scope     organization
+  created_at 2026-08-04
 ```
 
-| Entity | 관계 |
+`what`만 있고 `context`가 없으면 이 기억은 **어디에도 다시 쓸 수 없다**(INV-M-02). "학부모 대상"과 "인스타그램"이 회상의 키다.
+
+### 예시 2 — 회상이 다음 Decision을 바꾸는 순간
+
+```
+task_014  겨울방학 특강 인스타 카피 작성 (2026-11-02)
+   ↓ 회상 질의: 대상=학부모, 채널=인스타그램, 도메인=학원
+mem_612  유사도 0.87  (3개월 전, decay 가중치 0.82)
+mem_588  유사도 0.61  (10개월 전, decay 가중치 0.34)
+   ↓
+Planner: task_014의 프롬프트에 "구체적 일정 제시" 방향을 우선 반영
+```
+
+`mem_588`은 사라지지 않았다. 가중치가 낮아졌을 뿐이다(INV-M-05).
+
+### 예시 3 — Memory 3건이 Knowledge 후보가 되는 시점
+
+```
+mem_612  (08-04)  학부모 대상 · 일정 제시형 카피 → CTR 3.2%
+mem_640  (09-11)  학부모 대상 · 일정 제시형 카피 → CTR 2.9%
+mem_701  (10-25)  학부모 대상 · 불안 소구형 카피 → CTR 1.4%
+   ↓ 패턴 발견
+"학부모 대상 광고는 불안 소구보다 일정 제시가 효과적이다"
+   ↓ INV-M-04 — 단일 사례로는 승격 불가. 3건이 같은 방향
+know_042  Provisional  근거 mem_612, mem_640, mem_701
+```
+
+Memory는 사건의 기록이고 Knowledge는 그 위에서 발견된 경향이다. **승격은 개수가 아니라 반복된 방향으로 판정한다.**
+
+---
+
+## 11. Edge Cases
+
+| 상황 | 판정 |
 |---|---|
-| [Goal](e001-goal.md) | 모든 Memory는 특정 Goal의 맥락에서 생성된다 |
-| Decision (예정) | Memory는 Decision의 근거와 결과를 기록한다 |
-| [Knowledge](e011-knowledge.md) | Memory가 승격되어 Knowledge가 된다 |
-| [Feedback](e012-feedback.md) | Feedback은 Memory에 평가 신호를 덧붙인다 |
-| Resource (예정) | Resource 성능 프로필은 Memory 집합에서 계산된다 |
-
-Learning Engine 관점의 전체 흐름은 [Volume 5](../v5-learning-engine.md), World 수준의 장기 기억은 [Volume 4-F §20 World Memory](../v4f-world-model.md)를 참조한다.
+| **같은 실행에서 상반된 평가가 나옴** (시스템 accept, 사용자 reject) | 둘 다 남긴다. Memory는 하나이고 [Feedback](e012-feedback.md) 두 건이 붙는다. 평균을 내서 하나로 만들지 않는다 — 불일치 자체가 평가 모델의 학습 신호다 |
+| **나중에 사실이 아니었음이 밝혀짐** | Memory를 고치지 않는다(INV-M-01). 새 Memory를 만들고 이전 것을 참조하며, 승격된 Knowledge가 있으면 반증 절차([e011 §6](e011-knowledge.md))로 넘긴다 |
+| **개인정보가 포함된 Memory** | Scope를 좁히고 보존 기간을 [Policy](e019-policy.md)에 위임한다. 삭제 요청이 오면 원본을 지우되 **집계에 쓰인 파생 통계는 재계산**한다. 지웠는데 통계에 남아 있으면 지운 것이 아니다 |
+| **회상 결과가 0건** | 실패가 아니다. 유사 사례가 없다는 사실을 그대로 Planner에 전달한다. 억지로 유사도 기준을 낮춰 무관한 기억을 끌어오면 잘못된 근거로 판단하게 된다 |
+| **Memory가 폭증해 회상 비용이 커짐** | 요약·병합으로 줄이되 `provenance`는 유지한다. 원본 참조가 끊기면 INV-M-03에 걸려 그 요약본은 Knowledge 승격에 쓸 수 없게 된다 |
+| **한 번의 큰 성공** | Knowledge로 올리지 않는다(INV-M-04). 강한 인상은 강한 증거가 아니다. 단 `salience`를 높여 회상 우선순위는 올릴 수 있다 |
+| **Execution은 실패했지만 배울 것이 있음** | Memory로 남긴다. 실패 Memory가 없으면 시스템은 성공만 기억하고 같은 실패를 반복한다 |
 
 ---
 
@@ -380,3 +498,4 @@ Memory를 지우면 Knowledge의 근거가 사라진다. Knowledge까지 폐기�
 - Scope 승격 시 익명화 규칙의 형식 정의
 - Decay Factor의 도메인별 파라미터 표
 - 실제 예시 30~50개
+

@@ -1,8 +1,9 @@
 # Entity 009: Decision
 
-- **Version:** v1.0 Draft
+- **Version:** v2.0 Draft
 - **Status:** Core Entity
 - **Last Updated:** 2026-08-04
+- **Schema:** [`decision.schema.json`](../intent-os-spec/schemas/decision.schema.json)
 
 ---
 
@@ -50,7 +51,7 @@ Decision Engine은 **Component**(선택을 수행하는 시스템, [Volume 4](..
 
 ---
 
-## 3. Decision의 조건
+## 3. Design Principles
 
 Decision은 반드시 아래 조건을 만족해야 한다.
 
@@ -97,7 +98,7 @@ Confidence가 임계값(예: 70%) 미만이면 Multi-Agent 실행 또는 Escalat
 
 ---
 
-## 4. Decision Attributes
+## 4. Attributes
 
 ```
 Decision
@@ -132,9 +133,7 @@ Decision
 | **Supersedes** | 대체한 이전 Decision | `null` 또는 `dec_087` |
 | **Outcome Link** | 사후 평가 연결 (§8) | `outcome_331` |
 
----
-
-## 5. Decision Types
+### 4.1 Decision Types
 
 Intent OS의 결정은 Resource 선택만이 아니다.
 
@@ -159,9 +158,7 @@ Decision
 
 모든 Type은 동일한 Canonical 구조(§9)를 공유한다. `subject`와 `selection`의 내용만 달라진다.
 
----
-
-## 6. Utility Scores
+### 4.2 Utility Scores
 
 Resource Selection과 Plan Selection의 근거 점수는 [Volume 4-A §8](../v4a-decision-engine-detail.md)의 Utility 공식을 따른다.
 
@@ -185,7 +182,61 @@ Human Copywriter   0.71   (품질 최고, 비용·속도에서 감점)
 
 ---
 
-## 7. Decision Lifecycle
+## 5. Invariants
+
+### INV-D-01 — Decision은 생성 후 변경되지 않는다
+
+Rule D-005의 상태 표현이다. 판단을 사후에 고치면 "그때 무엇을 알고 무엇을 골랐는가"가 사라지고, 감사도 학습도 성립하지 않는다.
+
+| | |
+|---|---|
+| **위반 시** | 변경을 거부한다. 판단을 바꾸려면 **새 Decision을 만들고** `supersedes`로 이전 것을 가리킨다 |
+| **탐지** | 쓰기 시점 |
+
+### INV-D-02 — 모든 Decision은 입력 스냅샷을 갖는다
+
+Rule D-004의 상태 표현이다. Resource 점수는 계속 변하므로, 스냅샷 없이는 "왜 그때 이 Resource가 1등이었는가"를 재현할 수 없다.
+
+| | |
+|---|---|
+| **위반 시** | 해당 Decision을 감사 불가로 표시하고 학습 데이터에서 제외한다. 실행은 막지 않는다 — 이미 내려진 판단을 되돌리는 비용이 더 크다 |
+
+### INV-D-03 — 선택된 후보의 Utility가 대안보다 낮을 수 없다
+
+낮은데도 선택됐다면 점수 밖의 이유가 작용한 것이다. 그 이유가 기록되지 않으면 Decision Engine은 자기 점수를 믿을 수 없게 된다.
+
+| | |
+|---|---|
+| **위반 시** | 예외 사유(`override_reason`)를 요구한다. 사유가 없으면 Decision을 무효로 처리하고 재실행한다. 사유가 있으면 정상이며, **그 사유 자체가 Utility 모델의 보정 신호가 된다** |
+
+### INV-D-04 — Decision 없이 Execution이 생기지 않는다
+
+전역 불변식의 Decision 측 표현이다. Decision이 없는 실행은 누가 왜 그것을 골랐는지 알 수 없는 실행이다.
+
+| | |
+|---|---|
+| **위반 시** | Execution을 `Aborted`로 종료하고 정합성 오류로 보고한다. 발생 비용은 기록한다 |
+| **탐지** | Execution 생성 훅 |
+
+### INV-D-05 — Hard Constraint를 위반한 후보는 선택되지 않는다
+
+| | |
+|---|---|
+| **위반 시** | Decision을 무효화하고 재실행한다. **Hard는 필터이지 감점 항목이 아니다**([INV-CN-02](e004-constraint.md)) |
+
+### INV-D-06 — 사후 평가는 Decision을 덮어쓰지 않는다
+
+`decision_quality`가 낮게 나왔다고 원래 `utility`를 고치면, 예측과 실측의 차이가 사라져 Prediction Model이 배울 것을 잃는다.
+
+| | |
+|---|---|
+| **위반 시** | 원본 값을 복원한다. 사후 평가는 [Evaluation](e015-evaluation.md)의 `decision_review`에 별도로 남는다 |
+
+Entity 간 불변식은 [e000a-entity-relationships.md](e000a-entity-relationships.md)가 단일 권위다.
+
+---
+
+## 6. Lifecycle
 
 Decision의 **내용**은 불변이지만, **기록의 상태**는 전이한다.
 
@@ -206,9 +257,7 @@ Proposed → Committed → Applied → Evaluated
 
 상태 전이는 필드 추가(평가 결과, 대체 링크)만 허용하며, **§4의 핵심 속성(selection, rationale, inputs_snapshot 등)은 어떤 상태에서도 수정할 수 없다.**
 
----
-
-## 8. Decision Outcome — 사후 평가
+### 6.1 Decision Outcome — 사후 평가
 
 Decision은 내리는 순간이 아니라 **결과와 대조될 때** 가치가 완성된다.
 
@@ -233,7 +282,33 @@ Decision (예측)          Outcome (실제)
 
 ---
 
-## 9. Canonical Decision Representation
+## 7. Relationships
+
+```
+Plan (e008) ──후보──→ Decision Engine ──기록──→ Decision (e009)
+Task (e005) ──대상──→        │                     │
+Resource (e007) ──선택지──→   │                     ├──→ Outcome (Runtime State)
+Memory (e010) ←──축적────────┴─────────────────────┘
+Feedback (e012) ←── 사용자/시스템 평가
+```
+
+| Entity | 관계 | Cardinality |
+|---|---|---|
+| [Plan](e008-plan.md) | Plan Selection Decision의 대상. Plan 버전 교체는 항상 Decision을 남긴다 | `Plan 1:0..N Decision` |
+| [Task](e005-task.md) | Resource Selection Decision의 단위 | `Task 1:0..N Decision` |
+| [Resource](e007-resource.md) | 선택지. Decision의 `inputs_snapshot`에 당시 Resource 점수가 동결된다 | `Resource 1:0..N Decision` |
+| [Execution](e013-execution.md) | 모든 Execution은 하나의 Decision에서 파생된다 (INV-D-04) | `Decision 1:0..N Execution` |
+| [Constraint](e004-constraint.md) | Hard는 후보 필터, Soft는 점수 감점으로 들어온다 | `Constraint N:M Decision` |
+| [Evaluation](e015-evaluation.md) | 사후 평가는 Decision을 덮지 않고 별도로 남는다 (INV-D-06) | `Decision 1:0..N Evaluation` |
+| [Memory](e010-memory.md) | Evaluated Decision이 Decision Memory로 축적된다 | `Decision 1:0..N Memory` |
+| [Feedback](e012-feedback.md) | User Reject 등 Feedback이 Decision의 사후 평가에 반영된다 | `Decision 1:0..N Feedback` |
+| [Goal](e001-goal.md) | 모든 Decision은 subject를 따라가면 결국 하나 이상의 Goal에 도달해야 한다 | `Goal 1:0..N Decision` (간접) |
+
+**Decision은 시간상 앞선 것들을 참조한다**([Rule REL-002](e000a-entity-relationships.md)).
+
+---
+
+## 8. Canonical Representation
 
 모든 Decision은 내부적으로 동일한 구조를 가진다.
 
@@ -274,7 +349,7 @@ Decision (예측)          Outcome (실제)
 
 ---
 
-## 10. Decision Validation Algorithm
+## 9. Validation Rules
 
 Decision이 `Proposed`로 생성될 때 다음 검증을 통과해야 한다.
 
@@ -302,24 +377,70 @@ Committed
 
 ---
 
-## 11. 다른 Entity와의 관계
+## 10. Examples
+
+### 예시 1 — Resource Selection Decision
 
 ```
-Plan (e008) ──후보──→ Decision Engine ──기록──→ Decision (e009)
-Task (e005) ──대상──→        │                     │
-Resource (e007) ──선택지──→   │                     ├──→ Outcome (Runtime State)
-Memory (e010) ←──축적────────┴─────────────────────┘
-Feedback (e012) ←── 사용자/시스템 평가
+dec_101   subject: task_004 (인스타그램 광고 카피 3종 작성)
+          type: resource_selection
+          decided_at: 2026-08-04T09:12:00Z
+
+후보와 Utility
+  anthropic:claude-5      0.91   ✅ 선택
+  human:copywriter_kim    0.78        품질 최고(94)이나 지연 4시간이 감점
+  openai:gpt              0.74        관측 점수 81
+
+inputs_snapshot
+  claude-5   copywriting 88 (conf 0.82)  예상 800ms / 0.35 USD
+  kim        copywriting 94 (conf 0.91)  예상 4h    / 50,000 KRW
+  gpt        copywriting 81 (conf 0.68)  예상 950ms / 0.28 USD
+
+rationale: 마감까지 8주이나 후속 Task 3개가 이 산출물에 의존(SPOF).
+           지연 감점이 품질 우위를 상쇄한다.
 ```
 
-| Entity | 관계 |
+스냅샷이 있으므로 한 달 뒤 claude-5의 점수가 76으로 떨어져도 **이 판단이 당시 기준으로 옳았는지** 그대로 검증할 수 있다.
+
+### 예시 2 — 점수를 뒤집은 선택과 그 사유
+
+```
+dec_118   subject: task_009 (학부모 대상 상담 스크립트 검수)
+          후보  claude-5              0.88
+                human:copywriter_kim  0.71   ✅ 선택
+
+override_reason: "학부모 응대 문구는 대표가 최종 책임을 진다.
+                  인간 검수를 Policy(pol_004)가 요구한다."
+```
+
+INV-D-03이 요구하는 사유가 붙어 있으므로 정상이다. 이 사유가 반복되면 Utility 모델에 `human_required` 항을 넣어야 한다는 신호가 된다.
+
+### 예시 3 — 예측과 실측이 갈린 뒤의 사후 평가
+
+```
+dec_101   예측  utility 0.91  /  800ms  /  0.35 USD
+exe_220   실측         —      / 1,820ms /  0.42 USD
+  ↓ Evaluation (eval_055)
+decision_review
+  prediction_error  utility +0.06  latency_ms +1,020  cost +0.07
+  decision_quality  good — 결과는 좋았고 선택도 옳았다
+```
+
+`dec_101` 자체는 한 글자도 바뀌지 않는다(INV-D-06). 차이는 별도 Evaluation에 기록되고 Prediction Model의 보정에 쓰인다.
+
+---
+
+## 11. Edge Cases
+
+| 상황 | 판정 |
 |---|---|
-| **Plan** | Plan Selection Decision의 대상. Plan 버전 교체는 항상 Decision을 남긴다 |
-| **Task** | Resource Selection Decision의 단위 |
-| **Resource** | 선택지. Decision의 inputs_snapshot에 당시 Resource 점수가 동결된다 |
-| **Memory** | Evaluated Decision이 Decision Memory로 축적된다 |
-| **Feedback** | User Reject 등 Feedback이 Decision의 사후 평가에 반영된다 |
-| **Goal** | 모든 Decision은 subject를 따라가면 결국 하나 이상의 Goal에 도달해야 한다 |
+| **후보가 하나뿐** | 그래도 Decision을 남긴다. `alternatives_considered`가 비었다는 사실 자체가 정보다 — 선택지가 없었다는 뜻이며, Resource 등록의 필요를 알린다 |
+| **Utility 동점** | 임의로 고르지 않는다. 비용이 낮은 쪽 → 관측 표본이 많은 쪽 → 먼저 등록된 쪽 순으로 결정론적 규칙을 적용하고, 적용한 규칙을 `rationale`에 남긴다 |
+| **선택 직후 Resource가 사용 불가가 됨** | 기존 Decision을 수정하지 않는다. **새 Decision을 만들고** `supersedes`로 잇는다. 이전 판단이 틀렸던 것이 아니라 상황이 바뀐 것이다 |
+| **사용자가 시스템 선택을 거부** | Decision을 지우지 않는다. 사용자 선택을 새 Decision으로 기록하고, 거부 사실은 [Feedback](e012-feedback.md)으로 붙인다. **거부당한 판단이 학습 가치가 가장 높다** |
+| **스냅샷 없이 내려진 과거 Decision** | 감사 불가로 표시하고 학습 데이터에서 제외한다(INV-D-02). 소급해서 현재 점수로 스냅샷을 채우지 않는다 — 그건 기록이 아니라 날조다 |
+| **같은 Task에 Decision이 둘** | 재시도 때문이면 정상이다. 각 Execution이 자기 Decision을 갖는다. 동시에 두 개가 Applied면 [INV-P-01](e008-plan.md) 위반의 하류 증상이므로 Plan 쪽을 먼저 본다 |
+| **결과는 나빴는데 선택은 옳았던 경우** | `decision_quality: good`, `outcome: bad`로 **따로 기록한다.** 결과로만 판단을 평가하면 운 좋은 나쁜 판단이 학습되고, 운 나쁜 좋은 판단이 버려진다 |
 
 ---
 
@@ -343,3 +464,4 @@ Feedback (e012) ←── 사용자/시스템 평가
 - Forced Action(대안 없는 선택)의 처리 규칙
 - Superseded 체인의 최대 깊이 및 조회 표준
 - 실제 예시 30~50개
+
