@@ -47,6 +47,7 @@ Goal → Strategy → Resources → Outcome
 
 Intent OS 내부에서 Strategy는 하나의 객체다.
 
+<!-- validate: none -->
 ```json
 {
   "strategy_id": "marketing.education.v12",
@@ -313,6 +314,28 @@ Strategy Graph Engine은 Intent OS를 **"AI 선택기"에서 "AI 운영체제"�
 시간이 지나면 개별 모델의 성능 차이는 줄어들 가능성이 크다. 하지만 **"어떤 순서로, 어떤 도구를 조합해, 어떤 검증 과정을 거치는가"** 라는 전략은 계속 경쟁력이 될 가능성이 높다.
 
 장기적으로 Intent OS의 가장 큰 자산은 AI 모델 목록이 아니라 **성공 전략 라이브러리**가 될 수 있다.
+
+---
+
+## Volume 4-E Completion Criteria
+
+> **본 문서는 장기 연구 문서다** ([Volume 4](v4-decision-engine.md) 문서 목록의 ⚠️ 표시). 아래 판정은 설계 의도의 명확성을 본다.
+
+| 항목 | 근거 | 판정 |
+|---|---|---|
+| 문제 정의 | §1, §2 | ✅ |
+| Strategy 객체 정의 | §3 | ⚠️ 부분 — 개념 예시만. 대응 Entity·스키마 없음 |
+| Strategy Graph 구조 정의 | §4~§6 (Node / Edge 유형) | ✅ |
+| Strategy 저장·검색 정의 | §7, §8 | ⚠️ 부분 — 검색 키·색인 구조 미정의 |
+| Strategy 적응·변형 정의 | §9, §11, §12 | ⚠️ 부분 |
+| Strategy 평가 정의 | §13 | ❌ **미충족** — §1이 지적한 **기여도 분리 문제**(전략·Resource·운 중 무엇이 성공 요인인가)가 미해결 |
+| Strategy Embedding 정의 | §14 | ⚠️ 부분 — 벡터 공간 정의 미정 ([4-C Appendix B](v4c-resource-genome.md) 1번과 동일 문제) |
+| 전략 발견 정의 | §17, §20 | ⚠️ 부분 |
+
+**§13의 기여도 분리(credit assignment)가 본 문서의 핵심 난제다.** 이것이 풀리지 않으면 Strategy Score는 Resource 성능의 대리 지표에 머물고, 전략 자체를 학습한다는 §2의 주장이 성립하지 않는다.
+
+Strategy를 Entity로 승격할지는 미결이다. 승격한다면 [`e000a-entity-relationships.md`](entities/e000a-entity-relationships.md)의 Cardinality 전체표와 Entity 지도를 함께 갱신해야 한다.
+
 
 ---
 

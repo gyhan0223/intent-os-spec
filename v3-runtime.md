@@ -58,13 +58,16 @@ graph TD
 
 **정의:** 하나 이상의 Goal을 추진하는 경계 지어진 실행 단위. 일시적 Context와 예산을 보유하되 **영속 Entity는 참조만 한다.**
 
+<!-- validate: session.schema.json -->
 ```json
 {
   "session_id": "ses_057",
   "type": "interactive",
   "actor": "human:대표",
-  "goal_ids": ["goal_001"],
+  "goal_ids": ["goal_01HZX9M4Y4QF2X"],
   "budget": { "max_cost": { "amount": 50000, "currency": "KRW" }, "max_executions": 200 },
+  "started_at": "2026-08-04T09:00:00Z",
+  "last_activity_at": "2026-08-04T09:42:00Z",
   "execution_ids": [],
   "decision_ids": [],
   "artifact_ids": [],
@@ -278,13 +281,17 @@ Created → Queued → Running → Waiting → Completed
 | Efficiency | 비용 대비 효과 |
 | User Satisfaction | 사용자 평가 |
 
-**Output**
+네 기준의 명칭은 [Entity 015](entities/e015-evaluation.md)를 따른다. Volume 5 §5가 첫 항목을 `Goal Achievement`로 쓰던 것은 **`Goal Alignment`로 통일했다.**
 
+**Output** — 아래는 점수 부분만 발췌한 것이다. Evaluation Entity의 전체 형태는 [Entity 015 §8](entities/e015-evaluation.md)에 있다.
+
+<!-- validate: none -->
 ```json
 {
   "quality_score": 0.91,
   "goal_alignment": 0.87,
-  "cost_efficiency": 0.95
+  "cost_efficiency": 0.95,
+  "user_satisfaction": 0.90
 }
 ```
 
@@ -321,13 +328,22 @@ IDLE → UNDERSTANDING → PLANNING → DECIDING
 → EXECUTING → EVALUATING → LEARNING → COMPLETED
 ```
 
-| 계층 | 상태 |
-|---|---|
-| `Session.status` | Created / Active / Idle / Suspended / Completed / Expired / Aborted |
-| `Session.phase` | 위 7단계 (Runtime 진행 위치) |
-| `Execution.status` | Created / Queued / Running / Waiting / Completed / Failed / TimedOut / Aborted |
+| 계층 | 상태 | 묻는 것 |
+|---|---|---|
+| `Session.status` | Created / Active / Idle / Suspended / Completed / Expired / Aborted | Session이 **살아 있는가** |
+| `Session.phase` | IDLE / UNDERSTANDING / PLANNING / DECIDING / EXECUTING / EVALUATING / LEARNING / COMPLETED | Session이 **어디까지 왔는가** |
+| `Execution.status` | Created / Queued / Running / Waiting / Completed / Failed / TimedOut / Aborted | 이 시도가 **어떻게 되었는가** |
 
-`phase` 필드의 정식 도입은 [Entity 021 §12](entities/e021-session.md)의 Open Issue다.
+**`phase`는 [`session.schema.json`](intent-os-spec/schemas/session.schema.json)에 정식 도입되었다** ([Entity 021 §4](entities/e021-session.md), 2026-08-04). 초안에서 Open Issue였던 항목이다.
+
+두 필드는 **독립적이다.** 곱집합이 모두 유효하지는 않지만, 아래 조합은 정상이다.
+
+| status | phase | 의미 |
+|---|---|---|
+| `Active` | `EXECUTING` | 정상 실행 중 |
+| `Suspended` | `EXECUTING` | 실행 도중 멈춤 — 인간 승인 대기(§7) |
+| `Idle` | `PLANNING` | 계획 단계에서 사용자 입력 대기 |
+| `Completed` | `LEARNING` | ❌ **불가.** `Completed`는 `phase = COMPLETED`를 요구한다 |
 
 ---
 
@@ -335,11 +351,20 @@ IDLE → UNDERSTANDING → PLANNING → DECIDING
 
 Intent OS는 **실패를 정상 상태로 취급한다.**
 
-| Type | 예시 | 처리 |
+| Type | 예시 | 처리 | 상태 변화 |
+|---|---|---|---|
+| **1. Resource Failure** | API 장애 | Detect → Retry → Alternative Resource → Continue | `Execution.status = Failed` → 새 Execution 생성 (`attempt` 증가) |
+| **2. Goal Ambiguity** | 목표 불명확 | Ask User → Resume | `Session.status = Idle` (§7) |
+| **3. Low Confidence** | 성공 확률 낮음 | Generate Alternative Plans → Compare → Select | Session 상태 불변. [4-A §11](v4a-decision-engine-detail.md) Multi-Agent 발동 |
+
+> **`Pause`라는 상태는 없다.** 초안이 `Pause → Ask User → Resume`으로 적었으나 §5의 어느 상태 집합에도 `Pause`가 없다. 대기는 두 가지로 나뉘며, 어느 계층이 멈추는지가 다르다.
+
+| 무엇을 기다리는가 | 멈추는 계층 | 상태 |
 |---|---|---|
-| **1. Resource Failure** | API 장애 | Detect → Retry → Alternative Resource → Continue |
-| **2. Goal Ambiguity** | 목표 불명확 | Pause → Ask User → Resume |
-| **3. Low Confidence** | 성공 확률 낮음 | Generate Alternative Plans → Compare → Select |
+| 사용자의 답변 | Session | `Session.status = Idle` |
+| 외부 시스템·인간 Resource의 작업 | Execution | `Execution.status = Waiting` |
+
+Execution이 `Waiting`인 동안에도 Session은 `Active`다. 다른 Task가 병렬로 진행될 수 있기 때문이다.
 
 ---
 
@@ -347,11 +372,58 @@ Intent OS는 **실패를 정상 상태로 취급한다.**
 
 > Intent OS는 인간을 제거하지 않는다. **인간은 가장 중요한 Resource다.**
 
-Human이 개입하는 경우:
+### 7.1 개입 발동 조건
 
-- **High Impact Decision** — 예: 대규모 투자 결정
-- **Value Judgment** — 예: 브랜드 방향
-- **Low Confidence** — 예: 예측 신뢰도 부족
+| # | 조건 | 판정 | 예 |
+|---|---|---|---|
+| H1 | **High Impact Decision** | [4-A §9.2](v4a-decision-engine-detail.md)의 `R5 Irreversibility ≥ 0.5` | 대규모 투자 결정, 대외 발송 |
+| H2 | **Value Judgment** | Goal의 `desired_state`로 환원 불가한 선택 | 브랜드 방향 |
+| H3 | **Low Confidence** | `Confidence < 0.70` ([4-A §13](v4a-decision-engine-detail.md)) | 예측 신뢰도 부족 |
+| H4 | **Policy 요구** | [Policy](entities/e019-policy.md)가 승인을 명시적으로 요구 | 예산 초과 집행 |
+
+H1과 H4는 **차단형**이다 — 승인 없이 진행할 수 없다. H2와 H3은 **자문형**이며, 타임아웃 시 §7.3의 기본 동작으로 넘어간다.
+
+### 7.2 개입 프로토콜
+
+```
+개입 발동
+→ Execution.status = Waiting        (실행 중이던 시도를 멈춘다)
+→ Session.status  = Idle            (사용자 응답 대기)
+→ 승인 요청 생성 (질문 + 근거 + 기본 선택지)
+→ ┌ 응답 있음 → Session.status = Active → Execution 재개 또는 Abort
+  └ 타임아웃  → §7.3
+```
+
+승인 요청에는 **반드시 셋을 포함한다.** 셋 중 하나라도 없으면 인간은 판단할 수 없고, 형식적 승인만 남는다.
+
+| 항목 | 내용 |
+|---|---|
+| 질문 | 무엇을 결정해야 하는가 |
+| 근거 | 왜 물어보는가 — 발동 조건(H1~H4)과 그 수치 |
+| 기본 선택지 | 응답이 없으면 무엇이 일어나는가 |
+
+### 7.3 타임아웃
+
+무한 대기는 허용하지 않는다. Session의 `idle_timeout`([Entity 021 §4](entities/e021-session.md))이 만료되면 개입 유형에 따라 갈린다.
+
+| 유형 | 타임아웃 시 |
+|---|---|
+| **차단형** (H1, H4) | `Execution.status = Aborted`, `failure_class = policy_violation`. **묵시적 승인으로 간주하지 않는다** |
+| **자문형** (H2, H3) | 기본 선택지로 진행. Decision에 `human_input: timeout` 기록 |
+
+차단형에서 침묵을 승인으로 해석하면 안 되는 이유는 [Volume 2 Constraint 2](v2-architecture.md) 때문이다 — 아무도 내리지 않은 결정은 설명할 수 없다.
+
+### 7.4 인간은 Resource이기도 하다
+
+§7.1~7.3은 인간이 **승인자**로 개입하는 경우다. 인간이 **실행자**로 쓰이는 경우는 개입이 아니라 통상 Execution이며, [Entity 007](entities/e007-resource.md)의 `type: human`으로 다뤄진다.
+
+| | 승인자 | 실행자 |
+|---|---|---|
+| 계기 | H1~H4 발동 | Decision이 선택 |
+| 표현 | Session이 대기 | Execution 1건 |
+| 지연 | `idle_timeout` | `timeout_ms` |
+
+❌ 김 카피라이터에게 카피를 맡기는 것은 Human Intervention이 아니다. Resource 선택 결과일 뿐이다.
 
 ---
 
@@ -382,10 +454,12 @@ User Goal
 
 ## Volume 3 Completion Criteria
 
-- [x] Goal 처리 Lifecycle 정의
-- [x] Runtime State 정의
-- [x] Execution Object 정의
-- [x] Planning → Decision → Execution 흐름 정의
-- [x] 실패 처리 정의
-- [x] Human Intervention 정의
-- [x] Learning 연결 구조 정의
+| 항목 | 근거 | 판정 |
+|---|---|---|
+| Goal 처리 Lifecycle 정의 | §4 Stage 1~7 | ✅ |
+| Runtime State 정의 | §5 (3개 상태축 + `phase` 스키마 도입 완료) | ✅ |
+| Execution Object 정의 | §3 (Session / Execution / Outcome 계층) | ✅ |
+| Planning → Decision → Execution 흐름 정의 | §4 Stage 3~5 | ✅ |
+| 실패 처리 정의 | §6 (3유형 + 상태 변화 + 대기 계층 구분) | ✅ |
+| Human Intervention 정의 | §7.1 발동 조건 · §7.2 프로토콜 · §7.3 타임아웃 · §7.4 역할 구분 | ✅ |
+| Learning 연결 구조 정의 | §4 Stage 7 · §8 | ⚠️ 부분 — 연결점만 정의. 학습 알고리즘은 [Volume 5](v5-learning-engine.md)에 위임 |

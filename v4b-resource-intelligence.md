@@ -37,17 +37,24 @@ Resource Intelligence = Eyes
 
 ## 3. Resource Identity
 
-모든 Resource는 하나의 객체다.
+모든 Resource는 하나의 객체다. 정본은 [`resource.schema.json`](intent-os-spec/schemas/resource.schema.json) / [Entity 007](entities/e007-resource.md)이다.
 
+<!-- validate: resource.schema.json -->
 ```json
 {
-  "resource_id": "openai:gpt-5.5",
+  "id": "openai:gpt-5.5",
+  "name": "GPT-5.5",
+  "type": "llm",
   "provider": "OpenAI",
-  "type": "LLM",
   "version": "5.5",
-  "status": "active"
+  "capabilities": [
+    { "name": "technical.coding", "declared_score": 95, "observed_score": 93, "confidence": 0.9 }
+  ],
+  "lifecycle": "Active"
 }
 ```
+
+식별자 필드는 `id`다(`resource_id` 아님). 상태 필드는 `lifecycle`이며 `Registered / Evaluating / Active / Optimized / Deprecated / Removed` 6개 중 하나다 — `"active"` 같은 임의 문자열을 쓰지 않는다.
 
 **Resource 종류:** LLM, Image Model, Video Model, Search Engine, Browser, Database, Code Executor, API, Human Expert, Agent
 
@@ -59,6 +66,7 @@ Resource Intelligence = Eyes
 
 사람에게 IQ가 있는 것처럼, AI는 **Capability Vector**를 가진다.
 
+<!-- validate: none -->
 ```json
 {
   "writing": 94,
@@ -93,6 +101,7 @@ Writing
 
 즉 `writing: 94`가 아니라:
 
+<!-- validate: none -->
 ```json
 {
   "writing": {
@@ -126,20 +135,41 @@ graph TD
 
 ## 7. Resource Profile
 
-모든 Resource는 Capability 외에도 여러 특성을 가진다.
+모든 Resource는 Capability 외에도 여러 특성을 가진다. 이 특성 묶음의 정본은 [Entity 025 — Resource Profile](entities/e025-resource-profile.md)이며, **Resource와 별도 Entity다** — Resource는 "무엇인가", Profile은 "지금 얼마나 잘하는가"를 담는다.
 
+<!-- validate: resource-profile.schema.json -->
 ```json
 {
-  "quality": 93,
-  "cost": 70,
-  "latency": 92,
-  "reliability": 95,
-  "privacy": 98,
-  "context_window": 95,
-  "tool_use": 88,
-  "reasoning_depth": 90
+  "profile_id": "rpf_0142",
+  "resource_id": "anthropic:claude",
+  "snapshot_version": "2026-08-04",
+  "status": "Established",
+  "capability_scores": [
+    {
+      "capability": "language.generation.copywriting",
+      "context": { "domain": "education", "language": "ko", "audience": "parents" },
+      "declared_score": 95,
+      "observed_score": 97,
+      "confidence": 0.91
+    },
+    {
+      "capability": "technical.coding",
+      "context": { "domain": "global" },
+      "declared_score": 87,
+      "observed_score": 85,
+      "confidence": 0.74
+    }
+  ],
+  "performance": {
+    "reliability": 0.99,
+    "latency_ms": { "p50": 1800, "p95": 4200, "p99": 7100 },
+    "success_rate": 0.92
+  },
+  "availability": { "schedule": "24/7", "uptime_30d": 0.999 }
 }
 ```
+
+**점수는 Context 없이 존재하지 않는다**([INV-RPF-04](entities/e025-resource-profile.md)). 초안의 `"quality": 93`처럼 Context 없는 단일 스칼라를 두면 §9 Context-Aware Ranking과 정면으로 모순된다 — 절대 순위가 없다고 해놓고 절대 점수를 저장하는 셈이 된다. 전역 점수가 필요하면 `context: { "domain": "global" }`로 **명시**한다.
 
 ---
 
@@ -232,6 +262,7 @@ Drift 발생 → Ranking 하락
 
 모든 Resource는 Health를 가진다.
 
+<!-- validate: none -->
 ```json
 {
   "availability": 99.9,
@@ -365,6 +396,27 @@ Instruction Following / Tool Dependency / Context Retention
 새로운 모델이 나와도 이름이 아니라 "유전자"를 보고 기존 모델과 비슷한 성향을 즉시 추론할 수 있다.
 
 → 이 제안은 [Volume 4-C](v4c-resource-genome.md)에서 본격적으로 설계된다.
+
+---
+
+## Volume 4-B Completion Criteria
+
+| 항목 | 근거 | 판정 |
+|---|---|---|
+| Resource 식별 구조 정의 | §3 · 정본 [Entity 007](entities/e007-resource.md) | ✅ |
+| Capability 표현 구조 정의 | §4, §5, §6 · 정본 [Entity 006](entities/e006-capability.md) | ✅ |
+| Resource Profile 정의 | §7 · 정본 [Entity 025](entities/e025-resource-profile.md) | ✅ |
+| Benchmark보다 실사용 우선 원칙 정의 | §8 | ✅ |
+| Context별 Ranking 정의 | §9 | ✅ |
+| Confidence 정의 | §10 · 산출식 [4-A §13](v4a-decision-engine-detail.md) | ✅ |
+| Cold Start 절차 정의 | §11 (5단계, [Volume 5 §9](v5-learning-engine.md)와 일치) | ✅ |
+| Drift 감지 정의 | §13 | ⚠️ 부분 — 개념만. 임계값과 판정 주기 미정의 |
+| Health 모니터링 정의 | §14 | ✅ |
+| Reputation 정의 | §15 | ⚠️ 부분 — 네 요소 나열. 가중치·산출식 미정의 |
+| Composite Resource 정의 | §17 | ⚠️ 부분 — 조합 학습 방법 미정의 |
+| Capability Decay 정의 | §18 | ⚠️ 부분 — 예시 2개. 감쇠 함수 미정의 |
+
+§20 이후 Appendix는 **확정 명세가 아니라 설계 제안**이므로 위 판정에 포함하지 않는다.
 
 ---
 

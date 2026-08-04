@@ -73,6 +73,7 @@ graph TD
 
 실행 전에 최대한 많은 정보를 수집한다.
 
+<!-- validate: none -->
 ```json
 {
   "context_window": 1000000,
@@ -345,6 +346,24 @@ graph TD
 | 4 | **4-D Autonomous Benchmarking** | Intent OS의 **연구소** |
 
 이 네 가지가 결합되면 Intent OS는 단순한 AI 라우터가 아니라 **스스로 AI 생태계를 관찰하고, 학습하고, 최적화하는 시스템**이 된다.
+
+---
+
+## Volume 4-D Completion Criteria
+
+| 항목 | 근거 | 판정 |
+|---|---|---|
+| 자동 벤치마킹 목적·원칙 정의 | §1~§3 | ✅ |
+| Benchmark Pipeline 정의 | §4 | ✅ |
+| Resource 발견·메타데이터 분석 정의 | §5, §6 | ✅ |
+| Task 선택 전략 정의 | §8, §11 (Active Selection / Information Gain) | ⚠️ 부분 — 선택 기준만. Gain 산출식 미정의 |
+| Capability 갱신 방식 정의 | §10 Bayesian Update | ⚠️ 부분 — 사전분포·갱신식 미정의. 점수 갱신의 운용 정본은 [Volume 5 §8.1](v5-learning-engine.md) |
+| 비용 통제 정의 | §12 | ✅ |
+| 탐색 전략 정의 | §13 Multi-Armed Bandit | ⚠️ 부분 — 정책 선택은 [4-C Appendix B](v4c-resource-genome.md) Open Issue |
+| 지속 벤치마크·Drift 정의 | §14, §15 | ⚠️ 부분 — [4-B §13](v4b-resource-intelligence.md)과 마찬가지로 임계값 미정의 |
+| Shadow Evaluation 정의 | §16 | ✅ |
+| Benchmark 지식 축적 정의 | §19, §22 | ⚠️ 부분 |
+
 
 ---
 

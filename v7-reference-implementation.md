@@ -68,13 +68,36 @@ Intent OS 전체를 만드는 것이 아니다. 검증해야 하는 것은:
 Input: "내 학원 겨울캠프 모집을 늘리고 싶어"
 ```
 
+MVP도 Goal 표현은 [`goal.schema.json`](intent-os-spec/schemas/goal.schema.json)을 그대로 쓴다. **MVP라고 임시 형식을 만들면 Phase 2에서 전체 마이그레이션이 필요해진다.**
+
+<!-- validate: goal.schema.json -->
 ```json
 {
-  "goal": "Increase enrollment",
-  "domain": "Education Marketing",
-  "tasks": ["Market Analysis", "Content Creation", "Advertising Strategy"]
+  "goal_id": "goal_01HZX9M4Y4QF2X",
+  "version": 1,
+  "title": "2027 윈터캠프 학생 모집",
+  "goal_type": "Outcome",
+  "objective": {
+    "description": "겨울캠프 등록 학생 수를 늘린다",
+    "desired_state": {
+      "metric": "registered_students",
+      "operator": ">=",
+      "target": 100,
+      "unit": "students",
+      "baseline": 42
+    }
+  },
+  "context": { "environment": { "domain": "Education Marketing" } },
+  "status": { "phase": "Structured", "progress": 0 },
+  "metadata": {
+    "created_by": "system",
+    "created_at": "2026-08-04T09:05:00Z",
+    "source": "conversation"
+  }
 }
 ```
+
+`tasks` 목록은 Goal 안에 넣지 않는다. 별도 [Task](entities/e005-task.md) Entity로 만들고 `goal_id`로 연결한다.
 
 #### Feature 2 — Capability Mapping
 
@@ -125,6 +148,25 @@ graph TD
     O --> FL[Feedback Loop]
     FL -.-> DE
 ```
+
+### 4.1 MVP가 생략하는 Layer
+
+위 그림은 [Volume 2 §2](v2-architecture.md)의 8개 Layer를 **전부 담지 않는다.** 무엇을 뺐는지 명시하지 않으면 아키텍처 위반처럼 보이므로 아래에 적는다.
+
+| Volume 2 Layer | MVP | 사유 |
+|---|---|---|
+| 1 User | ✅ Goal Interface | |
+| 2 Goal | ✅ Goal Analyzer | |
+| 3 Planning | ⚠️ **축소** — Task Graph 없이 평면 Task 목록 | 의존성 해석은 Phase 2 |
+| 4 Capability | ✅ Capability Mapper | |
+| 5 Decision | ✅ Decision Engine (Rule Based, §7 Phase 1) | |
+| 6 Resource | ❌ **생략** — 어댑터 3종을 직접 호출 | Registry는 Resource가 3개뿐일 때 이득이 없다 |
+| 7 Execution | ⚠️ **축소** — 재시도만, 대체 Resource 전환 없음 | |
+| 8 Learning | ⚠️ **축소** — Feedback 수집만, 패턴 추출 없음 | [Volume 5](v5-learning-engine.md) 전체는 Phase 2 |
+
+**생략해도 되는 것과 안 되는 것의 기준은 하나다** — 나중에 넣을 때 **데이터를 버려야 하는가.**
+
+Resource Layer(6)는 나중에 넣어도 기존 데이터가 살아남으므로 생략할 수 있다. 반면 Learning Layer(8)의 **수집**은 축소하되 없애지 않았다. 지금 안 모은 실행 데이터는 나중에 소급해서 만들 수 없기 때문이다. Phase 1에서 [§4.1 Learning Record](v5-learning-engine.md)를 그대로 적재하는 이유가 여기에 있다.
 
 ---
 
@@ -301,10 +343,12 @@ Volume 1 Core Concepts
 
 ## Volume 7 Completion Criteria
 
-- [x] MVP 정의
-- [x] 제품 방향 정의
-- [x] 기술 구조 정의
-- [x] 개발 단계 정의
-- [x] 시장 진입 전략 정의
-- [x] 사업 모델 정의
-- [x] 장기 확장 구조 정의
+| 항목 | 근거 | 판정 |
+|---|---|---|
+| MVP 정의 | §3 Feature 1~5 | ✅ |
+| 제품 방향 정의 | §2 | ✅ |
+| 기술 구조 정의 | §4 · §4.1 생략 Layer 명시 · §5, §6 | ✅ |
+| 개발 단계 정의 | §10 Phase 0~3 | ✅ |
+| 시장 진입 전략 정의 | §11 | ✅ |
+| 사업 모델 정의 | §12 | ✅ |
+| 장기 확장 구조 정의 | §14 | ✅ |

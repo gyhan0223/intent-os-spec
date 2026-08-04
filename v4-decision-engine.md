@@ -86,6 +86,22 @@ Decision Engine
 └── Decision Memory
 ```
 
+### 3.1 Volume 4-A 모듈과의 대응
+
+> **권위:** 모듈 분해의 정본은 [Volume 4-A §3](v4a-decision-engine-detail.md)이다. 본 문서의 6개는 개요 수준의 묶음이며, 4-A는 이를 **7개**로 나눈다.
+
+| 본 문서 (개요) | Volume 4-A (정본) | 비고 |
+|---|---|---|
+| Task Analyzer | Task Intelligence Module | 동일 |
+| Capability Mapper | Capability Graph Engine | 동일 |
+| Candidate Generator | Resource Discovery Engine | 동일 |
+| Performance Predictor | Performance Prediction Engine | 동일 |
+| Optimization Engine | Utility Optimization Engine | 동일 |
+| — | **Risk Management Engine** | 개요에는 없다. 4-A §9에서 신설 |
+| Decision Memory | Decision Memory Engine | 동일 |
+
+개요에 Risk Management Engine이 없는 이유는 §2 목적함수가 위험 `R`을 이미 항으로 포함하기 때문이다. 그러나 `R`을 **누가 산출하는가**는 개요 수준에서 정의되지 않으므로, 구현 단계에서는 4-A §9를 따른다.
+
 ---
 
 ## 4. Task Analyzer
@@ -113,6 +129,7 @@ Required Capability:
 
 **Output**
 
+<!-- validate: none -->
 ```json
 {
   "task_type": "marketing_copy",
@@ -188,6 +205,7 @@ Audience: Parents
 
 ### 7.2 Prediction Output
 
+<!-- validate: none -->
 ```json
 {
   "resource": "Claude",
@@ -231,8 +249,10 @@ Audience: Parents
 다음 경우에만 Multi-Agent 실행:
 
 1. **High Impact Task** — 투자 계약서, 의료 연구, 법률 문서
-2. **Low Confidence** — Prediction Confidence < 60%
+2. **Low Confidence** — Prediction Confidence **< 0.70**
 3. **Conflicting Objectives** — 최저 비용 + 최고 품질처럼 두 목표 충돌
+
+> **임계값의 정본은 [Volume 4-A §11](v4a-decision-engine-detail.md)이다.** 초안에서 본 문서가 `< 60%`, 4-A가 `< 70%`로 갈렸으나 **0.70으로 통일했다.** 근거는 4-A §13의 Confidence 구성이다 — Confidence는 네 요소의 결합값이라 0.60~0.70 구간에도 예측 분산이 크게 남는다. 발동 임계값은 4-A 한 곳에서만 정의하고 본 문서는 참조한다.
 
 ---
 
@@ -351,10 +371,14 @@ graph TD
 
 ## Volume 4 Completion Criteria
 
-- [x] AI 선택 기준 정의
-- [x] 비용/품질/속도 최적화 구조 정의
-- [x] Multi-Agent 실행 기준 정의
-- [x] Resource Ranking 구조 정의
-- [x] Model Update Tracking 정의
-- [x] Decision Learning 구조 정의
-- [x] Explainability 정의
+| 항목 | 근거 | 판정 |
+|---|---|---|
+| AI 선택 기준 정의 | §2 목적함수 | ✅ |
+| 비용/품질/속도 최적화 구조 정의 | §2.1, §8 · 계산 정본 [4-A §8](v4a-decision-engine-detail.md) | ✅ |
+| Multi-Agent 실행 기준 정의 | §9 · 임계값 정본 [4-A §11](v4a-decision-engine-detail.md) | ✅ |
+| Resource Ranking 구조 정의 | §11 · 상세 [4-B §9](v4b-resource-intelligence.md) | ✅ |
+| Model Update Tracking 정의 | §12 | ⚠️ 부분 — 갱신 소스만 나열, 감지·반영 메커니즘은 [4-B §13](v4b-resource-intelligence.md)에 위임 |
+| Decision Learning 구조 정의 | §10 | ✅ |
+| Explainability 정의 | §13 · 영속 표현 [Entity 009](entities/e009-decision.md) | ✅ |
+
+본 문서는 **개요다.** 수치·알고리즘의 정본은 4-A~4-D에 있으며, 값이 갈릴 경우 하위 문서를 따른다.

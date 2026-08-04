@@ -34,6 +34,14 @@ Intent OS 기술 명세서. 코드가 아니라 **문서(Markdown) + JSON Schema
   - `Rule <PREFIX>-<NNN>` / `INV-<PREFIX>-<NN>` 번호 규칙. Prefix는 e000 §3 표에 등록한다.
   - §7 Relationships에는 반드시 **Cardinality**(`1:N`, `N:M` 등)를 표기한다.
   - §5 Invariants의 각 항목에는 **위반 시 시스템 반응**을 함께 쓴다.
+- **Volume 문서의 Completion Criteria는 근거 절을 함께 적는다.** 체크박스 나열은 쓰지 않는다.
+
+  | 항목 | 근거 | 판정 |
+  |---|---|---|
+  | ... | §N | ✅ / ⚠️ 부분 / ❌ |
+
+  근거 없는 ✅는 인정하지 않는다. 미충족 항목을 체크로 덮지 말고 **⚠️/❌로 남기고 무엇이 빠졌는지 적는다.**
+- **같은 수치가 두 문서에 나오면 한쪽을 정본으로 정하고 다른 쪽은 참조만 한다.** 임계값·가중치를 양쪽에 복제하면 반드시 갈린다.
 - **Rule과 Invariant를 섞지 않는다.** Rule은 "이렇게 만들어라"(생성 시 1회 검사), Invariant는 "이 상태가 되면 안 된다"(항상 검사).
 - 표, ASCII 트리, ✅/❌ 예시를 적극적으로 쓴다. 설명을 늘어뜨리지 않는다.
 - 예시는 고정 도메인(학원 학생 모집, 윈터캠프, 광고 예산 300만원, 김 카피라이터 등)을 이어서 쓴다. 새 도메인을 만들지 않는다.
@@ -73,6 +81,14 @@ Entity 간 관계와 전역 불변식 16개는 `entities/e000a-entity-relationsh
   `python3 -c "import json,glob; [json.load(open(f)) for f in glob.glob('intent-os-spec/schemas/*.json')]"`
 - **문서의 JSON 예시가 스키마를 통과하는지 검사한다.** `python3 tools/validate-examples.py`
   (새 Entity를 추가했으면 그 스크립트의 `DOC_TO_SCHEMA`에도 항목을 추가한다)
+- **Volume 문서(`v*.md`)의 JSON 블록에는 반드시 마커를 붙인다.** 마커 없는 블록은 검증 실패로 잡힌다.
+
+  ```
+  <!-- validate: goal.schema.json -->   ← 해당 스키마로 검증
+  <!-- validate: none -->               ← 스키마에 매이지 않는 개념 예시
+  ```
+
+  Volume 문서는 여러 Entity의 예시를 섞어 쓰므로 문서 단위 매핑이 불가능하다. `none`을 쓸 때는 **왜 스키마 밖인지 본문에 밝힌다.**
 - 문서를 추가했으면 `README.md`와 `entities/README.md`의 목차도 함께 갱신한다.
 - 상대 링크가 깨지지 않았는지 확인한다.
 - Entity를 추가했으면 `entities/e000a-entity-relationships.md`의 **§3 Cardinality 전체표와 §2 Entity 지도**도 갱신한다. 빠뜨리면 관계 모델에 구멍이 생긴다.
