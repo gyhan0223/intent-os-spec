@@ -13,25 +13,46 @@
     "created_at"
   ],
   "properties": {
-    "execution_id": { "type": "string" },
-    "task_id": { "type": "string" },
+    "execution_id": {
+      "type": "string",
+      "description": "Execution의 고유 식별자."
+    },
+    "task_id": {
+      "type": "string",
+      "description": "수행 대상 Task. 하나의 Execution은 정확히 하나의 Task만 갖는다."
+    },
     "decision_id": {
       "type": "string",
       "description": "이 실행을 낳은 Decision (Rule EXE-002, INV-03). 대안이 하나뿐이어도 Forced Action Decision이 선행해야 한다."
     },
-    "session_id": { "type": ["string", "null"] },
+    "session_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "이 실행이 속한 Session. Session 밖의 단독 실행이면 null."
+    },
     "resource_id": {
       "type": "string",
       "description": "실행 주체. 예: 'anthropic:claude-5', 'human:copywriter_kim'"
     },
     "agent_id": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "Resource를 운용한 Agent (Entity 023). 없으면 null."
     },
     "mode": {
       "type": "string",
       "description": "실행 형태. shadow/rehearsal의 Outcome은 Goal Progress에 기여하지 않는다.",
-      "enum": ["single", "pipeline", "collaborative", "shadow", "rehearsal"],
+      "enum": [
+        "single",
+        "pipeline",
+        "collaborative",
+        "shadow",
+        "rehearsal"
+      ],
       "default": "single"
     },
     "attempt": {
@@ -41,62 +62,151 @@
       "default": 1
     },
     "previous_execution_id": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "직전 시도. 체인을 따라가면 반드시 attempt=1에 도달해야 한다 (INV-EXE-05)."
     },
     "parent_execution_id": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "Pipeline/Composite 실행의 부모."
     },
     "status": {
       "type": "string",
       "description": "Completed는 '실행이 끝났다'는 뜻이지 '잘 됐다'는 뜻이 아니다. 성공 판정은 Evaluation의 몫이다.",
-      "enum": ["Created", "Queued", "Running", "Waiting", "Completed", "Failed", "TimedOut", "Aborted"]
+      "enum": [
+        "Created",
+        "Queued",
+        "Running",
+        "Waiting",
+        "Completed",
+        "Failed",
+        "TimedOut",
+        "Aborted"
+      ]
     },
-    "progress": { "type": "number", "minimum": 0, "maximum": 1 },
+    "progress": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "진행률 (0~1). 총량을 알 수 없는 스트리밍 실행에서는 의미가 없다 (e013 §12 미해결)."
+    },
     "contributes_to_goal": {
       "type": "boolean",
       "description": "Goal 집계 포함 여부. shadow/rehearsal은 false.",
       "default": true
     },
-    "created_at": { "type": "string", "format": "date-time" },
-    "started_at": { "type": ["string", "null"], "format": "date-time" },
-    "finished_at": { "type": ["string", "null"], "format": "date-time" },
-    "timeout_ms": { "type": "integer", "minimum": 0 },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "레코드가 생성된 시각. 아직 대기열에 오르기 전이다."
+    },
+    "started_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "Resource 호출이 시작된 시각. 시작 전이면 null."
+    },
+    "finished_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "종료 시각. created_at ≤ started_at ≤ finished_at을 어기면 정합성 오류다. 진행 중이면 null."
+    },
+    "timeout_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "실행 제한 시간 (밀리초). 초과하면 TimedOut으로 종료한다."
+    },
     "latency_ms": {
-      "type": ["integer", "null"],
+      "type": [
+        "integer",
+        "null"
+      ],
       "description": "실측 지연. finished_at − started_at 과 일치해야 한다 (INV-EXE-04).",
       "minimum": 0
     },
     "cost": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "description": "실측 비용 (Rule EXE-006). 추정치가 아니다. 측정 불가 Resource는 안분값 + estimated:true.",
-      "required": ["amount", "currency"],
+      "required": [
+        "amount",
+        "currency"
+      ],
       "properties": {
-        "amount": { "type": "number", "minimum": 0 },
-        "currency": { "type": "string" },
-        "estimated": { "type": "boolean", "default": false }
-      }
+        "amount": {
+          "type": "number",
+          "minimum": 0,
+          "description": "실제로 발생한 비용."
+        },
+        "currency": {
+          "type": "string",
+          "description": "통화 코드 (ISO 4217)."
+        },
+        "estimated": {
+          "type": "boolean",
+          "default": false,
+          "description": "안분·추정으로 계산한 값인가. 정액 계약 Resource가 여기 해당한다."
+        }
+      },
+      "additionalProperties": false
     },
     "usage": {
       "type": "object",
       "description": "자원 사용량. Resource 타입별로 키가 다르다. 예: input_tokens, output_tokens, api_calls, person_minutes"
     },
-    "input_ref": { "type": ["string", "null"] },
+    "input_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "입력 데이터의 참조. 본문은 여기 담지 않는다. 입력이 없으면 null."
+    },
     "logs_ref": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "원시 로그 참조. 로그는 Execution의 하위 데이터이지 Event가 아니다."
     },
     "error": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "properties": {
-        "code": { "type": "string" },
-        "message": { "type": "string" },
-        "retryable": { "type": "boolean" }
-      }
+        "code": {
+          "type": "string",
+          "description": "Resource가 반환한 원본 오류 코드."
+        },
+        "message": {
+          "type": "string",
+          "description": "오류 메시지."
+        },
+        "retryable": {
+          "type": "boolean",
+          "description": "같은 조건으로 재시도할 가치가 있는가."
+        }
+      },
+      "additionalProperties": false,
+      "description": "실패 시의 오류 정보. 성공했으면 null."
     },
     "failure_class": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "실패 원인 분류. 재시도 전략을 결정한다.",
       "enum": [
         "resource_unavailable",
@@ -110,20 +220,55 @@
       ]
     },
     "outcome_id": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "종료 시 생성된 Outcome. 종료 상태에서는 null일 수 없다 (INV-EXE-02)."
     },
     "policy_evaluation": {
       "type": "object",
       "description": "실행 전 Policy 판정 결과. 판정 시점의 Policy 버전을 함께 기록한다.",
       "properties": {
-        "evaluated_at": { "type": "string", "format": "date-time" },
-        "point": { "type": "string" },
-        "matched_policies": { "type": "array", "items": { "type": "string" } },
-        "policy_versions": { "type": "object" },
-        "exceptions_used": { "type": "array", "items": { "type": "string" } },
-        "result": { "type": "string", "enum": ["allow", "deny", "require_approval"] }
-      }
+        "evaluated_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Policy를 평가한 시각."
+        },
+        "point": {
+          "type": "string",
+          "description": "평가 지점. 실행 전인지 실행 중인지에 따라 조치가 다르다."
+        },
+        "matched_policies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "이 실행에 걸린 Policy 목록."
+        },
+        "policy_versions": {
+          "type": "object",
+          "description": "평가에 쓰인 Policy의 버전 (policy_id → version). Policy가 개정되어도 당시 판정을 재현할 수 있어야 한다."
+        },
+        "exceptions_used": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "적용된 예외 목록. 예외로 통과한 실행은 사후 감사 대상이다."
+        },
+        "result": {
+          "type": "string",
+          "enum": [
+            "allow",
+            "deny",
+            "require_approval"
+          ],
+          "description": "평가 결과. require_approval은 승인 전까지 실행을 시작하지 않는다는 뜻이다."
+        }
+      },
+      "additionalProperties": false
     }
-  }
+  },
+  "additionalProperties": false
 }

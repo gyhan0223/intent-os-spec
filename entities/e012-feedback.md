@@ -1,8 +1,9 @@
 # Entity 012: Feedback
 
-- **Version:** v1.0 Draft
+- **Version:** v2.0 Draft
 - **Status:** Core Entity
 - **Last Updated:** 2026-08-04
+- **Schema:** [`feedback.schema.json`](../intent-os-spec/schemas/feedback.schema.json)
 
 ---
 
@@ -75,7 +76,7 @@ Goal 변경:   Audience: 학부모 → 학생
 
 ---
 
-## 3. Feedback의 조건
+## 3. Design Principles
 
 ### Rule F-001 — 반드시 대상(Target)을 가진다
 
@@ -99,7 +100,7 @@ Feedback 1건으로 Knowledge나 Resource 프로필을 갱신하지 않는다. (
 
 ---
 
-## 4. Feedback Attributes
+## 4. Attributes
 
 ```
 Feedback
@@ -132,9 +133,7 @@ Feedback
 | **Provenance** | 발생 주체/채널 | `user_A / UI 재생성 버튼` |
 | **Status** | 처리 상태 | `Routed` |
 
----
-
-## 5. Feedback Source Types
+### 4.1 Feedback Source Types
 
 모든 Feedback은 정확히 하나의 Source Type을 가진다.
 
@@ -151,7 +150,7 @@ Feedback
 | **Implicit** | 재생성/재시도, 결과 미사용, 복사 여부, 세션 이탈, 추가 질문 | 풍부하지만 해석이 필요하다 |
 | **Systemic** | Success Metric 달성 여부 (`CTR 8% 목표 → 실제 5%`), 비용 초과, 실행 실패, SLA 위반 | 객관적. Goal의 Metric과 직결 |
 
-### 예 — 하나의 Outcome, 세 종류의 Feedback
+#### 예 — 하나의 Outcome, 세 종류의 Feedback
 
 ```
 Outcome: 윈터캠프 인스타 광고 카피 게시
@@ -165,7 +164,60 @@ Systemic:  2주 후 상담 신청 +30% (Goal Metric 달성 = 강한 긍정)
 
 ---
 
-## 6. Feedback Lifecycle
+## 5. Invariants
+
+### INV-F-01 — 모든 Feedback은 실재하는 대상을 가리킨다
+
+Rule F-001의 상태 표현이다. 대상 없는 평가는 어디에도 반영할 수 없고, 잘못된 대상을 가리키면 엉뚱한 Resource의 점수가 움직인다.
+
+| | |
+|---|---|
+| **위반 시** | 라우팅을 중단하고 미귀속 Feedback으로 격리한다. 삭제하지 않는다 — 대상을 나중에 복원할 수 있다 |
+| **탐지** | 수집 시점, 대상 Entity 삭제·병합 시점 |
+
+### INV-F-02 — 원시 신호는 해석으로 덮이지 않는다
+
+Rule F-002의 상태 표현이다. "별 2개"를 "품질 나쁨"으로 바꿔 저장하면, 나중에 해석 규칙이 바뀌어도 원본을 다시 해석할 수 없다.
+
+| | |
+|---|---|
+| **위반 시** | 원시 신호를 복원한다. 복원 불가면 해당 Feedback을 해석 재계산 대상에서 제외한다 |
+
+### INV-F-03 — 단일 Feedback은 학습 갱신을 일으키지 않는다
+
+Rule F-003의 상태 표현이다. 한 사람의 한 번의 불만으로 Resource 점수가 흔들리면, 시스템은 가장 최근에 화난 사람을 따라간다.
+
+| | |
+|---|---|
+| **위반 시** | 갱신을 되돌리고 집계 단위로 재계산한다. 최소 집계 조건은 [Volume 5](../v5-learning-engine.md)가 정한다 |
+
+### INV-F-04 — Implicit Feedback의 가중치는 Explicit을 넘지 않는다
+
+Rule F-004의 상태 표현이다. "빨리 닫았다"가 "좋았다고 말했다"보다 강하게 작용하면, 추측이 진술을 이긴다.
+
+| | |
+|---|---|
+| **위반 시** | 가중치를 재조정한다. Implicit 신호가 더 정확하다는 근거가 쌓이면 가중치 자체를 개정하되, **개정 전까지는 규칙을 지킨다** |
+
+### INV-F-05 — Feedback은 대상 Entity를 수정하지 않는다
+
+Feedback이 Memory나 Decision의 내용을 직접 고치면 [INV-M-01](e010-memory.md)과 [INV-D-01](e009-decision.md)이 동시에 깨진다.
+
+| | |
+|---|---|
+| **위반 시** | 수정을 되돌린다. Feedback은 대상에 **첨부**될 뿐이다. 하나의 Memory에 여러 Feedback이 시차를 두고 붙을 수 있다 |
+
+### INV-F-06 — 처리된 Feedback도 삭제되지 않는다
+
+| | |
+|---|---|
+| **위반 시** | 삭제를 거부한다. 반영이 끝났다고 지우면 "이 점수가 왜 이렇게 됐는가"를 역추적할 수 없다 |
+
+Entity 간 불변식은 [e000a-entity-relationships.md](e000a-entity-relationships.md)가 단일 권위다.
+
+---
+
+## 6. Lifecycle
 
 ```
 Captured → Interpreted → Routed → Aggregated → Consumed → Archived
@@ -182,42 +234,7 @@ Captured → Interpreted → Routed → Aggregated → Consumed → Archived
 | **Quarantined** | 이상 패턴(스팸, 조작 의심)으로 격리 |
 | **Archived** | 보존 전용 |
 
----
-
-## 7. Feedback Routing
-
-**어떤 Feedback이 어떤 Entity를 갱신하는가.** 이것이 Feedback 명세의 핵심이다.
-
-| Feedback 내용 | 갱신 대상 | 예 |
-|---|---|---|
-| 결과물 품질 평가 | **Resource 성능 프로필** | `Claude의 marketing_copy 점수 조정 근거` |
-| 전략 자체에 대한 평가 | **Knowledge** (Task/Domain) | `감성 소구 전략 → 이 도메인에서 유효` 지지/반증 |
-| 사용자 취향 신호 | **Knowledge** (User) | `사용자 A는 짧은 카피 선호` |
-| 목표 재해석 요구 | **Goal** | `사실 학생 수보다 객단가가 문제였어` → Goal 수정 제안 |
-| Metric 달성/미달 | **Memory** (Result 보강) + Goal Status | 상담 신청 +30% → mem_0142의 result 확정 |
-| 실행 오류/비용 초과 | **Plan / Runtime 정책** | 재시도 정책, 예산 가드 조정 근거 |
-
-### Routing 알고리즘
-
-```
-Feedback (Interpreted)
-  ↓
-Target Type 확인
-  ↓
-평가 축 분류 (품질? 전략? 취향? 목표? 비용?)
-  ↓
-갱신 대상 Entity 목록 결정 (복수 가능)
-  ↓
-각 대상의 집계 버킷에 적재
-  ↓
-버킷이 Learning 임계값 도달 → Learning Engine 호출
-```
-
-하나의 Feedback이 **여러 대상에 동시에 라우팅**될 수 있다. `톤이 너무 가벼워요`는 Resource 프로필(품질)과 User Knowledge(취향) 양쪽의 근거가 된다.
-
----
-
-## 8. Feedback Loop — 전체 흐름
+### 6.1 Feedback Loop — 전체 흐름
 
 Intent OS가 시간이 지날수록 좋아지는 유일한 이유가 이 루프다.
 
@@ -257,7 +274,35 @@ Memory 보강 / Knowledge 갱신                ← e010, e011
 
 ---
 
-## 9. Canonical Feedback Representation
+## 7. Relationships
+
+```
+Outcome (Runtime State)
+   ↓ 평가
+Feedback (e012)
+   ├──→ Memory (e010)          : 기록에 평가 신호 첨부
+   ├──→ Knowledge (e011)       : 지지/반증 근거로 집계
+   ├──→ Resource (예정)         : 성능 프로필 갱신 근거
+   ├──→ Goal (e001)            : 목표 재해석/수정 제안
+   └──→ Plan (e008)            : 전략 유효성 재평가
+```
+
+| Entity | 관계 | Cardinality |
+|---|---|---|
+| [Outcome](e014-outcome.md) | 평가 대상의 기본 단위. Feedback은 결과물에 붙는다 | `Outcome 1:0..N Feedback` |
+| [Goal](e001-goal.md) | Systemic Feedback의 기준은 Goal의 Success Metric이다 | `Goal 1:0..N Feedback` |
+| [Plan](e008-plan.md) | 전략 수준 Feedback은 Plan 평가로 라우팅된다 | `Plan 1:0..N Feedback` |
+| [Memory](e010-memory.md) | Feedback은 Memory에 **첨부**된다. 내용을 고치지 않는다 (INV-F-05) | `Memory 1:0..N Feedback` |
+| [Knowledge](e011-knowledge.md) | 집계된 Feedback이 Knowledge의 지지·반증 근거가 된다 | `Knowledge 1:0..N Feedback` |
+| [Resource Profile](e025-resource-profile.md) | 관측 점수와 Drift 감지의 입력이다 | `Feedback N:M Resource Profile` |
+| [Decision](e009-decision.md) | Feedback 반영의 최종 목적지는 다음 Decision의 개선이다 | `Decision 1:0..N Feedback` |
+| [Evaluation](e015-evaluation.md) | Evaluation은 시스템의 판정, Feedback은 외부의 반응이다. 둘은 별개로 기록된다 | `Feedback N:M Evaluation` |
+
+**Feedback은 대상을 참조하고 대상은 Feedback을 모른다**([Rule REL-002](e000a-entity-relationships.md)).
+
+---
+
+## 8. Canonical Representation
 
 ```json
 {
@@ -289,7 +334,7 @@ Memory 보강 / Knowledge 갱신                ← e010, e011
 
 ---
 
-## 10. Feedback 처리 알고리즘
+## 9. Validation Rules
 
 ```
 신호 감지 (UI 이벤트 / Metric 관측 / 사용자 발화)
@@ -315,28 +360,106 @@ Routing (§7)
 집계 → 임계값 도달 시 Learning 반영
 ```
 
+### 9.1 Feedback Routing
+
+**어떤 Feedback이 어떤 Entity를 갱신하는가.** 이것이 Feedback 명세의 핵심이다.
+
+| Feedback 내용 | 갱신 대상 | 예 |
+|---|---|---|
+| 결과물 품질 평가 | **Resource 성능 프로필** | `Claude의 marketing_copy 점수 조정 근거` |
+| 전략 자체에 대한 평가 | **Knowledge** (Task/Domain) | `감성 소구 전략 → 이 도메인에서 유효` 지지/반증 |
+| 사용자 취향 신호 | **Knowledge** (User) | `사용자 A는 짧은 카피 선호` |
+| 목표 재해석 요구 | **Goal** | `사실 학생 수보다 객단가가 문제였어` → Goal 수정 제안 |
+| Metric 달성/미달 | **Memory** (Result 보강) + Goal Status | 상담 신청 +30% → mem_0142의 result 확정 |
+| 실행 오류/비용 초과 | **Plan / Runtime 정책** | 재시도 정책, 예산 가드 조정 근거 |
+
+#### Routing 알고리즘
+
+```
+Feedback (Interpreted)
+  ↓
+Target Type 확인
+  ↓
+평가 축 분류 (품질? 전략? 취향? 목표? 비용?)
+  ↓
+갱신 대상 Entity 목록 결정 (복수 가능)
+  ↓
+각 대상의 집계 버킷에 적재
+  ↓
+버킷이 Learning 임계값 도달 → Learning Engine 호출
+```
+
+하나의 Feedback이 **여러 대상에 동시에 라우팅**될 수 있다. `톤이 너무 가벼워요`는 Resource 프로필(품질)과 User Knowledge(취향) 양쪽의 근거가 된다.
+
 ---
 
-## 11. 다른 Entity와의 관계
+## 10. Examples
+
+### 예시 1 — 명시적 Feedback과 그 라우팅
 
 ```
-Outcome (Runtime State)
-   ↓ 평가
-Feedback (e012)
-   ├──→ Memory (e010)          : 기록에 평가 신호 첨부
-   ├──→ Knowledge (e011)       : 지지/반증 근거로 집계
-   ├──→ Resource (예정)         : 성능 프로필 갱신 근거
-   ├──→ Goal (e001)            : 목표 재해석/수정 제안
-   └──→ Plan (e008)            : 전략 유효성 재평가
+fbk_301
+  target       out_331 (인스타 광고 카피 3종)
+  source_type  explicit_user
+  raw_signal   "두 번째 안은 학부모가 읽기엔 너무 딱딱해요" + 별점 3/5
+  interpreted  { sentiment: negative, dimension: tone, severity: 0.4 }
+  created_at   2026-08-05T11:20:00Z
+  ↓ Routing
+  → mem_612            평가 신호 첨부 (Memory 내용은 그대로, INV-F-05)
+  → rp_claude5         copywriting 관측 점수 재계산 대기열
+  → eval_055           satisfaction 항목 갱신
 ```
 
-| Entity | 관계 |
+`raw_signal`과 `interpreted`가 나란히 남는다(INV-F-02). 해석 규칙이 바뀌면 원문에서 다시 해석한다.
+
+### 예시 2 — 암묵적 Feedback과 낮은 가중치
+
+```
+fbk_318
+  target       art_450
+  source_type  implicit_behavior
+  raw_signal   { opened: true, dwell_ms: 2100, copied: false, edited_before_use: true }
+  interpreted  { sentiment: weak_negative, confidence: 0.35 }
+  weight       0.3   ← Explicit(1.0)보다 낮다 (INV-F-04)
+```
+
+"쓰기 전에 고쳤다"는 불만족의 신호일 수도, 원래 다듬어 쓰는 습관일 수도 있다. **추측은 진술보다 약하게 다룬다.**
+
+### 예시 3 — 시차를 두고 뒤집히는 평가
+
+```
+out_331  카피 3종
+  08-05  fbk_301  사용자 만족 4/5           → 긍정
+  09-12  fbk_402  집행 결과 CTR 1.1% (목표 3%) → systemic, 부정
+```
+
+두 Feedback은 모순이 아니다. **좋아 보였지만 성과가 없었다**는 것이 하나의 완결된 정보이며, 이 조합이 "사용자 만족도와 실제 성과가 갈리는 경우"의 학습 재료가 된다. 앞선 Feedback을 지우거나 덮지 않는다(INV-F-06).
+
+### 예시 4 — 단일 Feedback이 학습을 바꾸지 못하는 이유
+
+```
+fbk_402  CTR 1.1%  → claude-5의 copywriting 점수를 낮춰야 하는가?
+
+  집계 확인: 같은 조건(학부모·인스타)의 관측 12건 중 목표 미달 3건
+  ↓ INV-F-03
+단일 건으로는 갱신하지 않는다. 12건 집계로 재계산 → 88 → 85
+```
+
+한 건으로 12점을 깎았다면, 다음 한 건으로 다시 올려야 한다. **점수는 여론이 아니다.**
+
+---
+
+## 11. Edge Cases
+
+| 상황 | 판정 |
 |---|---|
-| [Goal](e001-goal.md) | Systemic Feedback의 기준은 Goal의 Success Metric이다 |
-| [Plan](e008-plan.md) | 전략 수준 Feedback은 Plan 평가로 라우팅된다 |
-| [Memory](e010-memory.md) | Feedback은 Memory의 result/confidence를 보강한다 |
-| [Knowledge](e011-knowledge.md) | 집계된 Feedback이 Knowledge의 지지/반증 근거가 된다 |
-| Decision (예정) | Feedback 반영의 최종 목적지는 다음 Decision의 개선이다 |
+| **대상 Entity가 이미 삭제됨** | 미귀속으로 격리한다(INV-F-01). 버리지 않는 이유는 대상 복원이나 집계 통계 보정에 여전히 쓰이기 때문이다 |
+| **같은 대상에 상반된 Feedback** | 둘 다 남긴다. 평균 내서 하나로 만들지 않는다 — 불일치 자체가 평가 기준이 흔들린다는 신호다 |
+| **Feedback이 대상보다 훨씬 늦게 도착** (한 달 뒤 성과 확인) | 정상이다. 시차를 `created_at`과 대상의 시각 차이로 기록한다. **시차가 클수록 인과 귀속이 약해지므로** 가중치에 반영한다 |
+| **사용자가 이유 없이 거부만 함** | `raw_signal`에 "거부, 사유 없음"을 그대로 남긴다. 이유를 추측해 채우지 않는다. 사유 없는 거부가 반복되면 그것 자체가 질문 생성의 근거다 |
+| **Feedback 자체가 틀림** (착오로 낮은 평가) | 지우지 않는다. 정정 Feedback을 새로 붙이고 이전 것을 `superseded`로 표시한다. 착오도 기록이다 |
+| **자동 수집 신호가 폭증** | Implicit 신호는 집계 후 저장한다. 개별 클릭을 전부 Feedback으로 만들면 INV-F-03의 집계가 잡음에 묻힌다 |
+| **어느 Resource 탓인지 모를 실패** (Pipeline 실행) | 단일 Resource에 귀속시키지 않는다. Pipeline 전체를 대상으로 기록하고 기여도 분리는 미해결로 남긴다([Volume 4-E](../v4e-strategy-graph.md)). **모르면서 아는 척 귀속시키면 엉뚱한 Resource가 벌을 받는다** |
 
 ---
 
@@ -364,3 +487,4 @@ Explicit Feedback을 더 모으려고 사용자에게 평가를 강요하면 경
 - Goal 변경 성분 분리 알고리즘의 상세화
 - Feedback → Routing 규칙표의 완전 열거
 - 실제 예시 30~50개
+

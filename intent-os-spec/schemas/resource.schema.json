@@ -4,13 +4,21 @@
   "title": "Resource",
   "description": "Capability를 제공하는 실행 주체. AI, Tool, Human, Hybrid를 동일하게 취급한다 (Principle 03 — Resource Agnostic). Entity 007 명세(entities/e007-resource.md) 참조.",
   "type": "object",
-  "required": ["id", "name", "type", "capabilities"],
+  "required": [
+    "id",
+    "name",
+    "type",
+    "capabilities"
+  ],
   "properties": {
     "id": {
       "type": "string",
       "description": "Registry 내 고유 식별자. 'provider:name' 네임스페이스 권장. 예: 'anthropic:claude-5', 'human:copywriter_kim'"
     },
-    "name": { "type": "string" },
+    "name": {
+      "type": "string",
+      "description": "사람이 읽는 이름. 예: 'Claude 5', '김 카피라이터'"
+    },
     "type": {
       "type": "string",
       "enum": [
@@ -24,35 +32,69 @@
         "agent",
         "human",
         "hybrid"
-      ]
+      ],
+      "description": "Resource의 종류. AI·Tool·Human을 같은 필드로 다룬다 — 선택 로직이 종류를 구분하지 않는다는 것이 Principle 03의 실체다."
     },
-    "provider": { "type": "string" },
-    "version": { "type": "string" },
+    "provider": {
+      "type": "string",
+      "description": "제공 주체. 예: 'anthropic', 'openai', 'internal'. 장애·요금 변경의 귀속 단위다."
+    },
+    "version": {
+      "type": "string",
+      "description": "Resource의 버전. 같은 이름이라도 버전이 다르면 성능 이력을 합치지 않는다."
+    },
     "capabilities": {
       "type": "array",
       "description": "제공하는 Capability 목록 (Rule R-001 — 최소 하나 필요). name은 canonical capability id를 권장한다.",
       "items": {
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "properties": {
-          "name": { "type": "string" },
-          "declared_score": { "type": "number", "minimum": 0, "maximum": 100 },
-          "observed_score": { "type": "number", "minimum": 0, "maximum": 100 },
+          "name": {
+            "type": "string",
+            "description": "Capability의 canonical id. 예: 'language.generation.copywriting'. 자유 문자열을 쓰면 매칭이 깨진다 (e006a 참조)."
+          },
+          "declared_score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "공급자나 등록자가 **주장한** 점수 (0~100). 검증 전 값이므로 Decision의 가중치가 낮다."
+          },
+          "observed_score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "실행 결과로 **관측된** 점수 (0~100). 한 번도 실행되지 않았으면 0이 아니라 부재다 — 측정 안 함과 0점은 다르다."
+          },
           "confidence": {
             "type": "number",
             "description": "observed_score의 신뢰도 (0~1). Intent OS는 Score보다 Confidence를 더 중요하게 본다 (Volume 4-B §10).",
             "minimum": 0,
             "maximum": 1
           }
-        }
+        },
+        "additionalProperties": false
       }
     },
-    "cost_model": { "type": "object" },
+    "cost_model": {
+      "type": "object",
+      "description": "비용 구조. 단가·과금 단위·정액 여부를 담는다. 형태는 Resource 종류마다 다르므로 자유 객체이며, Utility 계산에 쓰이는 값은 resource-profile.schema.json이 정규화한다."
+    },
     "performance": {
       "type": "object",
       "properties": {
-        "reliability": { "type": "number", "minimum": 0, "maximum": 1 },
-        "latency_ms": { "type": "number" },
+        "reliability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "호출이 오류 없이 응답을 반환한 비율 (0~1). 결과의 품질이 아니라 응답 자체의 성공률이다."
+        },
+        "latency_ms": {
+          "type": "number",
+          "description": "관측된 평균 응답 지연 (밀리초). 인간 Resource는 자릿수가 다르므로 Utility의 latency 가중치가 낮은 Task에만 후보로 오른다."
+        },
         "success_rate": {
           "type": "number",
           "description": "실사용 성공률 (0~1). Benchmark < Production Data.",
@@ -68,13 +110,33 @@
           "description": "마지막 관찰 시각. 오래된 관찰은 가중치가 낮아진다 (Capability Decay).",
           "format": "date-time"
         }
-      }
+      },
+      "additionalProperties": false,
+      "description": "관측된 성능 지표. 선언값이 아니라 실측이며, Execution이 쌓일 때마다 갱신된다 (Rule R-004)."
     },
-    "limitations": { "type": "array", "items": { "type": "string" } },
-    "availability": { "type": "string" },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "이 Resource가 못 하는 것. 후보에서 제외하는 근거가 되므로 '느림' 같은 정도가 아니라 '한국어 음성 합성 불가'처럼 판정 가능한 형태로 쓴다."
+    },
+    "availability": {
+      "type": "string",
+      "description": "가용 시간·조건. 인간 Resource의 근무 시간, API의 지역 제한 등. Decision이 실행 가능성을 판정할 때 본다."
+    },
     "lifecycle": {
       "type": "string",
-      "enum": ["Registered", "Evaluating", "Active", "Optimized", "Deprecated", "Removed"]
+      "enum": [
+        "Registered",
+        "Evaluating",
+        "Active",
+        "Optimized",
+        "Deprecated",
+        "Removed"
+      ],
+      "description": "Registry 안에서의 상태. Deprecated 이후의 Resource는 새 Decision의 후보가 되지 않는다."
     }
-  }
+  },
+  "additionalProperties": false
 }

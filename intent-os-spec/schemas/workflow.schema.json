@@ -4,29 +4,75 @@
   "title": "Workflow",
   "description": "Capability 위에 정의된 재사용 가능하고 버전을 갖는 제어 흐름 템플릿. Plan(일회성·Goal 종속)과 달리 Goal에 독립이며, Resource를 지정하지 않는다(INV-WFL-03). 발행된 버전은 수정되지 않고 진행 중 Plan은 시작 시점 버전을 계속 쓴다(Version Pinning). Entity 022 명세(entities/e022-workflow.md) 참조.",
   "type": "object",
-  "required": ["workflow_id", "name", "version", "type", "entry_step", "steps", "status"],
+  "required": [
+    "workflow_id",
+    "name",
+    "version",
+    "type",
+    "entry_step",
+    "steps",
+    "status"
+  ],
   "properties": {
-    "workflow_id": { "type": "string" },
-    "name": { "type": "string" },
-    "version": { "type": "string" },
+    "workflow_id": {
+      "type": "string",
+      "description": "Workflow의 고유 식별자."
+    },
+    "name": {
+      "type": "string",
+      "description": "사람이 읽는 이름. 예: '시즌 캠페인 집행'"
+    },
+    "version": {
+      "type": "string",
+      "description": "Workflow 정의의 버전. 단계나 분기가 바뀌면 올린다. 실행 중인 인스턴스는 시작 시점의 버전을 계속 따른다."
+    },
     "type": {
       "type": "string",
       "description": "saga는 비가역 단계 + 보상 트랜잭션을 포함한다. 되돌릴 수 없다면 앞에 승인 게이트를 둔다.",
-      "enum": ["linear", "branching", "iterative", "event_driven", "saga"]
+      "enum": [
+        "linear",
+        "branching",
+        "iterative",
+        "event_driven",
+        "saga"
+      ]
     },
-    "owner": { "type": "string" },
-    "entry_step": { "type": "string" },
+    "owner": {
+      "type": "string",
+      "description": "이 Workflow를 승인하고 개정할 권한을 가진 주체."
+    },
+    "entry_step": {
+      "type": "string",
+      "description": "첫 번째로 실행할 step_id. steps 안에 실재해야 한다."
+    },
     "variables": {
       "type": "array",
       "description": "인스턴스화 시 Goal의 Constraint에서 값이 주입된다.",
       "items": {
         "type": "object",
-        "required": ["name", "type"],
+        "required": [
+          "name",
+          "type"
+        ],
         "properties": {
-          "name": { "type": "string" },
-          "type": { "type": "string", "enum": ["string", "number", "boolean"] },
-          "default": {}
-        }
+          "name": {
+            "type": "string",
+            "description": "변수 이름. 단계의 조건식과 입력에서 참조한다."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "string",
+              "number",
+              "boolean"
+            ],
+            "description": "변수의 타입. 조건식 평가 시 형 검사에 쓴다."
+          },
+          "default": {
+            "description": "인스턴스 생성 시 값이 주어지지 않았을 때 쓰는 기본값. 타입은 type 필드를 따른다."
+          }
+        },
+        "additionalProperties": false
       }
     },
     "steps": {
@@ -34,27 +80,72 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["step_id", "control"],
+        "required": [
+          "step_id",
+          "control"
+        ],
         "properties": {
-          "step_id": { "type": "string" },
-          "name": { "type": "string" },
+          "step_id": {
+            "type": "string",
+            "description": "Workflow 안에서 유일한 단계 식별자. 분기·반복의 목적지로 참조된다."
+          },
+          "name": {
+            "type": "string",
+            "description": "단계의 이름. 예: '광고 카피 작성'"
+          },
           "control": {
             "type": "string",
             "description": "이 6개로 표현할 수 없는 흐름은 Workflow를 분할해야 한다는 신호다.",
-            "enum": ["sequence", "parallel", "branch", "loop", "wait", "compensate"]
+            "enum": [
+              "sequence",
+              "parallel",
+              "branch",
+              "loop",
+              "wait",
+              "compensate"
+            ]
           },
           "required_capabilities": {
             "type": "array",
             "description": "Resource가 아니라 Capability로 표현한다 (Rule WFL-002). 그래야 다음 실행에서 더 나은 Resource로 자동 교체된다.",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           },
-          "expected_output": { "type": "string" },
-          "branches": { "type": "array", "items": { "type": "string" }, "description": "control=parallel일 때의 동시 실행 단계들." },
-          "next": { "type": ["string", "null"] },
-          "condition": { "type": "string", "description": "control=branch일 때의 조건식." },
-          "on_true": { "type": "string" },
-          "on_false": { "type": "string" },
-          "loop_condition": { "type": "string" },
+          "expected_output": {
+            "type": "string",
+            "description": "이 단계가 만들어야 하는 산출물. 다음 단계의 입력 조건이자 완료 판정 기준이다."
+          },
+          "branches": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "control=parallel일 때의 동시 실행 단계들."
+          },
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "다음 단계의 step_id. 마지막 단계는 null이다."
+          },
+          "condition": {
+            "type": "string",
+            "description": "control=branch일 때의 조건식."
+          },
+          "on_true": {
+            "type": "string",
+            "description": "조건 단계에서 조건이 참일 때 이동할 step_id."
+          },
+          "on_false": {
+            "type": "string",
+            "description": "조건 단계에서 조건이 거짓일 때 이동할 step_id."
+          },
+          "loop_condition": {
+            "type": "string",
+            "description": "반복 단계의 계속 조건. 참인 동안 반복한다. 무한 반복을 막기 위해 max_retries 또는 예산 상한과 함께 쓴다."
+          },
           "max_iterations": {
             "type": "integer",
             "description": "control=loop일 때 필수 (INV-WFL-02). 상한 없는 반복은 예산을 태운다.",
@@ -63,45 +154,111 @@
           "wait_for": {
             "type": "object",
             "properties": {
-              "event_type": { "type": "string" },
-              "timeout": { "type": "string" }
-            }
+              "event_type": {
+                "type": "string",
+                "description": "기다릴 Event의 종류. e020 Event의 type과 같은 값을 쓴다."
+              },
+              "timeout": {
+                "type": "string",
+                "description": "대기 제한 시간 (ISO 8601 duration). 초과하면 on_failure를 따른다."
+              }
+            },
+            "additionalProperties": false,
+            "description": "외부 사건을 기다리는 단계의 대기 조건."
           },
           "on_failure": {
             "type": "string",
-            "enum": ["retry", "skip", "fail_workflow", "compensate", "branch_to"]
+            "enum": [
+              "retry",
+              "skip",
+              "fail_workflow",
+              "compensate",
+              "branch_to"
+            ],
+            "description": "이 단계가 실패했을 때의 조치. Workflow는 실패 처리를 미리 정해 두는 것이 존재 이유다."
           },
           "branch_to": {
             "type": "string",
             "description": "on_failure가 branch_to일 때의 대체 경로 step_id."
           },
-          "max_retries": { "type": "integer", "minimum": 0 },
+          "max_retries": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "재시도 상한. on_failure가 retry일 때만 의미가 있다."
+          },
           "irreversible": {
             "type": "boolean",
             "description": "true면 선행 경로에 승인 게이트 또는 Rehearsal이 있어야 한다 (INV-WFL-05).",
             "default": false
           },
-          "requires_approval": { "type": "boolean", "default": false },
-          "budget_cap": { "type": ["string", "number"] },
-          "compensation": { "type": ["string", "null"], "description": "실패 시 실행할 보상 단계 ID." }
-        }
-      }
+          "requires_approval": {
+            "type": "boolean",
+            "default": false,
+            "description": "실행 전 인간 승인이 필요한가. true면 승인 전까지 Execution을 만들지 않는다."
+          },
+          "budget_cap": {
+            "type": [
+              "string",
+              "number"
+            ],
+            "description": "이 단계가 쓸 수 있는 비용 상한. 문자열('300000 KRW')이나 숫자로 쓴다. 초과 시 단계를 중단한다."
+          },
+          "compensation": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "실패 시 실행할 보상 단계 ID."
+          }
+        },
+        "additionalProperties": false
+      },
+      "description": "단계 목록. 각 단계는 **필요한 Capability**를 말하고 Resource는 지정하지 않는다 — Resource 선택은 Decision의 소관이다."
     },
-    "policy_refs": { "type": "array", "items": { "type": "string" } },
+    "policy_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "이 Workflow 전체에 적용되는 Policy 목록. 단계별 Policy는 각 step이 따로 참조한다."
+    },
     "usage_stats": {
       "type": "object",
       "properties": {
-        "instantiations": { "type": "integer", "minimum": 0 },
-        "success_rate": { "type": "number", "minimum": 0, "maximum": 1 }
-      }
+        "instantiations": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "이 Workflow로 만들어진 인스턴스의 총 개수."
+        },
+        "success_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "인스턴스가 Completed로 끝난 비율 (0~1)."
+        }
+      },
+      "additionalProperties": false,
+      "description": "이 Workflow가 실제로 얼마나 쓰였고 얼마나 성공했는가. 검증된 패턴만 Published로 올리는 근거가 된다."
     },
     "derived_from": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "학습으로 추출된 경우의 Knowledge ID. Workflow의 가장 강력한 출처는 사람이 아니라 학습이다."
     },
     "status": {
       "type": "string",
-      "enum": ["Draft", "Review", "Published", "Deprecated", "Retired", "Rejected"]
+      "enum": [
+        "Draft",
+        "Review",
+        "Published",
+        "Deprecated",
+        "Retired",
+        "Rejected"
+      ],
+      "description": "Workflow 정의의 상태. Published만 새 인스턴스를 만들 수 있다."
     }
-  }
+  },
+  "additionalProperties": false
 }

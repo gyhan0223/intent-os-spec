@@ -111,11 +111,11 @@ Session 021 ──▶ Goal 001 ──▶ Intent 002 ──▶ Task 005 ──▶
 
 | 좌변 | 관계 | 우변 | Cardinality | 비고 |
 |---|---|---|---|---|
-| Session | 다룬다 | Goal | `1:0..N` | Goal은 Session보다 오래 산다. 소유가 아니라 참조다 |
+| Session | 다룬다 | Goal | `N:M` | Goal은 Session보다 오래 산다. 소유가 아니라 참조이므로 **다른 Session이 같은 Goal을 이어받는다** |
 | Goal | 하위 목표 | Goal | `1:0..N` | Goal Graph. DAG |
-| Goal | 해석된다 | Intent | `1:1..N` | Goal 하나에 해결 영역 여럿 |
+| Goal | 해석된다 | Intent | `1:0..N` | Goal 하나에 해결 영역 여럿. **`Created` 상태의 Goal은 아직 0개다** |
 | Goal | 계획된다 | Plan | `1:0..N` | 버전 관리. **Active는 항상 1개** |
-| Intent | 분해된다 | Task | `1:1..N` | |
+| Intent | 분해된다 | Task | `1:0..N` | `Rejected` Intent는 전개되지 않는다. `Expanded`인 것만 1개 이상 ([INV-I-03](e002-intent.md)) |
 | Plan | 포함한다 | Task | `1:1..N` | Plan의 Task Graph |
 | Plan | 실행순서 | Workflow | `1:0..1` | Workflow가 없으면 의존 순서대로 실행 |
 | Task | 선행한다 | Task | `N:M` | Task Graph. DAG |
@@ -132,13 +132,24 @@ Session 021 ──▶ Goal 001 ──▶ Intent 002 ──▶ Task 005 ──▶
 | Outcome | 평가된다 | Evaluation | `1:0..N` | 평가자·시점마다 1개 |
 | Feedback | 입력된다 | Evaluation | `N:M` | Feedback은 Evaluation의 입력원 |
 | Evaluation | 축적된다 | Memory | `1:0..N` | |
-| Memory | 승격된다 | Knowledge | `N:1` | 여러 Memory가 하나의 Knowledge로 |
+| Memory | 승격된다 | Knowledge | `N:M` | 여러 Memory가 하나의 Knowledge로. 한 Memory가 여러 Knowledge의 근거가 되기도 한다 |
 | Goal / Plan | 전제한다 | Assumption | `1:0..N` | |
 | Plan | 식별한다 | Risk | `1:0..N` | |
 | Policy | 지배한다 | 모든 Entity | `1:N` | 전역 |
 | Constraint | 제약한다 | Goal / Task / Plan | `N:M` | 상속·전파된다 |
 | Context | 주입된다 | 모든 Entity | `N:M` | Scope 계층에 따라 |
 | 모든 Entity | 발생시킨다 | Event | `1:0..N` | 상태 전이마다 |
+
+> **📌 v1.1 정정 (2026-08-04)** — Entity 문서에 Cardinality를 표기하면서 이 표와 어긋나는 네 곳이 드러났다.
+>
+> | 관계 | 이전 | 현재 | 근거 |
+> |---|---|---|---|
+> | Session — Goal | `1:0..N` | `N:M` | 비고가 이미 "Goal이 Session보다 오래 산다"고 적고 있었다. 그렇다면 다음 Session이 같은 Goal을 다룬다 |
+> | Goal — Intent | `1:1..N` | `1:0..N` | `Created` 상태의 Goal은 Intent가 없다. Context 부족으로 추론 결과가 0개일 수도 있다 ([e002 §11](e002-intent.md)) |
+> | Intent — Task | `1:1..N` | `1:0..N` | `Rejected` Intent는 Task를 만들지 않는다 |
+> | Memory — Knowledge | `N:1` | `N:M` | 한 Memory가 여러 Knowledge의 근거가 될 수 있다 ([e011 §5](e011-knowledge.md)) |
+>
+> 이 표가 정본이다. Entity 문서 §7의 표기는 여기에 맞춘다. `tools/validate-format.py`가 불일치를 검사한다.
 
 ---
 

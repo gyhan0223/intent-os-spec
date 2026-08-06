@@ -50,8 +50,8 @@ Answer                      Resource → Execution → Outcome
 | 4-B | ↳ Resource Intelligence — Capability DNA, Drift 감지 | [v4b-resource-intelligence.md](v4b-resource-intelligence.md) | Specification |
 | 4-C | ↳ Resource Genome — 행동 기반 AI 표현, Meta Prediction | [v4c-resource-genome.md](v4c-resource-genome.md) | Research Design |
 | 4-D | ↳ Autonomous Benchmarking — AI를 자동으로 연구·평가 | [v4d-autonomous-benchmarking.md](v4d-autonomous-benchmarking.md) | Research Design |
-| 4-E | ↳ Strategy Graph — 전략 자체를 학습·재사용 ⚠️연구 | [v4e-strategy-graph.md](v4e-strategy-graph.md) | Research Design ⚠️ |
-| 4-F | ↳ World Model — 사용자의 현실을 모델링 ⚠️연구 | [v4f-world-model.md](v4f-world-model.md) | Research Design ⚠️ |
+| 4-E | ↳ Strategy Graph — 전략 자체를 학습·재사용 🔬연구 | [v4e-strategy-graph.md](v4e-strategy-graph.md) | Research Design 🔬 |
+| 4-F | ↳ World Model — 사용자의 현실을 모델링 🔬연구 | [v4f-world-model.md](v4f-world-model.md) | Research Design 🔬 |
 | 5 | Learning Engine — 경험 축적과 개선 | [v5-learning-engine.md](v5-learning-engine.md) | Specification |
 | 6 | Developer Platform — 외부 Resource 연결 | [v6-developer-platform.md](v6-developer-platform.md) | Specification |
 | 7 | Reference Implementation — MVP 및 로드맵 | [v7-reference-implementation.md](v7-reference-implementation.md) | Blueprint |
@@ -137,6 +137,26 @@ Answer                      Resource → Execution → Outcome
 | [`resource-profile.schema.json`](intent-os-spec/schemas/resource-profile.schema.json) | Entity 025 |
 | [`task-graph.schema.json`](intent-os-spec/schemas/task-graph.schema.json) | Entity 005-A |
 | [`capability-taxonomy.schema.json`](intent-os-spec/schemas/capability-taxonomy.schema.json) | Entity 006-A |
+| [`state-machine.schema.json`](intent-os-spec/schemas/state-machine.schema.json) | 상태 머신 **문서의 형식**을 정의한다. `goal-state-machine.json`이 이것을 가리킨다 |
+
+모든 스키마는 draft 2020-12이며 객체마다 `additionalProperties: false`가 걸려 있다. 필드 이름을 잘못 쓰면 "추가 필드"로 통과하지 않고 검증에서 잡힌다.
+
+---
+
+## 검증
+
+명세가 스스로를 검사한다. 세 스크립트가 있고 [GitHub Actions](.github/workflows/validate-spec.yml)가 push마다 실행한다.
+
+```bash
+pip install jsonschema referencing
+
+python3 tools/validate-format.py     # 12개 섹션 순서, Rule·INV 최소 개수, Prefix 등록,
+                                     # 헤더 3필드, 스키마 위생, 상호 참조(§N) 유효성
+python3 tools/validate-examples.py   # 문서의 JSON 예시 ↔ 스키마
+python3 tools/validate-links.py      # 상대 링크
+```
+
+형식 규격 자체는 [entities/e000-spec-format.md](entities/e000-spec-format.md)가 정의하며, `validate-format.py`는 Rule Prefix 표를 그 문서에서 **직접 파싱한다.** 표를 고치면 검사도 따라 바뀐다.
 
 ---
 

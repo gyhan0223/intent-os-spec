@@ -4,7 +4,14 @@
   "title": "Event",
   "description": "시스템에서 이미 일어난 일에 대한 불변·시각·순서를 가진 기록. 항상 과거형이며(Rule EVT-001) 명령을 담지 않는다(INV-EVT-05). 모든 상태 전이는 정확히 하나의 Event를 발생시키고(INV-12), Event 재생만으로 상태를 재구성할 수 있어야 한다. Entity 020 명세(entities/e020-event.md) 참조.",
   "type": "object",
-  "required": ["event_id", "type", "sequence", "subject", "emitted_by", "emitted_at"],
+  "required": [
+    "event_id",
+    "type",
+    "sequence",
+    "subject",
+    "emitted_by",
+    "emitted_at"
+  ],
   "properties": {
     "event_id": {
       "type": "string",
@@ -17,7 +24,14 @@
     },
     "category": {
       "type": "string",
-      "enum": ["lifecycle", "threshold", "governance", "external", "system"]
+      "enum": [
+        "lifecycle",
+        "threshold",
+        "governance",
+        "external",
+        "system"
+      ],
+      "description": "Event의 대분류. 소비자는 보통 type이 아니라 category로 구독한다."
     },
     "sequence": {
       "type": "integer",
@@ -27,20 +41,57 @@
     "subject": {
       "type": "object",
       "description": "무엇에 대한 Event인가 (Rule EVT-003). 없으면 소비자가 아무것도 할 수 없다.",
-      "required": ["entity_type", "entity_id"],
+      "required": [
+        "entity_type",
+        "entity_id"
+      ],
       "properties": {
-        "entity_type": { "type": "string" },
-        "entity_id": { "type": "string" }
-      }
+        "entity_type": {
+          "type": "string",
+          "description": "사건의 주체가 된 Entity의 종류. 예: 'Execution'"
+        },
+        "entity_id": {
+          "type": "string",
+          "description": "사건의 주체가 된 Entity의 식별자."
+        }
+      },
+      "additionalProperties": false
     },
-    "session_id": { "type": ["string", "null"] },
-    "goal_id": { "type": ["string", "null"] },
+    "session_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "이 Event가 발생한 Session. Session 밖에서 발생했으면 null."
+    },
+    "goal_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "관련 Goal. 어떤 목표의 흐름에서 나온 사건인지 추적한다. 무관하면 null."
+    },
     "correlation_id": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "인과 사슬 추적 ID. 하나의 원인에서 파생된 Event들을 한 번의 질의로 묶는다."
     },
-    "previous_state": { "type": ["string", "null"] },
-    "new_state": { "type": ["string", "null"] },
+    "previous_state": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "상태 전이 Event에서 전이 이전의 상태. 상태 전이가 아니면 null."
+    },
+    "new_state": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "상태 전이 Event에서 전이 이후의 상태. 상태 전이가 아니면 null."
+    },
     "data": {
       "type": "object",
       "description": "변화에 관한 최소 데이터 (Rule EVT-005). Entity 전체를 복사해 넣지 않는다. 대용량은 참조로 전환한다."
@@ -49,15 +100,31 @@
       "type": "string",
       "description": "발행 주체. 발행자는 구독자를 모른다 (Rule EVT-007) — 수신자 필드를 두지 않는다."
     },
-    "emitted_at": { "type": "string", "format": "date-time" },
+    "emitted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Event가 발생한 시각. 소비 시각이 아니라 **발생** 시각이며, 재생(Replay) 시에도 이 값은 바뀌지 않는다."
+    },
     "severity": {
       "type": "string",
-      "enum": ["info", "warning", "critical"],
-      "default": "info"
+      "enum": [
+        "info",
+        "warning",
+        "critical"
+      ],
+      "default": "info",
+      "description": "심각도. critical은 즉시 인간에게 도달해야 하는 것만 쓴다."
     },
-    "schema_version": { "type": "string", "default": "1.0" },
+    "schema_version": {
+      "type": "string",
+      "default": "1.0",
+      "description": "이 Event 형식의 버전. 소비자가 오래된 형식을 만났을 때 판단할 근거다."
+    },
     "corrects": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "type이 event.correction_issued 일 때 보정 대상 Event ID. 원본은 수정하지 않는다 (INV-EVT-01)."
     },
     "delivery": {
@@ -66,11 +133,31 @@
       "properties": {
         "status": {
           "type": "string",
-          "enum": ["Emitted", "Published", "Consumed", "DeadLettered", "Replayed", "Archived"]
+          "enum": [
+            "Emitted",
+            "Published",
+            "Consumed",
+            "DeadLettered",
+            "Replayed",
+            "Archived"
+          ],
+          "description": "전달 상태. DeadLettered는 소비에 반복 실패해 격리된 상태이며, 사라진 것이 아니라 보관된다."
         },
-        "attempts": { "type": "integer", "minimum": 0 },
-        "consumers_acked": { "type": "array", "items": { "type": "string" } }
-      }
+        "attempts": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "전달 시도 횟수."
+        },
+        "consumers_acked": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "수신을 확인한 소비자 목록. 일부만 확인했어도 Event는 삭제하지 않는다."
+        }
+      },
+      "additionalProperties": false
     }
-  }
+  },
+  "additionalProperties": false
 }

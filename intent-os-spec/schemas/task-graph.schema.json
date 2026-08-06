@@ -4,18 +4,34 @@
   "title": "Task Graph",
   "description": "하나의 Plan에 속한 Task들의 방향성 비순환 그래프. 간선은 실행 의존을 표현하며(depends_on 한 종류), 그 구조가 병렬성·임계 경로·실패 전파·재계획 시 보존 범위를 결정한다. Workflow(제어 흐름)와 달리 분기·반복을 표현하지 않는다. Entity 005-A 명세(entities/e005a-task-graph.md) 참조.",
   "type": "object",
-  "required": ["graph_id", "plan_id", "version", "nodes", "edges", "status"],
+  "required": [
+    "graph_id",
+    "plan_id",
+    "version",
+    "nodes",
+    "edges",
+    "status"
+  ],
   "properties": {
-    "graph_id": { "type": "string" },
+    "graph_id": {
+      "type": "string",
+      "description": "Task Graph의 고유 식별자."
+    },
     "plan_id": {
       "type": "string",
       "description": "모든 노드가 동일 Plan에 속해야 한다 (INV-TG-03). Plan 간 의존은 Goal Graph로 표현한다."
     },
-    "version": { "type": "integer", "minimum": 1 },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "그래프 버전. 재계획으로 그래프가 재구성되면 올린다."
+    },
     "nodes": {
       "type": "array",
       "description": "Task ID 목록. 모든 노드는 entry_tasks에서 도달 가능해야 한다 (INV-TG-02).",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "minItems": 1
     },
     "edges": {
@@ -23,22 +39,34 @@
       "description": "(from, to)는 'to는 from이 완료되어야 시작 가능'을 뜻한다. 순환 금지 (INV-TG-01). 불필요한 간선은 병렬성을 죽인다 (Rule TG-004).",
       "items": {
         "type": "object",
-        "required": ["from", "to"],
+        "required": [
+          "from",
+          "to"
+        ],
         "properties": {
-          "from": { "type": "string" },
-          "to": { "type": "string" },
+          "from": {
+            "type": "string",
+            "description": "선행 Task의 id."
+          },
+          "to": {
+            "type": "string",
+            "description": "후행 Task의 id. from이 끝나야 to를 시작할 수 있다."
+          },
           "redundant": {
             "type": "boolean",
             "description": "전이적 축약으로 제거 제안되었으나 명시적 순서 요구로 유지된 간선. 병렬성 손실을 드러낸다.",
             "default": false
           }
-        }
+        },
+        "additionalProperties": false
       }
     },
     "entry_tasks": {
       "type": "array",
       "description": "진입 차수 0인 노드. 비어 있으면 순환 그래프다.",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "analysis": {
       "type": "object",
@@ -46,38 +74,94 @@
         "critical_path": {
           "type": "array",
           "description": "임계 경로. 이 위의 Task가 지연되면 전체가 지연된다.",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
-        "estimated_duration": { "type": "string", "description": "ISO 8601 duration." },
-        "max_parallelism": { "type": "integer", "minimum": 1 },
+        "estimated_duration": {
+          "type": "string",
+          "description": "ISO 8601 duration."
+        },
+        "max_parallelism": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "동시에 실행 가능한 Task의 최대 개수. 자원 확보 계획의 입력이다."
+        },
         "spof": {
           "type": "array",
           "description": "단일 실패점. 하류 도달 집합이 임계치를 넘는 Task. Risk 자동 식별의 입력이 된다.",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
-      }
+      },
+      "additionalProperties": false,
+      "description": "그래프 구조에서 계산해낸 값들. 저장값이지만 원본은 nodes와 edges이며, 불일치하면 그래프가 이긴다."
     },
     "derived_from": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "인스턴스화한 Workflow. 예: 'wf_seasonal_campaign@2.1'"
     },
     "previous_version": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "재계획 시의 이전 그래프. 예: 'tg_014@1'"
     },
     "diff": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "description": "재계획 시의 Graph Diff 결과. Completed Task와 그 Artifact는 보존된다 (Rule TG-007, INV-TG-05).",
       "properties": {
-        "preserved": { "type": "array", "items": { "type": "string" } },
-        "invalidated": { "type": "array", "items": { "type": "string" } },
-        "removed": { "type": "array", "items": { "type": "string" } },
-        "added": { "type": "array", "items": { "type": "string" } }
-      }
+        "preserved": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "재구성 후에도 그대로 승계된 Task 목록. 산출물을 재사용한다."
+        },
+        "invalidated": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "입력이 바뀌어 다시 실행해야 하는 Task 목록."
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "새 그래프에 없는 Task 목록. 삭제하지 않고 Superseded로 표시만 한다."
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "새 그래프에만 있는 Task 목록."
+        }
+      },
+      "additionalProperties": false
     },
     "status": {
       "type": "string",
-      "enum": ["Constructed", "Validated", "Active", "Suspended", "Superseded", "Completed"]
+      "enum": [
+        "Constructed",
+        "Validated",
+        "Active",
+        "Suspended",
+        "Superseded",
+        "Completed"
+      ],
+      "description": "그래프의 현재 상태. Plan에 종속되므로 자체 상태는 단순하다."
     }
-  }
+  },
+  "additionalProperties": false
 }

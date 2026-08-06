@@ -4,13 +4,23 @@
   "title": "Context (Canonical Context Representation)",
   "description": "Goal을 둘러싼 현재 세계 상태의 구조화된 표현. 사실(Fact)만 담으며 판단이나 규칙을 담지 않는다. 모든 항목은 출처(Source)와 수집 시각을 가진다. Entity 003 명세(entities/e003-context.md) 참조.",
   "type": "object",
-  "required": ["context_id", "scope"],
+  "required": [
+    "context_id",
+    "scope"
+  ],
   "properties": {
-    "context_id": { "type": "string" },
+    "context_id": {
+      "type": "string",
+      "description": "Context의 고유 식별자."
+    },
     "scope": {
       "type": "string",
       "description": "적용 범위. 하위 Scope는 상위 Scope를 상속하며, 충돌 시 하위 Scope가 우선한다 (§5).",
-      "enum": ["Global", "Goal", "Task"]
+      "enum": [
+        "Global",
+        "Goal",
+        "Task"
+      ]
     },
     "goal_id": {
       "type": "string",
@@ -35,7 +45,9 @@
     "history": {
       "type": "array",
       "description": "과거 이력. History가 있어야 Prediction이 가능하다. 예: 지난 여름캠프 등록 35명",
-      "items": { "type": "object" }
+      "items": {
+        "type": "object"
+      }
     },
     "available_resources": {
       "type": "object",
@@ -46,7 +58,11 @@
       "description": "Context 항목별 메타데이터. 출처와 수집 시각은 필수다 (Rule C-002, C-003).",
       "items": {
         "type": "object",
-        "required": ["key", "source", "collected_at"],
+        "required": [
+          "key",
+          "source",
+          "collected_at"
+        ],
         "properties": {
           "key": {
             "type": "string",
@@ -55,7 +71,12 @@
           "source": {
             "type": "string",
             "description": "출처. 추정된 항목은 반드시 inferred로 표시한다 — 추정이 사실인 척하면 안 된다.",
-            "enum": ["user_input", "system_observation", "external_source", "inferred"]
+            "enum": [
+              "user_input",
+              "system_observation",
+              "external_source",
+              "inferred"
+            ]
           },
           "collected_at": {
             "type": "string",
@@ -70,10 +91,16 @@
           "freshness": {
             "type": "string",
             "description": "신선도 상태. Stale은 사용 가능하나 Confidence 감점, Expired는 추론 사용 금지·재수집 필수 (§6).",
-            "enum": ["Fresh", "Stale", "Expired"]
+            "enum": [
+              "Fresh",
+              "Stale",
+              "Expired"
+            ]
           }
-        }
+        },
+        "additionalProperties": false
       }
     }
-  }
+  },
+  "additionalProperties": false
 }

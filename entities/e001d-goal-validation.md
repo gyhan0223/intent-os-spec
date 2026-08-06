@@ -1,8 +1,10 @@
 # Entity 001-D: Goal Validation Rules
 
 - **Version:** v2.0 Draft
-- **Status:** Core Entity — Validation & Scoring
+- **Status:** Core Entity
+- **Format:** Annex — e001 Goal의 부속 문서 (e000 §7.1)
 - **Last Updated:** 2026-08-04
+- **Schema:** [`goal.schema.json`](../intent-os-spec/schemas/goal.schema.json) — 이 문서의 규칙이 검사하는 대상
 
 ---
 
@@ -57,7 +59,7 @@ Goal Confirmation → Canonical Goal 확정
 
 ### 3.2 Semantic Rules (의미 수준)
 
-[e001-goal.md §10](e001-goal.md)에 정의된 규칙을 실행한다.
+[e001-goal.md §3](e001-goal.md)에 정의된 규칙(Rule G-001~G-005)을 실행한다.
 
 | Rule | 내용 | 위반 시 |
 |---|---|---|

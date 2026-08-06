@@ -6,7 +6,7 @@
 
 ---
 
-## 0. Why Not Just a List
+## Why Not Just a List
 
 [Task](e005-task.md) 명세는 노드 하나를 정의했다. 그런데 실행에서 중요한 것은 노드가 아니라 **구조**다.
 
@@ -21,7 +21,7 @@
 
 목록은 이 네 질문에 하나도 답하지 못한다. [Goal Graph](e001a-goal-graph.md)가 Goal에 대해 했던 일을 Task에 대해 하는 것이 이 문서다.
 
-> [e005 §13 Open Issue](e005-task.md)가 제기한 "Task Graph는 별도 명세가 필요한가"에 대한 답이다.
+> [e005 §12 Open Issues](e005-task.md)가 제기한 "Task Graph는 별도 명세가 필요한가"에 대한 답이다.
 
 ---
 
@@ -263,11 +263,11 @@ Constructed → Validated → Active ──▶ Superseded
 
 ---
 
-## 7. Dynamic Planning — 그래프 재구성
+### 6.1 Dynamic Planning — 그래프 재구성
 
-**이 절이 이 문서의 핵심이다.** [e005 §13](e005-task.md)이 미해결로 남긴 문제에 답한다.
+**이 절이 이 문서의 핵심이다.** [e005 §12](e005-task.md)이 미해결로 남긴 문제에 답한다.
 
-### 7.1 문제
+#### 6.1.1 문제
 
 ```
 실행 중:  T1 ✅  T2 ✅  T3 ✅  T4 🔄(실행 중)  T5 ⬜  T6 ⬜  T7 ⬜
@@ -279,7 +279,7 @@ Constructed → Validated → Active ──▶ Superseded
 
 전부 다시 하면 이미 쓴 비용과 시간이 사라진다. 그대로 두면 새 계획과 맞지 않을 수 있다.
 
-### 7.2 Graph Diff
+#### 6.1.2 Graph Diff
 
 새 그래프 $TG'$ 와 기존 $TG$ 를 비교해 Task를 4분류한다.
 
@@ -292,7 +292,7 @@ Constructed → Validated → Active ──▶ Superseded
 
 **동일 Task 판정 기준:** `objective` + `required_capabilities` + `expected_output`이 같으면 동일하다. `task_id`가 아니다 — Planner가 매번 새 ID를 만들 수 있기 때문이다.
 
-### 7.3 재구성 알고리즘
+#### 6.1.3 재구성 알고리즘
 
 ```
 재계획 트리거 (가정 무효화 / 예산 변경 / 실패 누적 / 사용자 요청)
@@ -322,7 +322,7 @@ Constructed → Validated → Active ──▶ Superseded
 ⑧ Runtime 재개
 ```
 
-### 7.4 실제 적용
+#### 6.1.4 실제 적용
 
 ```
 plan_014 (예산 300만원)          plan_015 (예산 200만원)
@@ -339,7 +339,7 @@ T7 성과 분석      ⬜ Pending    →  Preserved
 
 **7개 중 5개가 보존되었다.** 조사·분석·카피는 예산이 줄어도 그대로 쓸 수 있다. 다시 만들었다면 약 12만원과 이틀을 낭비했을 것이다.
 
-### 7.5 보존 판정 기준
+#### 6.1.5 보존 판정 기준
 
 ④의 "새 계획에서도 유효한가"를 판정하는 질문들이다.
 
@@ -351,6 +351,34 @@ T7 성과 분석      ⬜ Pending    →  Preserved
 | Context Freshness를 넘겼는가 ([e003](e003-context.md)) | 아니오 | 예 |
 
 **세 번째 질문 때문에 전파가 일어난다.** T3(타겟 분석)이 무효화되면 그것을 입력으로 쓴 T4(카피)도 무효가 된다.
+
+---
+
+## 7. Relationships
+
+```
+Goal Graph 001-A ──(대응)──▶ Plan 008 ──1:1──▶ Task Graph 005-A
+                                                    │
+                                    ┌───────────────┼───────────────┐
+                                    │               │               │
+                              1:N nodes       1:0..1 previous  0..N spof
+                                    ▼               ▼               ▼
+                               Task 005      Task Graph 005-A    Risk 018
+                                    │
+                                    └──1:0..N──▶ Execution 013
+```
+
+| Entity | 관계 | Cardinality |
+|---|---|---|
+| [Plan](e008-plan.md) | Task Graph는 정확히 하나의 Plan에 속한다. Plan이 폐기되면 그래프도 `Superseded`가 된다 | `Plan 1:1 Task Graph` |
+| [Task](e005-task.md) | 노드의 실체. 그래프는 `task_id`만 담고 Task 본문은 갖지 않는다 | `Task Graph 1:N Task` |
+| Task Graph | `previous_version`으로 이전 버전을 가리킨다. 재계획 시 사슬이 늘어난다 | `Task Graph 1:0..1 Task Graph` |
+| [Workflow](e022-workflow.md) | `derived_from`. 검증된 패턴에서 그래프를 찍어낼 수 있다 | `Workflow 1:0..N Task Graph` |
+| [Goal Graph](e001a-goal-graph.md) | 대응 관계. Goal Graph는 **무엇을**, Task Graph는 **어떻게**를 담는다. 직접 참조하지 않고 Plan을 거친다 | `Goal Graph 1:0..N Task Graph` |
+| [Risk](e018-risk.md) | `analysis.spof`가 Risk 식별의 자동 입력이 된다 | `Task Graph 1:0..N Risk` |
+| [Execution](e013-execution.md) | 그래프는 Execution을 만들지 않는다. **실행 가능 Task를 계산해줄 뿐**이다(§9.2) | `Task Graph 1:0..N Execution` (간접) |
+
+**참조 방향은 한 방향이다.** Task는 자신이 어느 그래프에 속하는지 모른다. 그래프가 Task를 가리킨다([Rule REL-003](e000a-entity-relationships.md)).
 
 ---
 
@@ -576,5 +604,5 @@ plan_015 Active
 
 - 임계 경로 추정의 Resource 독립적 방법
 - 국소 재계획 알고리즘
-- Task 우선순위 계산식 (Goal Score 연동, [e005 §13](e005-task.md))
+- Task 우선순위 계산식 (Goal Score 연동, [e005 §12](e005-task.md))
 - 실제 예시 30~50개

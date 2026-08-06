@@ -4,99 +4,265 @@
   "title": "Policy",
   "description": "시스템이 무엇을 해도 되고 무엇을 하면 안 되는지를 규정하는 기계 강제 가능한 규칙. 특정 Goal과 무관하게 정의되며 최적화보다 우선한다 — Policy > Hard Constraint > Decision Utility > Soft Constraint (INV-11). Entity 019 명세(entities/e019-policy.md) 참조.",
   "type": "object",
-  "required": ["policy_id", "name", "type", "authority", "applies_to", "condition", "effect", "enforcement_points", "status"],
+  "required": [
+    "policy_id",
+    "name",
+    "type",
+    "authority",
+    "applies_to",
+    "condition",
+    "effect",
+    "enforcement_points",
+    "status"
+  ],
   "properties": {
-    "policy_id": { "type": "string" },
-    "name": { "type": "string" },
+    "policy_id": {
+      "type": "string",
+      "description": "Policy의 고유 식별자."
+    },
+    "name": {
+      "type": "string",
+      "description": "사람이 읽는 이름. 예: '광고 집행 사전 승인'"
+    },
     "type": {
       "type": "string",
-      "enum": ["privacy", "security", "compliance", "cost", "human_oversight", "quality", "data_retention", "resource_usage", "brand"]
+      "enum": [
+        "privacy",
+        "security",
+        "compliance",
+        "cost",
+        "human_oversight",
+        "quality",
+        "data_retention",
+        "resource_usage",
+        "brand"
+      ],
+      "description": "Policy가 지키려는 것의 종류. 충돌 시 우선순위 판정에 쓰인다."
     },
-    "version": { "type": "string" },
+    "version": {
+      "type": "string",
+      "description": "Policy 정의의 버전. 조건이나 조치가 바뀌면 올린다. 과거 판정의 근거를 재현하려면 버전이 필요하다."
+    },
     "authority": {
       "type": "string",
       "description": "권위 근거 (Rule POL-004). 충돌 해소 시 legal > security > organization > contractual > user 순으로 우선한다.",
-      "enum": ["legal", "security", "organization", "contractual", "user"]
+      "enum": [
+        "legal",
+        "security",
+        "organization",
+        "contractual",
+        "user"
+      ]
     },
-    "owner": { "type": "string" },
-    "reference": { "type": "string", "description": "근거 문서. 예: '개인정보보호법 제17조'" },
+    "owner": {
+      "type": "string",
+      "description": "이 Policy를 승인하고 개정할 권한을 가진 주체."
+    },
+    "reference": {
+      "type": "string",
+      "description": "근거 문서. 예: '개인정보보호법 제17조'"
+    },
     "applies_to": {
       "type": "array",
       "description": "적용 대상 Entity 타입. Goal ID가 등장하면 그것은 Policy가 아니라 Constraint다 (Rule POL-001).",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "minItems": 1
     },
     "condition": {
       "type": "object",
       "description": "판정 조건 (Rule POL-002). 모든 field는 시스템이 판정 가능한 값이어야 한다. all/any 조합으로 표현한다.",
       "properties": {
-        "all": { "type": "array", "items": { "$ref": "#/$defs/predicate" } },
-        "any": { "type": "array", "items": { "$ref": "#/$defs/predicate" } },
-        "not": { "$ref": "#/$defs/predicate" }
-      }
+        "all": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/predicate"
+          },
+          "description": "모두 참이어야 조건이 성립한다 (AND)."
+        },
+        "any": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/predicate"
+          },
+          "description": "하나라도 참이면 조건이 성립한다 (OR)."
+        },
+        "not": {
+          "$ref": "#/$defs/predicate",
+          "description": "이 조건이 거짓일 때 성립한다 (NOT)."
+        }
+      },
+      "additionalProperties": false
     },
     "effect": {
       "type": "string",
       "description": "deny된 후보는 Utility를 계산하지도 않는다 (Rule POL-003).",
-      "enum": ["deny", "require_approval", "warn", "log"]
+      "enum": [
+        "deny",
+        "require_approval",
+        "warn",
+        "log"
+      ]
     },
     "approval": {
       "type": "object",
       "description": "effect가 require_approval일 때 필수.",
       "properties": {
-        "approver_role": { "type": "string" },
-        "timeout": { "type": "string", "description": "ISO 8601 duration. 예: 'PT24H'" },
-        "on_timeout": { "type": "string", "enum": ["deny", "allow", "escalate"] }
-      }
+        "approver_role": {
+          "type": "string",
+          "description": "승인 권한을 가진 역할. 개인이 아니라 역할로 지정해야 담당자가 바뀌어도 Policy가 유지된다."
+        },
+        "timeout": {
+          "type": "string",
+          "description": "ISO 8601 duration. 예: 'PT24H'"
+        },
+        "on_timeout": {
+          "type": "string",
+          "enum": [
+            "deny",
+            "allow",
+            "escalate"
+          ],
+          "description": "승인 대기가 기한을 넘겼을 때의 처리. 기본은 deny다 — 응답이 없다는 것은 승인이 아니다."
+        }
+      },
+      "additionalProperties": false
     },
-    "priority": { "type": "integer", "description": "동일 조건·동일 authority일 때의 우선순위." },
+    "priority": {
+      "type": "integer",
+      "description": "동일 조건·동일 authority일 때의 우선순위."
+    },
     "enforcement_points": {
       "type": "array",
       "description": "언제 검사하는가 (Rule POL-008). 사후 감사만 하는 Policy는 사고를 막지 못한다.",
       "items": {
         "type": "string",
-        "enum": ["pre_decision", "pre_execution", "during", "post_outcome", "continuous"]
+        "enum": [
+          "pre_decision",
+          "pre_execution",
+          "during",
+          "post_outcome",
+          "continuous"
+        ]
       },
       "minItems": 1
     },
     "on_violation": {
       "type": "string",
-      "enum": ["block_and_alert", "block_silent", "alert_only", "log_only"],
-      "default": "block_and_alert"
+      "enum": [
+        "block_and_alert",
+        "block_silent",
+        "alert_only",
+        "log_only"
+      ],
+      "default": "block_and_alert",
+      "description": "위반 시의 조치. block_silent는 차단하되 알리지 않는 것으로, 공격자에게 규칙 구조를 노출하지 않아야 할 때만 쓴다."
     },
     "exceptions": {
       "type": "array",
       "description": "만료 없는 예외는 Policy를 무력화한다 (Rule POL-007, INV-POL-03).",
       "items": {
         "type": "object",
-        "required": ["exception_id", "reason", "approved_by", "expires_at"],
+        "required": [
+          "exception_id",
+          "reason",
+          "approved_by",
+          "expires_at"
+        ],
         "properties": {
-          "exception_id": { "type": "string" },
-          "scope": { "type": "object" },
-          "reason": { "type": "string" },
-          "approved_by": { "type": "string" },
-          "approved_at": { "type": "string", "format": "date-time" },
-          "expires_at": { "type": "string", "format": "date-time" }
-        }
+          "exception_id": {
+            "type": "string",
+            "description": "예외의 고유 식별자."
+          },
+          "scope": {
+            "type": "object",
+            "description": "예외가 적용되는 범위. 키 구조는 Policy 종류마다 다르므로 자유 객체로 둔다."
+          },
+          "reason": {
+            "type": "string",
+            "description": "왜 예외를 허용했는가. 사유 없는 예외는 만들지 않는다."
+          },
+          "approved_by": {
+            "type": "string",
+            "description": "예외를 승인한 주체."
+          },
+          "approved_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "예외가 승인된 시각."
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "예외의 만료 시각. 기한 없는 예외는 Policy를 무력화하므로 필수다."
+          }
+        },
+        "additionalProperties": false
       }
     },
     "status": {
       "type": "string",
       "description": "Deprecated Policy는 신규 검사에 쓰이지 않지만 과거 판정 기록은 보존된다 (INV-POL-05).",
-      "enum": ["Drafted", "Review", "Active", "Suspended", "Deprecated", "Retired", "Rejected"]
+      "enum": [
+        "Drafted",
+        "Review",
+        "Active",
+        "Suspended",
+        "Deprecated",
+        "Retired",
+        "Rejected"
+      ]
     },
-    "effective_from": { "type": "string", "format": "date" },
-    "effective_until": { "type": ["string", "null"], "format": "date" }
+    "effective_from": {
+      "type": "string",
+      "format": "date",
+      "description": "이 버전의 효력 발생일. 이전에 내려진 판정에는 소급 적용하지 않는다."
+    },
+    "effective_until": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date",
+      "description": "효력 만료일. 기한이 없으면 null."
+    }
   },
   "$defs": {
     "predicate": {
       "type": "object",
-      "required": ["field", "op", "value"],
+      "required": [
+        "field",
+        "op",
+        "value"
+      ],
       "properties": {
-        "field": { "type": "string", "description": "예: 'artifact.contains_pii'" },
-        "op": { "type": "string", "enum": ["eq", "ne", "gt", "gte", "lt", "lte", "in", "not_in", "contains", "matches"] },
-        "value": {}
-      }
+        "field": {
+          "type": "string",
+          "description": "예: 'artifact.contains_pii'"
+        },
+        "op": {
+          "type": "string",
+          "enum": [
+            "eq",
+            "ne",
+            "gt",
+            "gte",
+            "lt",
+            "lte",
+            "in",
+            "not_in",
+            "contains",
+            "matches"
+          ],
+          "description": "비교 연산자."
+        },
+        "value": {
+          "description": "비교 대상 값. 타입은 field가 가리키는 필드를 따른다."
+        }
+      },
+      "additionalProperties": false
     }
-  }
+  },
+  "additionalProperties": false
 }

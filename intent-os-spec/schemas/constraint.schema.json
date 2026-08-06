@@ -4,9 +4,18 @@
   "title": "Constraint (Canonical Constraint Representation)",
   "description": "허용 가능한 계획·결정·실행의 공간을 제한하는 명시적 규칙. Hard Constraint는 Decision Engine의 필터, Soft Constraint는 점수 감점으로 동작한다. Legal/Ethical Constraint는 Soft로 선언할 수 없다. Entity 004 명세(entities/e004-constraint.md) 참조.",
   "type": "object",
-  "required": ["constraint_id", "constraint_type", "hardness", "expression", "scope"],
+  "required": [
+    "constraint_id",
+    "constraint_type",
+    "hardness",
+    "expression",
+    "scope"
+  ],
   "properties": {
-    "constraint_id": { "type": "string" },
+    "constraint_id": {
+      "type": "string",
+      "description": "Constraint의 고유 식별자."
+    },
     "constraint_type": {
       "type": "string",
       "description": "Constraint 분류 (§4).",
@@ -23,7 +32,10 @@
     "hardness": {
       "type": "string",
       "description": "Hard: 위반 시 후보 즉시 탈락(필터). Soft: 위반 정도에 따라 점수 감점. 미지정 Constraint는 Runtime에 진입할 수 없다 (Rule CN-002).",
-      "enum": ["Hard", "Soft"]
+      "enum": [
+        "Hard",
+        "Soft"
+      ]
     },
     "expression": {
       "type": "string",
@@ -36,7 +48,11 @@
     "scope": {
       "type": "string",
       "description": "적용 범위 (Rule CN-003). Global Constraint는 모든 Goal이 자동 상속한다.",
-      "enum": ["Global", "Goal", "Task"]
+      "enum": [
+        "Global",
+        "Goal",
+        "Task"
+      ]
     },
     "goal_id": {
       "type": "string",
@@ -49,7 +65,11 @@
     "origin": {
       "type": "string",
       "description": "출처 (Rule CN-005). 완화 협상 시 누구와 협상할지 결정한다. Context에서 파생된 경우 반드시 derived_from_context로 표시한다.",
-      "enum": ["user_declared", "system_policy", "derived_from_context"]
+      "enum": [
+        "user_declared",
+        "system_policy",
+        "derived_from_context"
+      ]
     },
     "penalty": {
       "type": "object",
@@ -63,22 +83,30 @@
           "type": "string",
           "description": "감점 단위. 예: '초과 10%당'"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "relaxation": {
       "type": "object",
       "description": "완화(Relaxation) 정책. Soft는 시스템 자율 완화 가능, Hard는 승인 필수, Legal/Ethical은 어떤 절차로도 완화 불가 (§8).",
       "properties": {
-        "relaxable": { "type": "boolean" },
+        "relaxable": {
+          "type": "boolean",
+          "description": "완화할 수 있는가. Hard Constraint는 false이며, false인 제약을 어기는 Plan은 검증에서 거부된다."
+        },
         "requires_approval": {
           "type": "boolean",
           "description": "true면 Origin 주체(보통 사용자)의 승인 없이 완화할 수 없다."
         },
         "max_relaxed_value": {
-          "type": ["string", "number"],
+          "type": [
+            "string",
+            "number"
+          ],
           "description": "완화 허용 한계. 예: '4000000'"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "status": {
       "type": "string",
@@ -98,15 +126,25 @@
     {
       "if": {
         "properties": {
-          "constraint_type": { "enum": ["Legal", "Ethical"] }
+          "constraint_type": {
+            "enum": [
+              "Legal",
+              "Ethical"
+            ]
+          }
         },
-        "required": ["constraint_type"]
+        "required": [
+          "constraint_type"
+        ]
       },
       "then": {
         "properties": {
-          "hardness": { "const": "Hard" }
+          "hardness": {
+            "const": "Hard"
+          }
         }
       }
     }
-  ]
+  ],
+  "additionalProperties": false
 }

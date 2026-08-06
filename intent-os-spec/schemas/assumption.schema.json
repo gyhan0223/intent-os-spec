@@ -4,22 +4,53 @@
   "title": "Assumption",
   "description": "Goal 또는 Plan이 의존하지만 통제하지는 못하는 세계에 대한 명시적 믿음. Constraint(시스템이 지키는 규칙)와 구분된다 — 가정이 깨지면 시스템이 잘못한 것이 아니라 세계가 변한 것이므로 Replanning이 발생한다(INV-10). Entity 017 명세(entities/e017-assumption.md) 참조.",
   "type": "object",
-  "required": ["assumption_id", "scope", "type", "statement", "confidence", "impact", "validation", "on_invalidation", "status"],
+  "required": [
+    "assumption_id",
+    "scope",
+    "type",
+    "statement",
+    "confidence",
+    "impact",
+    "validation",
+    "on_invalidation",
+    "status"
+  ],
   "properties": {
-    "assumption_id": { "type": "string" },
+    "assumption_id": {
+      "type": "string",
+      "description": "Assumption의 고유 식별자."
+    },
     "scope": {
       "type": "object",
       "description": "어디에 걸린 가정인가. 하위는 상위의 가정을 상속하며 무효화할 수 없다 (Rule ASM-007).",
       "properties": {
-        "goal_id": { "type": "string" },
-        "plan_id": { "type": "string" },
-        "task_id": { "type": "string" }
-      }
+        "goal_id": {
+          "type": "string",
+          "description": "이 가정이 떠받치는 Goal."
+        },
+        "plan_id": {
+          "type": "string",
+          "description": "이 가정이 떠받치는 Plan."
+        },
+        "task_id": {
+          "type": "string",
+          "description": "이 가정이 떠받치는 Task."
+        }
+      },
+      "additionalProperties": false
     },
     "type": {
       "type": "string",
       "description": "technical 유형은 Resource Drift 감지가 자동으로 검증한다.",
-      "enum": ["economic", "resource", "behavioral", "environmental", "data", "temporal", "technical"]
+      "enum": [
+        "economic",
+        "resource",
+        "behavioral",
+        "environmental",
+        "data",
+        "temporal",
+        "technical"
+      ]
     },
     "statement": {
       "type": "string",
@@ -34,64 +65,167 @@
     "impact": {
       "type": "string",
       "description": "깨졌을 때의 영향. Priority = impact × (1 − confidence) 로 검증 자원을 배분한다 (Rule ASM-006).",
-      "enum": ["low", "medium", "high", "critical"]
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ]
     },
     "validation": {
       "type": "object",
       "description": "검증 주기가 없는 가정은 방치된다. 방치된 가정이 깨진 채 계획이 진행되는 것이 실패의 전형적 경로다.",
-      "required": ["method", "interval", "invalidation_criteria"],
+      "required": [
+        "method",
+        "interval",
+        "invalidation_criteria"
+      ],
       "properties": {
         "method": {
           "type": "string",
-          "enum": ["human_confirmation", "context_query", "external_api", "calendar_check", "drift_detection", "metric_threshold"]
+          "enum": [
+            "human_confirmation",
+            "context_query",
+            "external_api",
+            "calendar_check",
+            "drift_detection",
+            "metric_threshold"
+          ],
+          "description": "어떻게 확인할 것인가. 확인 방법이 없는 가정은 검증할 수 없으므로 Accepted로 두고 책임자를 남긴다."
         },
-        "source": { "type": "string" },
-        "interval": { "type": "string", "description": "ISO 8601 duration. 예: 'P7D'" },
-        "last_checked_at": { "type": ["string", "null"], "format": "date-time" },
+        "source": {
+          "type": "string",
+          "description": "확인에 쓸 출처. 예: 광고 플랫폼 API, 담당자 이름."
+        },
+        "interval": {
+          "type": "string",
+          "description": "ISO 8601 duration. 예: 'P7D'"
+        },
+        "last_checked_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "description": "마지막 확인 시각. 한 번도 확인하지 않았으면 null."
+        },
         "invalidation_criteria": {
           "type": "string",
           "description": "무엇이 관측되면 깨진 것인가. 관측 가능한 값으로 표현되어야 한다 (INV-ASM-01)."
         }
-      }
+      },
+      "additionalProperties": false
     },
     "early_warning": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "description": "조기 경보 지표. 가정은 대개 갑자기 깨지지 않고 조짐이 있다.",
       "properties": {
-        "metric": { "type": "string" },
-        "threshold": { "type": "number" },
-        "window": { "type": "string" }
-      }
+        "metric": {
+          "type": "string",
+          "description": "가정이 깨지고 있음을 알리는 선행 지표 이름."
+        },
+        "threshold": {
+          "type": "number",
+          "description": "경보를 울리는 임계값."
+        },
+        "window": {
+          "type": "string",
+          "description": "임계값을 판정하는 관측 구간 (ISO 8601 duration)."
+        }
+      },
+      "additionalProperties": false
     },
     "dependents": {
       "type": "array",
       "description": "이 가정에 의존하는 Plan/Task (Rule ASM-002). 비어 있으면 관리 대상이 아니다.",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "linked_risk_id": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "가정이 깨질 가능성을 표현한 Risk. impact=high AND confidence<0.9 이면 자동 생성된다."
     },
     "on_invalidation": {
       "type": "string",
       "description": "깨졌을 때의 조치 (Rule ASM-004). accept는 명시적 승인이 필요하다 (INV-ASM-06).",
-      "enum": ["replan", "adjust_scope", "substitute", "escalate", "accept"]
+      "enum": [
+        "replan",
+        "adjust_scope",
+        "substitute",
+        "escalate",
+        "accept"
+      ]
     },
-    "fallback_plan_ref": { "type": ["string", "null"] },
-    "accepted_by": { "type": ["string", "null"] },
-    "accepted_at": { "type": ["string", "null"], "format": "date-time" },
+    "fallback_plan_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "이 가정이 깨졌을 때 갈아탈 대안. 없으면 null이며, 계획의 근간이 되는 가정이 null이면 위험 신호다."
+    },
+    "accepted_by": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "검증 없이 이 가정을 받아들이기로 한 주체. 검증하지 않은 가정은 누군가가 책임진 것이어야 한다. 해당 없으면 null."
+    },
+    "accepted_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "수용 결정 시각. 해당 없으면 null."
+    },
     "monitoring_mode": {
       "type": "string",
       "description": "가정이 많아지면 상위 Priority만 능동 검증하고 나머지는 passive로 표시한다. 빠졌다는 사실을 명시한다.",
-      "enum": ["active", "passive"],
+      "enum": [
+        "active",
+        "passive"
+      ],
       "default": "active"
     },
     "status": {
       "type": "string",
-      "enum": ["Stated", "Validated", "Holding", "Stale", "AtRisk", "Invalidated", "Accepted", "Resolved", "Rejected"]
+      "enum": [
+        "Stated",
+        "Validated",
+        "Holding",
+        "Stale",
+        "AtRisk",
+        "Invalidated",
+        "Accepted",
+        "Resolved",
+        "Rejected"
+      ],
+      "description": "가정의 현재 상태. Stale은 오래되어 다시 확인해야 하는 상태이고, Invalidated는 깨진 것이 확인된 상태다."
     },
-    "invalidated_at": { "type": ["string", "null"], "format": "date-time" },
-    "created_at": { "type": "string", "format": "date-time" },
-    "created_by": { "type": "string" }
-  }
+    "invalidated_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "가정이 깨진 것이 확인된 시각. 이 시각 이후에 세워진 Plan은 재검토 대상이다. 유효하면 null."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "가정이 명시된 시각."
+    },
+    "created_by": {
+      "type": "string",
+      "description": "이 가정을 명시한 주체. 사람일 수도 Planner일 수도 있다."
+    }
+  },
+  "additionalProperties": false
 }

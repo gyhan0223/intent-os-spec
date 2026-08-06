@@ -4,9 +4,18 @@
   "title": "Resource Profile",
   "description": "하나의 Resource가 실제로 어떻게 수행하는지에 대한 살아있는·버전을 갖는·Context별 측정 기록. Resource의 정체성과 분리되어 있어 Decision의 inputs_snapshot이 특정 시점의 Profile을 동결 참조할 수 있다(Rule RPF-004). Intent OS에 절대 순위는 없다 — 모든 점수는 Context에 종속된다. Entity 025 명세(entities/e025-resource-profile.md) 참조.",
   "type": "object",
-  "required": ["profile_id", "resource_id", "snapshot_version", "capability_scores", "status"],
+  "required": [
+    "profile_id",
+    "resource_id",
+    "snapshot_version",
+    "capability_scores",
+    "status"
+  ],
   "properties": {
-    "profile_id": { "type": "string" },
+    "profile_id": {
+      "type": "string",
+      "description": "Resource Profile의 고유 식별자."
+    },
     "resource_id": {
       "type": "string",
       "description": "Resource와 1:1이다 (INV-RPF-01). 스냅샷은 Profile의 버전이지 별도 Profile이 아니다."
@@ -15,68 +24,151 @@
       "type": "string",
       "description": "동결 버전. 불변이다 (INV-RPF-03). 예: 'rp_claude5_2026-08-04T09:00Z'"
     },
-    "updated_at": { "type": "string", "format": "date-time" },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "이 Profile이 마지막으로 갱신된 시각. Profile은 Execution이 쌓일 때마다 다시 계산된다."
+    },
     "status": {
       "type": "string",
       "description": "Drifting에서는 후보 순위만 낮추고 점수는 유지한다. 3회 연속 이탈에서 Degraded로 확정한다 (INV-RPF-07).",
-      "enum": ["Initialized", "Calibrating", "Established", "Drifting", "Degraded", "Stale"]
+      "enum": [
+        "Initialized",
+        "Calibrating",
+        "Established",
+        "Drifting",
+        "Degraded",
+        "Stale"
+      ]
     },
     "capability_scores": {
       "type": "array",
       "description": "(능력 × Context)별 점수. Context 없는 점수는 존재하지 않는다 (INV-RPF-04).",
       "items": {
         "type": "object",
-        "required": ["capability", "context", "confidence"],
+        "required": [
+          "capability",
+          "context",
+          "confidence"
+        ],
         "properties": {
-          "capability": { "type": "string" },
+          "capability": {
+            "type": "string",
+            "description": "Capability의 canonical id."
+          },
           "context": {
             "type": "object",
             "description": "점수의 범위. 전역 점수는 { domain: 'global' }로 명시한다.",
             "properties": {
-              "domain": { "type": "string" },
-              "language": { "type": "string" },
-              "audience": { "type": "string" },
-              "task_type": { "type": "string" }
-            }
+              "domain": {
+                "type": "string",
+                "description": "이 점수가 관측된 도메인. 예: '학원 마케팅'. 도메인이 다르면 점수를 그대로 옮길 수 없다."
+              },
+              "language": {
+                "type": "string",
+                "description": "관측 언어. 예: 'ko'"
+              },
+              "audience": {
+                "type": "string",
+                "description": "관측 시의 대상 독자. 예: '예비 고3 학부모'"
+              },
+              "task_type": {
+                "type": "string",
+                "description": "관측 시의 Task 종류. 같은 Capability라도 Task 종류가 다르면 성적이 갈린다."
+              }
+            },
+            "additionalProperties": false
           },
           "declared_score": {
-            "type": ["number", "null"],
+            "type": [
+              "number",
+              "null"
+            ],
             "description": "제공자가 선언한 값. 신뢰의 시작점일 뿐이다 (Rule RPF-003).",
             "minimum": 0,
             "maximum": 100
           },
           "observed_score": {
-            "type": ["number", "null"],
+            "type": [
+              "number",
+              "null"
+            ],
             "description": "실측값. 한 번도 실행되지 않았으면 null이다. 0으로 두지 않는다 — 측정 안 함과 0점은 다르다.",
             "minimum": 0,
             "maximum": 100
           },
-          "sample_size": { "type": "integer", "minimum": 0 },
+          "sample_size": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "이 점수를 뒷받침하는 관측 횟수. 점수보다 이 값이 먼저다 — 표본 3개짜리 95점은 표본 200개짜리 80점보다 약하다."
+          },
           "confidence": {
             "type": "number",
             "description": "표본 없는 신뢰도는 근거가 없다 (INV-RPF-05). 표본 3건의 93점과 200건의 93점은 다른 정보다.",
             "minimum": 0,
             "maximum": 1
           },
-          "variance": { "type": ["number", "null"], "minimum": 0 },
-          "last_observed_at": { "type": ["string", "null"], "format": "date-time" }
-        }
+          "variance": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "description": "점수의 분산. 높으면 '잘할 때도 있고 못할 때도 있다'는 뜻이며, 실패 비용이 큰 Task에서 감점 요인이 된다. 표본이 부족하면 null."
+          },
+          "last_observed_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "이 Capability가 마지막으로 관측된 시각. 오래된 관측은 가중치가 낮아진다 (decay_lambda). 한 번도 관측되지 않았으면 null."
+          }
+        },
+        "additionalProperties": false
       }
     },
     "cost_model": {
       "type": "object",
       "properties": {
-        "unit": { "type": "string", "enum": ["token", "task", "hour", "call", "flat"] },
-        "rates": { "type": "object" },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "token",
+            "task",
+            "hour",
+            "call",
+            "flat"
+          ],
+          "description": "과금 단위. 이 값에 따라 rates의 해석이 달라진다."
+        },
+        "rates": {
+          "type": "object",
+          "description": "단위당 단가. 키 구조가 공급자마다 다르므로 자유 객체로 둔다. 예: { \"input\": 0.003, \"output\": 0.015 }"
+        },
         "observed_avg_cost": {
           "type": "object",
           "properties": {
-            "amount": { "type": "number", "minimum": 0 },
-            "currency": { "type": "string" },
-            "per": { "type": "string" }
-          }
+            "amount": {
+              "type": "number",
+              "minimum": 0,
+              "description": "평균 금액."
+            },
+            "currency": {
+              "type": "string",
+              "description": "통화 코드 (ISO 4217)."
+            },
+            "per": {
+              "type": "string",
+              "description": "이 평균이 무엇 하나당 값인가. 예: 'execution', '1k_tokens'"
+            }
+          },
+          "additionalProperties": false,
+          "description": "실행 1회당 **실측** 평균 비용. 단가가 아니라 결과다."
         }
-      }
+      },
+      "additionalProperties": false,
+      "description": "과금 구조와 실측 평균 비용. 선언된 단가와 실제로 나간 돈은 다르므로 둘 다 담는다."
     },
     "performance": {
       "type": "object",
@@ -85,59 +177,154 @@
           "type": "object",
           "description": "평균이 아니라 분포로 관리한다. 평균이 같아도 p95가 4배 다를 수 있다.",
           "properties": {
-            "p50": { "type": "integer", "minimum": 0 },
-            "p95": { "type": "integer", "minimum": 0 },
-            "p99": { "type": "integer", "minimum": 0 }
-          }
+            "p50": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "응답 지연의 중앙값 (밀리초)."
+            },
+            "p95": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "응답 지연의 95백분위수 (밀리초). Task 완료를 막는 것은 평균이 아니라 꼬리다."
+            },
+            "p99": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "응답 지연의 99백분위수 (밀리초)."
+            }
+          },
+          "additionalProperties": false
         },
-        "reliability": { "type": "number", "minimum": 0, "maximum": 1 },
+        "reliability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "호출이 오류 없이 응답을 반환한 비율 (0~1). 품질이 아니라 응답 자체의 성공률이다."
+        },
         "success_rate": {
           "type": "number",
           "description": "실패한 Execution도 반영된다. observed_score와 달리 산출물 품질이 아니라 완주 여부를 본다.",
           "minimum": 0,
           "maximum": 1
         },
-        "throughput": { "type": "object" }
-      }
+        "throughput": {
+          "type": "object",
+          "description": "단위 시간당 처리량. 단위가 Resource 종류마다 다르므로 자유 객체로 둔다."
+        }
+      },
+      "additionalProperties": false,
+      "description": "관측된 성능 지표. 벤치마크 수치가 아니라 이 조직의 실사용 데이터다."
     },
     "availability": {
       "type": "object",
       "properties": {
-        "schedule": { "type": "string", "description": "예: '24/7', '평일 10:00-19:00'" },
-        "uptime_30d": { "type": "number", "minimum": 0, "maximum": 1 },
-        "rate_limit": { "type": "object" }
-      }
+        "schedule": {
+          "type": "string",
+          "description": "예: '24/7', '평일 10:00-19:00'"
+        },
+        "uptime_30d": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "최근 30일 가동률 (0~1)."
+        },
+        "rate_limit": {
+          "type": "object",
+          "description": "호출 상한. 형태가 공급자마다 다르므로 자유 객체로 둔다."
+        }
+      },
+      "additionalProperties": false,
+      "description": "언제 쓸 수 있는가. 인간의 근무 시간과 API의 가동률을 같은 필드로 다룬다."
     },
     "drift": {
       "type": "object",
       "description": "성능 변화는 예외가 아니라 상시 추적되는 상태다 (Rule RPF-007).",
       "properties": {
-        "detected": { "type": "boolean", "default": false },
-        "direction": { "type": ["string", "null"], "enum": ["up", "down", null] },
-        "magnitude": { "type": ["number", "null"] },
-        "detected_at": { "type": ["string", "null"], "format": "date-time" },
-        "windows_deviated": { "type": "integer", "minimum": 0, "default": 0 }
-      }
+        "detected": {
+          "type": "boolean",
+          "default": false,
+          "description": "성능이 기준선에서 벗어났는가. true면 이 Resource의 예측값을 그대로 믿지 않는다."
+        },
+        "direction": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "up",
+            "down",
+            null
+          ],
+          "description": "벗어난 방향. up은 좋아진 것, down은 나빠진 것이며 둘 다 예측 모델의 보정 대상이다. 미탐지면 null."
+        },
+        "magnitude": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "기준선 대비 벗어난 정도. 미탐지면 null."
+        },
+        "detected_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "description": "Drift가 처음 판정된 시각. 미탐지면 null."
+        },
+        "windows_deviated": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "연속으로 기준을 벗어난 관측 구간의 수. 한 번의 이상치와 지속적 변화를 가르는 값이다."
+        }
+      },
+      "additionalProperties": false
     },
-    "limitations": { "type": "array", "items": { "type": "string" } },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "판정 가능한 형태로 쓴 제약. Decision이 후보에서 제외하는 근거가 된다."
+    },
     "genome_ref": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "Resource Genome(Volume 4-C) 참조. Genome은 행동 특성, Profile은 수치 측정값이다."
     },
     "evidence": {
       "type": "object",
       "description": "근거 표본. 오래된 관찰은 감쇠한다 (Rule RPF-005).",
       "properties": {
-        "execution_count": { "type": "integer", "minimum": 0 },
-        "window": { "type": "string" },
-        "decay_lambda": { "type": "number", "minimum": 0 }
-      }
+        "execution_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "이 Profile 전체를 뒷받침하는 Execution 총 개수."
+        },
+        "window": {
+          "type": "string",
+          "description": "집계 구간 (ISO 8601 duration). 예: 'P30D'"
+        },
+        "decay_lambda": {
+          "type": "number",
+          "minimum": 0,
+          "description": "오래된 관측의 가중치를 낮추는 감쇠 계수. 클수록 최근 관측만 본다."
+        }
+      },
+      "additionalProperties": false
     },
     "visibility": {
       "type": "string",
       "description": "인간 Resource의 Profile은 인사 평가로 전용될 위험이 있어 접근을 제한한다.",
-      "enum": ["internal", "internal_restricted"],
+      "enum": [
+        "internal",
+        "internal_restricted"
+      ],
       "default": "internal"
     }
-  }
+  },
+  "additionalProperties": false
 }

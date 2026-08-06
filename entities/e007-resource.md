@@ -1,8 +1,9 @@
 # Entity 007: Resource
 
-- **Version:** v1.0 Draft
+- **Version:** v2.0 Draft
 - **Status:** Core Entity
 - **Last Updated:** 2026-08-04
+- **Schema:** [`resource.schema.json`](../intent-os-spec/schemas/resource.schema.json)
 
 ---
 
@@ -56,7 +57,7 @@ Task와 Resource의 연결은 매 실행마다 Decision Engine이 새로 결정�
 
 ---
 
-## 3. Resource의 조건
+## 3. Design Principles
 
 ### Rule R-001 — 최소 하나의 Capability를 선언해야 한다
 
@@ -90,7 +91,7 @@ identify / capabilities / execute / estimate_cost / estimate_latency / evaluate_
 
 ---
 
-## 4. Resource Attributes (Resource Profile)
+## 4. Attributes
 
 ```
 Resource
@@ -121,9 +122,7 @@ Resource
 
 cost / latency / reliability / availability 네 축은 Decision Score Model([Volume 3](../v3-runtime.md) Stage 4)의 직접 입력이다. 축들은 서로 독립적이다 — 인간 카피라이터는 지연이 4시간이지만 특정 Capability에서는 최고 수준일 수 있다.
 
----
-
-## 5. Resource Types
+### 4.1 Resource Types
 
 [resource.schema.json](../intent-os-spec/schemas/resource.schema.json)의 `type` enum과 일치한다.
 
@@ -144,7 +143,61 @@ cost / latency / reliability / availability 네 축은 Decision Score Model([Vol
 
 ---
 
-## 6. Resource Lifecycle
+## 5. Invariants
+
+### INV-R-01 — Active Resource는 최소 하나의 Capability를 갖는다
+
+Rule R-001이 등록 시점의 검사라면 이쪽은 항상 성립해야 하는 상태다. Capability가 0개인 Resource는 어떤 Task에도 매칭되지 않으면서 후보 목록만 늘린다.
+
+| | |
+|---|---|
+| **위반 시** | `Deprecated`로 내리고 후보 생성에서 제외한다. Capability가 전부 폐기된 경우가 대부분이므로 폐기 사유를 함께 기록한다 |
+| **탐지** | 등록 시점, Capability 폐기 시점 |
+
+### INV-R-02 — 선언 점수와 관측 점수는 섞이지 않는다
+
+`declared_score`와 `observed_score`가 같은 필드에 합쳐지면 "누가 주장한 값"과 "실제로 확인된 값"을 구분할 수 없다. Rule R-002가 무너지는 지점이다.
+
+| | |
+|---|---|
+| **위반 시** | 값을 분리 복원한다. 복원할 수 없으면 둘 다 선언값으로 간주하고 신뢰도를 낮춘다. **의심스러우면 관측이 아니라 선언으로 본다** |
+
+### INV-R-03 — 관측 점수는 근거가 되는 Execution 없이 존재하지 않는다
+
+측정 표본이 0인데 `observed_score`가 있으면 그 숫자는 아무것도 관측하지 않은 값이다.
+
+| | |
+|---|---|
+| **위반 시** | 점수를 부재로 되돌린다. **0으로 두지 않는다** — 0은 "가장 못한다"는 뜻이고 부재는 "모른다"는 뜻이다 |
+| **탐지** | Profile 재계산 시점 |
+
+### INV-R-04 — Resource는 Goal을 직접 참조하지 않는다
+
+Resource가 Goal을 알면 특정 Goal에 최적화된 Resource가 생기고, Resource Agnostic 원칙이 깨진다.
+
+| | |
+|---|---|
+| **위반 시** | 참조를 제거한다. Goal 정보가 실행에 필요하면 Context로 전달한다([Rule REL-004](e000a-entity-relationships.md)) |
+
+### INV-R-05 — Drift가 감지된 Resource의 예측값은 그대로 쓰이지 않는다
+
+성능이 기준선에서 벗어난 것을 알면서 이전 예측값으로 Utility를 계산하면, 알고 있는 오차를 그대로 결정에 넣는 것이다.
+
+| | |
+|---|---|
+| **위반 시** | 해당 Resource의 예측 신뢰도를 낮추고 재측정을 우선 배정한다. Drift 방향이 아래쪽이면 후보 순위를 강등한다 |
+
+### INV-R-06 — Deprecated Resource는 새 Decision의 후보가 되지 않는다
+
+| | |
+|---|---|
+| **위반 시** | 후보에서 제거하고 이미 선택된 경우 Decision을 재실행한다. 단 **진행 중인 Execution은 중단하지 않는다** — 중단 비용이 교체 이득보다 큰 경우가 많다 |
+
+Entity 간 불변식은 [e000a-entity-relationships.md](e000a-entity-relationships.md)가 단일 권위다.
+
+---
+
+## 6. Lifecycle
 
 ```
 Registered → Evaluating → Active → Optimized
@@ -164,9 +217,7 @@ Registered → Evaluating → Active → Optimized
 
 **Invariant:** Removed 상태여도 **성능 이력은 삭제하지 않는다.** 후속 버전·유사 Genome 추론([Volume 4-C §12](../v4c-resource-genome.md))의 근거 데이터이기 때문이다.
 
----
-
-## 7. Resource 등록과 발견
+### 6.1 등록과 발견
 
 Resource는 Resource Registry([Volume 6 §4](../v6-developer-platform.md))에 등록된다.
 
@@ -187,9 +238,7 @@ Cold Start 평가 → Evaluating → Active
 1. **개발자가 등록한다** — Resource SDK / Plugin System ([Volume 6](../v6-developer-platform.md))
 2. **시스템이 발견한다** — Autonomous Benchmarking Engine이 새 모델을 스스로 찾아 등록한다 ([Volume 4-D](../v4d-autonomous-benchmarking.md))
 
----
-
-## 8. 성능 이력과 Drift
+### 6.2 성능 이력과 Drift
 
 Resource Profile은 **관찰로 유지된다.** 모든 Execution 후 다음이 갱신된다.
 
@@ -214,7 +263,43 @@ Expected vs Actual 비교
 
 ---
 
-## 9. Canonical Resource Representation
+## 7. Relationships
+
+```
+Capability ◀──(제공)── Resource ──(수행)──▶ Execution ──▶ Outcome
+     ▲                     ▲                                 │
+     │                     │                                 ▼
+   Task ──(요구)──── Decision Engine ◀──────────────── Feedback/Learning
+```
+
+| Entity | 관계 | Cardinality |
+|---|---|---|
+| [Capability](e006-capability.md) | Resource는 Capability를 제공한다. 제공 수준은 계속 측정된다 | `Capability N:M Resource` |
+| [Task](e005-task.md) | Resource는 Task에 **할당**된다. 소유하지 않는다 | `Task N:M Resource` (Decision 경유) |
+| [Goal](e001-goal.md) | Resource는 Goal을 모른다. Goal 정보는 Context로만 전달된다 | 직접 관계 없음 (INV-R-04) |
+| [Decision](e009-decision.md) | Decision의 출력이 Task-Resource 할당이다 | `Resource 1:0..N Decision` |
+| [Execution](e013-execution.md) | 실행 주체. 성능 이력의 귀속 대상이다 | `Resource 1:0..N Execution` |
+| [Resource Profile](e025-resource-profile.md) | 관측 데이터의 저장소. Resource 등록 정보와 분리된다 | `Resource 1:1 Resource Profile` |
+| [Feedback](e012-feedback.md) | Feedback이 observed_score와 Drift 감지의 입력이다 | `Resource 1:0..N Feedback` |
+
+**Resource는 아무것도 참조하지 않는다.** Task도 Decision도 Resource를 가리킬 뿐, Resource는 자신이 어디에 쓰이는지 모른다.
+
+### 7.1 Resource 선택은 누구의 소관인가
+
+**본 문서는 Resource가 "무엇인지"만 정의한다. "어떤 Resource를 고르는지"는 정의하지 않는다.**
+
+| 질문 | 담당 |
+|---|---|
+| Resource란 무엇인가 | 본 문서 (Entity 007) |
+| Resource를 어떻게 측정하는가 | [Volume 4-B — Resource Intelligence](../v4b-resource-intelligence.md) |
+| Resource의 행동 특성을 어떻게 표현하는가 | [Volume 4-C — Resource Genome](../v4c-resource-genome.md) |
+| 어떤 Resource를 선택하는가 | Decision Engine ([Volume 4](../v4-decision-engine.md)), Decision Entity (Entity 009, 예정) |
+
+Entity 정의에 선택 로직을 섞으면 Resource가 특정 선택 전략에 종속된다. 계층을 분리한다.
+
+---
+
+## 8. Canonical Representation
 
 ```json
 {
@@ -266,7 +351,7 @@ Expected vs Actual 비교
 
 ---
 
-## 10. Resource 등록 검증 알고리즘
+## 9. Validation Rules
 
 ```
 등록 요청
@@ -288,41 +373,68 @@ Cold Start 평가 계획 생성 → Evaluating
 
 ---
 
-## 11. Resource 선택은 누구의 소관인가
+## 10. Examples
 
-**본 문서는 Resource가 "무엇인지"만 정의한다. "어떤 Resource를 고르는지"는 정의하지 않는다.**
+### 예시 1 — 세 종류의 Resource가 같은 인터페이스로 등록된 모습
 
-| 질문 | 담당 |
-|---|---|
-| Resource란 무엇인가 | 본 문서 (Entity 007) |
-| Resource를 어떻게 측정하는가 | [Volume 4-B — Resource Intelligence](../v4b-resource-intelligence.md) |
-| Resource의 행동 특성을 어떻게 표현하는가 | [Volume 4-C — Resource Genome](../v4c-resource-genome.md) |
-| 어떤 Resource를 선택하는가 | Decision Engine ([Volume 4](../v4-decision-engine.md)), Decision Entity (Entity 009, 예정) |
+```
+anthropic:claude-5        llm     capabilities: language.generation.copywriting 88 (conf 0.82)
+                                                analysis.audience             79 (conf 0.71)
+                                  cost: 토큰당 / 지연 p50 1,800ms / 가용 24h
 
-Entity 정의에 선택 로직을 섞으면 Resource가 특정 선택 전략에 종속된다. 계층을 분리한다.
+human:copywriter_kim      human   capabilities: language.generation.copywriting 94 (conf 0.91)
+                                                creative.brand_strategy       86 (conf 0.77)
+                                  cost: 건당 50,000 KRW / 지연 p50 4시간 / 가용 평일 10-19시
+
+meta:ads_api              api     capabilities: execution.ad_delivery           — (측정 불가)
+                                  cost: 집행액 비례 / 지연 p50 900ms / 가용 24h
+```
+
+**세 개가 같은 필드 구조를 갖는다.** 김 카피라이터의 지연이 4시간이라는 사실은 Decision이 `latency` 가중치로 다룰 뿐, 별도 코드 경로를 만들지 않는다.
+
+### 예시 2 — 선언과 관측이 갈리는 순간
+
+```
+등록 시점 (2026-07-01)
+  openai:gpt   copywriting  declared_score 95   observed_score 없음   conf —
+
+실행 12건 후 (2026-08-04)
+  openai:gpt   copywriting  declared_score 95   observed_score 81     conf 0.68
+```
+
+선언은 95였지만 이 학원의 실제 Task에서는 81이었다. **Decision은 81을 본다**(Rule R-002). 선언값은 관측이 쌓이기 전의 임시 근거일 뿐이다.
+
+### 예시 3 — Drift 감지와 그 후
+
+```
+anthropic:claude-5  copywriting
+  7월 관측 88 (표본 40)
+  8월 관측 76 (표본 12)   ← 연속 3개 관측 구간에서 기준선 이탈
+  ↓
+drift: { detected: true, direction: down, magnitude: 0.14, windows_deviated: 3 }
+  ↓ INV-R-05
+예측 신뢰도 하향 → 고위험 Task에서 후보 순위 강등, 저위험 Task로 재측정 배정
+```
+
+Drift는 Resource를 즉시 배제하지 않는다. **모른다는 사실을 반영해 배정을 바꿀 뿐이다.**
 
 ---
 
-## 12. 다른 Entity와의 관계
+## 11. Edge Cases
 
-```
-Capability ◀──(제공)── Resource ──(수행)──▶ Execution ──▶ Outcome
-     ▲                     ▲                                 │
-     │                     │                                 ▼
-   Task ──(요구)──── Decision Engine ◀──────────────── Feedback/Learning
-```
-
-| Entity | 관계 |
+| 상황 | 판정 |
 |---|---|
-| [Capability](e006-capability.md) | Resource는 Capability를 제공한다. 제공 수준은 계속 측정된다 |
-| [Task](e005-task.md) | Resource는 Task에 **할당**된다. 소유하지 않는다 |
-| [Goal](e001-goal.md) | Resource는 Goal을 모른다. Goal 정보는 Context로만 전달된다 |
-| Decision (Entity 009, 예정) | Decision의 출력이 Task-Resource 할당이다 |
-| Feedback (Entity 012, 예정) | Feedback이 observed_score와 Drift 감지의 입력이다 |
+| **같은 Resource가 두 Registry에 다른 id로 등록** | 성능 이력이 갈라져 어느 쪽도 유의미한 표본을 못 갖는다. `provider:name` 네임스페이스로 동일성을 판정해 병합한다. 병합 시 관측 이력은 합치되 **버전이 다르면 합치지 않는다** |
+| **Resource 버전이 올라감** (claude-5 → claude-5.1) | 새 Resource로 등록한다. 같은 이름이라도 버전이 다르면 성능 이력을 합치지 않는다 — 합치면 개선도 퇴보도 감지되지 않는다 |
+| **인간 Resource가 응답하지 않음** | Resource를 실패로 표시하지 않는다. 해당 Execution만 `TimedOut`이고, 반복되면 `availability`를 보정한다. 사람은 고장 나는 것이 아니라 바쁜 것이다 |
+| **비용을 측정할 수 없는 Resource** (정액 계약, 사내 도구) | `cost.amount`를 계약 단가로 안분하고 `estimated: true`로 표시한다. `null`은 허용하지 않는다 — 비용 0으로 오인되면 Utility가 왜곡된다 |
+| **Resource가 선언한 Capability를 실제로는 못 함** | 선언을 지우지 않는다. `observed_score`가 낮게 쌓이면서 자연히 후보에서 밀린다. 선언을 지우면 "왜 이 판단이 틀렸는가"의 근거가 사라진다 |
+| **표본이 3건뿐인데 점수가 95** | 점수보다 `sample_size`가 먼저다. 표본 3개짜리 95점은 표본 200개짜리 80점보다 약하게 다룬다([e025 §4](e025-resource-profile.md)) |
+| **Resource가 실행 중 폐기됨** | 진행 중 Execution은 끝까지 간다(INV-R-06). 새 Decision부터 후보에서 빠진다. 중단 비용이 교체 이득보다 큰 경우가 대부분이다 |
 
 ---
 
-## 13. Open Issues (v1.0)
+## 12. Open Issues (v1.0)
 
 ### Human Resource의 특수성
 
@@ -343,3 +455,4 @@ Capability ◀──(제공)── Resource ──(수행)──▶ Execution �
 - Genome 참조 필드 (resource ↔ genome 연결, [Volume 4-C](../v4c-resource-genome.md))
 - Registry 간 Resource 식별자 충돌 규칙 (`provider:name` 네임스페이스 표준화)
 - 실제 예시 30~50개
+

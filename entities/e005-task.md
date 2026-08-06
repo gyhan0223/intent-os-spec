@@ -1,8 +1,9 @@
 # Entity 005: Task
 
-- **Version:** v1.0 Draft
+- **Version:** v2.0 Draft
 - **Status:** Core Entity
 - **Last Updated:** 2026-08-04
+- **Schema:** [`task.schema.json`](../intent-os-spec/schemas/task.schema.json)
 
 ---
 
@@ -55,7 +56,7 @@ Task는 Entity고 Execution은 Task가 수행되는 **과정**이다. ([README.m
 
 ---
 
-## 3. Task의 조건
+## 3. Design Principles
 
 Task는 반드시 아래 조건을 만족해야 한다.
 
@@ -92,11 +93,11 @@ Resource 선택은 Task의 소관이 아니다. (Principle 03 — Resource Agnos
 
 ### Rule T-005 — 반드시 Goal에 연결되어야 한다
 
-어떤 Goal에도 기여하지 않는 Task는 시스템이 관리하지 않는다. Goal Graph Invariant 2("고립된 Goal은 관리하지 않는다")와 동일한 원칙이다.
+어떤 Goal에도 기여하지 않는 Task는 시스템이 관리하지 않는다. [Goal Graph](e001a-goal-graph.md)의 "고립된 Goal은 관리하지 않는다"와 동일한 원칙이다.
 
 ---
 
-## 4. Task Attributes
+## 4. Attributes
 
 Task는 최소한 아래 속성을 가진다.
 
@@ -127,84 +128,102 @@ Task
 | **Retry Policy** | 실패 시 행동 | 최대 2회 재시도 후 Resource 재선택 |
 | **State** | 상태 머신의 현재 상태 | Pending |
 
----
+### 4.1 Execution Mode
 
-## 5. Task Decomposition
+Task Graph 실행 방식은 세 가지다. ([Volume 3](../v3-runtime.md) Stage 5와 동일)
 
-Goal은 직접 실행되지 않는다. **Planner가 Goal을 Task로 분해한다.**
-
-```
-Goal: 윈터캠프 100명 모집
-  ↓ Decomposition
-Task Graph:
-  T1  시장 조사
-  T2  경쟁 분석
-  T3  타겟 분석
-  T4  광고 카피 작성        (T3 의존)
-  T5  랜딩페이지 개선        (T2, T4 의존)
-  T6  상담 프로세스 설계
-  T7  성과 분석             (T5, T6 의존)
-```
-
-### 분해 규칙
-
-1. **각 Task는 Rule T-001~T-005를 만족할 때까지 분해한다.**
-2. **분해 결과의 합집합이 Goal 달성을 커버해야 한다.** 빠진 영역이 있으면 Planner는 Task를 추가한다.
-3. **Task 간 중복 작업은 제거한다.** 두 Task가 같은 산출물을 만들면 하나로 합치고 의존 관계로 연결한다.
-4. **분해는 재귀적이다.** Task가 아래 "크기 기준"을 넘으면 Sub-Task로 다시 분해한다.
-
-### Task 크기 기준 — 더 분해해야 하는가?
-
-다음 중 하나라도 해당되면 **더 분해한다.**
-
-| 판정 질문 | 예 |
-|---|---|
-| 서로 다른 Capability 도메인을 3개 이상 요구하는가? | `조사 + 카피 작성 + 디자인` → 3개 Task로 분리 |
-| Expected Output이 2개 이상인가? | `비교표와 광고 시안` → 분리 |
-| 단일 Resource가 처리하기 어려운가? | 검색과 장문 작성을 동시에 요구 → 분리 |
-| 실패 시 부분 재시도가 필요한가? | 카피만 다시 쓰면 되는데 조사까지 다시 하게 되는 구조 → 분리 |
-
-반대로, 다음이면 **분해를 멈춘다.**
-
-- 단일 Capability 집합으로 수행 가능하다.
-- Expected Output이 하나다.
-- 더 쪼개면 조율 비용이 실행 비용보다 커진다.
-
----
-
-## 6. Task Graph
-
-Task는 혼자 존재하지 않는다. `dependencies`로 연결된 **DAG(Directed Acyclic Graph)** 를 이룬다.
-
-```
-        T1 시장 조사        T3 타겟 분석
-            │                   │
-            ▼                   ▼
-        T2 경쟁 분석        T4 광고 카피 작성
-            │                   │
-            └───────┬───────────┘
-                    ▼
-            T5 랜딩페이지 개선
-                    │
-                    ▼
-            T7 성과 분석
-```
-
-Task Graph는 [Goal Graph](e001a-goal-graph.md)와 대칭 구조다.
-
-| | Goal Graph | Task Graph |
+| Mode | 의미 | 예 |
 |---|---|---|
-| 노드 | Goal (미래 상태) | Task (행위) |
-| 관계 | DEPENDS_ON, ENABLES, CONFLICTS_WITH … | dependencies (선행 완료) |
-| 생성 주체 | 사용자 + Goal Engine | Planner |
-| 소비 주체 | Planner | Runtime Engine |
-| 불변식 | 순환 금지 (DAG) | 순환 금지 (DAG) |
+| **sequential** | 선행 Task 완료 후 실행 | 조사 → 분석 → 보고서 |
+| **parallel** | 의존이 없는 Task 동시 실행 | 시장 조사 ‖ 경쟁 분석 ‖ 고객 분석 |
+| **conditional** | 조건에 따라 실행 여부 결정 | `IF 전환율 < 목표 → 랜딩페이지 개선` |
 
-**Invariant:** Task Graph에 순환이 생기면 Runtime이 교착 상태에 빠진다. Planner는 Task Graph 생성 시 순환 검사를 반드시 수행한다.
+### 4.2 Task Types
+
+Task는 요구하는 Capability의 성격에 따라 분류된다. Task Type은 Decision Engine의 후보 생성(Candidate Generation)을 좁혀준다.
+
+```
+Task
+├── Research Task        (조사·수집)
+├── Analysis Task        (분석·비교)
+├── Creation Task        (생성·제작)
+├── Transformation Task  (변환·가공)
+├── Decision Task        (판단·선택)
+├── Communication Task   (전달·상담)
+├── Automation Task      (반복 실행)
+└── Verification Task    (검증·평가)
+```
+
+| Type | 예시 |
+|---|---|
+| **Research Task** | `홍대 지역 경쟁 학원 조사` |
+| **Analysis Task** | `광고 채널별 CAC 비교` |
+| **Creation Task** | `광고 카피 3종 작성` |
+| **Transformation Task** | `상담 녹취록 요약` |
+| **Decision Task** | `광고 예산 배분안 선택` |
+| **Communication Task** | `학부모 안내 메시지 발송` |
+| **Automation Task** | `주간 모집 현황 리포트 생성` |
+| **Verification Task** | `랜딩페이지 카피 사실 검증` |
 
 ---
 
-## 7. Task State Machine
+## 5. Invariants
+
+### INV-T-01 — 모든 Task는 정확히 하나의 Goal에 연결된다
+
+Rule T-005가 생성 검사라면 이쪽은 항상 성립해야 하는 상태다. 어느 Goal에도 기여하지 않는 Task는 비용만 쓰고 아무것도 진척시키지 않는다.
+
+| | |
+|---|---|
+| **위반 시** | 고아 Task를 `Failed` + `orphaned`로 종료하고 진행 중 Execution을 중단한다. 발생 비용은 기록한다 |
+| **탐지** | 생성 시점, Goal 삭제·병합 시점, 야간 정합성 검사 |
+
+### INV-T-02 — Task Graph에 순환이 없다
+
+순환이 생기면 어떤 Task도 선행 조건을 만족하지 못해 Runtime이 교착 상태에 빠진다. 그래프 차원의 규정은 [e005a §5](e005a-task-graph.md)가 정본이며, 여기서는 Task 측 표현만 둔다.
+
+| | |
+|---|---|
+| **위반 시** | 그래프 생성을 거부하고 순환 경로를 오류로 반환한다. 실행 중 발견되면 해당 Plan을 `Superseded`로 내리고 재계획한다 |
+| **탐지** | Task Graph 생성 시점, 의존 추가 시점 |
+
+### INV-T-03 — Task는 Resource를 지정하지 않는다
+
+Rule T-004의 상태 표현이다. `required_capabilities`는 있고 Resource 이름은 없어야 한다. 어느 시점에 조회해도 그래야 한다.
+
+| | |
+|---|---|
+| **위반 시** | Resource 지정을 제거하고 Capability로 환원한다. 환원할 수 없으면 Task 선언 오류로 반려한다. **Task가 Resource를 고르기 시작하면 Decision Engine이 존재할 이유가 없어진다** |
+
+### INV-T-04 — required_capabilities가 빈 Task는 Assigned로 갈 수 없다
+
+Capability가 없으면 매칭할 대상이 없고, 매칭 없이 할당된 Task는 아무 Resource나 잡는다.
+
+| | |
+|---|---|
+| **위반 시** | `Pending`으로 되돌리고 Planner에 Capability 보강을 요청한다 |
+
+### INV-T-05 — Completed된 Task는 Expected Output을 갖는다
+
+산출물 없이 `Completed`인 Task는 "끝났다"는 기록만 남기고 실체가 없다.
+
+| | |
+|---|---|
+| **위반 시** | `Failed` + `no_output`으로 되돌린다. Completed는 품질 판정이 아니라 **산출 여부**의 판정이므로, 산출물이 없으면 Completed가 성립하지 않는다 |
+
+### INV-T-06 — 실패 이력은 삭제되지 않는다
+
+재시도로 성공했다고 앞선 실패를 지우면, Resource의 실제 성적이 실제보다 좋게 기록된다.
+
+| | |
+|---|---|
+| **위반 시** | 삭제를 거부한다. 실패한 시도의 비용도 Goal 예산에서 차감된 상태로 남는다 |
+
+Entity 간 불변식은 [e000a-entity-relationships.md](e000a-entity-relationships.md)가 단일 권위다.
+
+---
+
+## 6. Lifecycle
 
 Task의 상태는 다음 6개뿐이다. ([task.schema.json](../intent-os-spec/schemas/task.schema.json)의 `state` enum과 동일하다.)
 
@@ -245,48 +264,60 @@ Failed
 
 ---
 
-## 8. Execution Mode
+## 7. Relationships
 
-Task Graph 실행 방식은 세 가지다. ([Volume 3](../v3-runtime.md) Stage 5와 동일)
+```
+Goal ──(분해)──▶ Task ──(요구)──▶ Capability ──(제공)──▶ Resource
+                  │
+                  └──(수행됨)──▶ Execution ──▶ Outcome ──▶ Feedback
+```
 
-| Mode | 의미 | 예 |
+| Entity | 관계 | Cardinality |
 |---|---|---|
-| **sequential** | 선행 Task 완료 후 실행 | 조사 → 분석 → 보고서 |
-| **parallel** | 의존이 없는 Task 동시 실행 | 시장 조사 ‖ 경쟁 분석 ‖ 고객 분석 |
-| **conditional** | 조건에 따라 실행 여부 결정 | `IF 전환율 < 목표 → 랜딩페이지 개선` |
+| [Goal](e001-goal.md) | Task는 정확히 하나의 Goal에 기여한다. Goal 없는 Task는 없다 | `Goal 1:0..N Task` |
+| [Capability](e006-capability.md) | Task는 Capability를 **요구**한다 (`required_capabilities`) | `Task N:M Capability` |
+| [Resource](e007-resource.md) | Task는 Resource를 직접 지정하지 않는다. Decision Engine이 매칭한다 | `Task N:M Resource` (간접) |
+| [Plan](e008-plan.md) | Plan은 Task Graph + 실행 전략의 상위 개념이다 | `Plan 1:1..N Task` |
+| [Task Graph](e005a-task-graph.md) | 실행 순서의 정본. Task는 자신이 어느 그래프에 속하는지 모른다 | `Task Graph 1:N Task` |
+| [Constraint](e004-constraint.md) | Goal의 Constraint는 Task로 상속·전파된다 | `Constraint N:M Task` |
+| [Execution](e013-execution.md) | Task는 여러 번 실행될 수 있다. 재시도마다 새 Execution이 생긴다 | `Task 1:0..N Execution` |
+| [Outcome](e014-outcome.md) | Execution을 거쳐 간접적으로 연결된다. Task가 Outcome을 직접 참조하지 않는다 | `Task 1:0..N Outcome` (간접) |
+
+**계층을 건너뛰는 참조는 금지된다**([Rule REL-004](e000a-entity-relationships.md)). Task는 `goal_id`만 알고, Goal의 상위 정보가 필요하면 Goal을 거쳐 조회한다.
+
+### 7.1 Task Graph
+
+Task는 혼자 존재하지 않는다. `dependencies`로 연결된 **DAG(Directed Acyclic Graph)** 를 이룬다.
+
+```
+        T1 시장 조사        T3 타겟 분석
+            │                   │
+            ▼                   ▼
+        T2 경쟁 분석        T4 광고 카피 작성
+            │                   │
+            └───────┬───────────┘
+                    ▼
+            T5 랜딩페이지 개선
+                    │
+                    ▼
+            T7 성과 분석
+```
+
+Task Graph는 [Goal Graph](e001a-goal-graph.md)와 대칭 구조다.
+
+| | Goal Graph | Task Graph |
+|---|---|---|
+| 노드 | Goal (미래 상태) | Task (행위) |
+| 관계 | DEPENDS_ON, ENABLES, CONFLICTS_WITH … | dependencies (선행 완료) |
+| 생성 주체 | 사용자 + Goal Engine | Planner |
+| 소비 주체 | Planner | Runtime Engine |
+| 불변식 | 순환 금지 (DAG) | 순환 금지 (DAG) |
+
+순환 금지는 INV-T-02가 규정한다. 그래프 차원의 정본은 [e005a §5](e005a-task-graph.md)다.
 
 ---
 
-## 9. Task Types
-
-Task는 요구하는 Capability의 성격에 따라 분류된다. Task Type은 Decision Engine의 후보 생성(Candidate Generation)을 좁혀준다.
-
-```
-Task
-├── Research Task        (조사·수집)
-├── Analysis Task        (분석·비교)
-├── Creation Task        (생성·제작)
-├── Transformation Task  (변환·가공)
-├── Decision Task        (판단·선택)
-├── Communication Task   (전달·상담)
-├── Automation Task      (반복 실행)
-└── Verification Task    (검증·평가)
-```
-
-| Type | 예시 |
-|---|---|
-| **Research Task** | `홍대 지역 경쟁 학원 조사` |
-| **Analysis Task** | `광고 채널별 CAC 비교` |
-| **Creation Task** | `광고 카피 3종 작성` |
-| **Transformation Task** | `상담 녹취록 요약` |
-| **Decision Task** | `광고 예산 배분안 선택` |
-| **Communication Task** | `학부모 안내 메시지 발송` |
-| **Automation Task** | `주간 모집 현황 리포트 생성` |
-| **Verification Task** | `랜딩페이지 카피 사실 검증` |
-
----
-
-## 10. Canonical Task Representation
+## 8. Canonical Representation
 
 모든 Task는 내부적으로 동일한 구조를 가진다.
 
@@ -314,7 +345,7 @@ Task
 
 ---
 
-## 11. Task Validation Algorithm
+## 9. Validation Rules
 
 Planner가 생성한 Task는 Runtime에 전달되기 전에 검증된다.
 
@@ -336,27 +367,127 @@ Task Graph 순환 검사 ── 순환 시 → Planner에 반려
 Canonical Task 생성
 ```
 
----
+### 9.1 Task Decomposition
 
-## 12. 다른 Entity와의 관계
+Goal은 직접 실행되지 않는다. **Planner가 Goal을 Task로 분해한다.**
 
 ```
-Goal ──(분해)──▶ Task ──(요구)──▶ Capability ──(제공)──▶ Resource
-                  │
-                  └──(수행됨)──▶ Execution ──▶ Outcome ──▶ Feedback
+Goal: 윈터캠프 100명 모집
+  ↓ Decomposition
+Task Graph:
+  T1  시장 조사
+  T2  경쟁 분석
+  T3  타겟 분석
+  T4  광고 카피 작성        (T3 의존)
+  T5  랜딩페이지 개선        (T2, T4 의존)
+  T6  상담 프로세스 설계
+  T7  성과 분석             (T5, T6 의존)
 ```
 
-| Entity | 관계 |
+#### 분해 규칙
+
+1. **각 Task는 Rule T-001~T-005를 만족할 때까지 분해한다.**
+2. **분해 결과의 합집합이 Goal 달성을 커버해야 한다.** 빠진 영역이 있으면 Planner는 Task를 추가한다.
+3. **Task 간 중복 작업은 제거한다.** 두 Task가 같은 산출물을 만들면 하나로 합치고 의존 관계로 연결한다.
+4. **분해는 재귀적이다.** Task가 아래 "크기 기준"을 넘으면 Sub-Task로 다시 분해한다.
+
+#### Task 크기 기준 — 더 분해해야 하는가?
+
+다음 중 하나라도 해당되면 **더 분해한다.**
+
+| 판정 질문 | 예 |
 |---|---|
-| [Goal](e001-goal.md) | Task는 정확히 하나의 Goal에 기여한다. Goal 없는 Task는 없다 |
-| [Capability](e006-capability.md) | Task는 Capability를 **요구**한다 (`required_capabilities`) |
-| [Resource](e007-resource.md) | Task는 Resource를 직접 지정하지 않는다. Decision Engine이 매칭한다 |
-| Plan (Entity 008, 예정) | Plan은 Task Graph + 실행 전략의 상위 개념이다 |
-| Constraint (Entity 004, 예정) | Goal의 Constraint는 Task로 상속·전파된다 |
+| 서로 다른 Capability 도메인을 3개 이상 요구하는가? | `조사 + 카피 작성 + 디자인` → 3개 Task로 분리 |
+| Expected Output이 2개 이상인가? | `비교표와 광고 시안` → 분리 |
+| 단일 Resource가 처리하기 어려운가? | 검색과 장문 작성을 동시에 요구 → 분리 |
+| 실패 시 부분 재시도가 필요한가? | 카피만 다시 쓰면 되는데 조사까지 다시 하게 되는 구조 → 분리 |
+
+반대로, 다음이면 **분해를 멈춘다.**
+
+- 단일 Capability 집합으로 수행 가능하다.
+- Expected Output이 하나다.
+- 더 쪼개면 조율 비용이 실행 비용보다 커진다.
 
 ---
 
-## 13. Open Issues (v1.0)
+## 10. Examples
+
+### 예시 1 — Goal 하나가 Task 7개로 분해된 모습
+
+```
+goal_001  윈터캠프 학생 100명 모집 (예산 300만원, 마감 2026-11-30)
+  ↓ Decomposition
+task_001  시장 조사            research.web                    → 지역 학원 시장 요약
+task_002  경쟁 분석            research.web + analysis.compare → 경쟁 학원 5곳 비교표
+task_003  타겟 분석            analysis.audience               → 예비 고3 학부모 프로파일
+task_004  광고 카피 작성        language.generation.copywriting → 인스타 카피 3종
+task_005  랜딩페이지 개선       language.generation + design    → 개선안
+task_006  상담 프로세스 설계    process.design                  → 상담 스크립트
+task_007  성과 분석            analysis.metrics                → 집행 결과 리포트
+```
+
+어느 Task에도 Resource 이름이 없다. `task_004`는 Claude가 할 수도, 김 카피라이터가 할 수도 있으며 그 선택은 [Decision](e009-decision.md)의 몫이다(INV-T-03).
+
+### 예시 2 — 크기 기준에 걸려 재분해된 Task
+
+```
+task_010  "경쟁 분석하고 광고 시안까지 만들기"
+          required_capabilities: research.web, analysis.compare,
+                                 language.generation, design.visual
+          expected_output: 비교표, 광고 시안
+   ↓ 크기 기준 판정
+   Capability 도메인 4개 (≥3)  ✅ 분해 대상
+   Expected Output 2개 (≥2)    ✅ 분해 대상
+   ↓
+task_002  경쟁 분석      → 비교표
+task_004  광고 카피 작성  → 광고 시안 (task_002 의존)
+```
+
+분해하지 않으면 카피만 다시 쓰면 되는 상황에서 조사까지 다시 하게 된다.
+
+### 예시 3 — 실패에서 재시도까지
+
+```
+task_004  광고 카피 작성
+  Pending → Assigned(GPT) → Running → Failed  (rate_limit_exceeded, 0.11 USD)
+     ↓ 원인 분류: Resource 일시 장애 → reassign
+  Pending → Assigned(Claude) → Running → Completed  (0.42 USD)
+     ↓
+  Evaluated  quality 0.88 / goal_alignment 0.91 → accept
+```
+
+Task의 총 비용은 **0.53 USD**다. 실패한 시도의 비용도 남는다(INV-T-06).
+
+### 예시 4 — Completed지만 Failed로 되돌아간 경우
+
+```
+task_005  랜딩페이지 개선
+  Running → Completed (개선안 산출)
+     ↓ Evaluation
+  quality 0.42 — 브랜드 가이드 이탈, 모바일 레이아웃 깨짐
+     ↓
+  Failed → Pending (재시도)
+```
+
+**Completed는 "산출물이 나왔다"는 뜻이지 "잘 됐다"는 뜻이 아니다.**
+
+---
+
+## 11. Edge Cases
+
+| 상황 | 판정 |
+|---|---|
+| **Task가 두 Goal에 동시에 기여** | Task를 공유하지 않는다. INV-T-01에 걸린다. 대신 Task를 하나 더 만들고 산출물([Artifact](e016-artifact.md))을 재사용한다. 기여도 귀속이 흐려지면 학습이 망가진다 |
+| **선행 Task가 부분만 성공** | 후행 Task를 시작하지 않는다. 부분 산출물로 이어붙이면 실패가 하류로 조용히 번진다. 선행을 `Failed`로 확정하고 재시도한다 |
+| **분해가 끝나지 않음** (계속 더 쪼개야 함) | 조율 비용이 실행 비용을 넘는 지점에서 멈춘다(§9.1 분해 규칙). 멈출 수 없다면 Goal 자체가 너무 크다는 신호이므로 **Goal 분할**로 올려보낸다 |
+| **required_capabilities에 맞는 Resource가 하나도 없음** | Task를 실패시키지 않는다. `Pending`으로 두고 Capability 부재를 보고한다. Resource 등록이나 Task 재분해가 답이지 아무 Resource나 잡는 것이 답이 아니다 |
+| **conditional Task의 조건이 끝까지 거짓** | `Completed`가 아니라 `Skipped`로 남긴다. 실행되지 않은 것과 실행해서 성공한 것은 다르며, 이 구분이 없으면 Plan 성공률이 부풀려진다 |
+| **재시도 중 Plan이 바뀜** | 새 Plan의 Task가 다르면 기존 시도 사슬을 종료하고 새 Task에서 처음부터 시작한다. 이전 산출물은 [e005a §6.1](e005a-task-graph.md)의 Graph Diff가 승계 여부를 판정한다 |
+| **Evaluated 이후 결과가 뒤집힘** (한 달 뒤 성과 부진 확인) | Task 상태를 되돌리지 않는다. 늦게 온 판단은 [Feedback](e012-feedback.md)으로 붙는다. 종료된 Task를 소급 수정하면 그 시점의 판단 근거가 사라진다 |
+
+---
+
+## 12. Open Issues (v1.0)
 
 ### Task Graph는 별도 명세가 필요한가
 
@@ -372,3 +503,4 @@ Goal이 [Goal Graph](e001a-goal-graph.md)로 확장된 것처럼, Task Graph도 
 - Task 수준 Constraint의 상속 규칙 (Entity 004 확정 후)
 - Retry Policy의 비용 상한 (재시도 폭주 방지)
 - 실제 예시 30~50개
+

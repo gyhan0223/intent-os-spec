@@ -41,6 +41,13 @@ RFC 수준 명세의 핵심 10개 섹션에, 이 저장소의 관례 2개(Attrib
 
 **§1~§12의 번호는 고정이다.** Entity마다 섹션 번호가 달라지면 문서 간 상호 참조(`e013 §5`)가 성립하지 않기 때문이다.
 
+§13 이상을 만들지 않는다. §0도 만들지 않는다. **"왜 이 Entity가 따로 필요한가"를 먼저 말해야 하는 문서는 §1 앞에 번호 없는 도입부를 하나 둔다.**
+
+```markdown
+## Why Not Just a List        ← 번호 없음. 도입부는 1개까지
+## 1. Definition
+```
+
 **Types**, **Algorithm**, **Metrics**, **Taxonomy** 처럼 Entity 성격에 따라 필요한 내용은 새 섹션을 만들지 않고 **가장 가까운 필수 섹션의 하위 절**로 넣는다.
 
 | 추가 내용 | 들어갈 위치 |
@@ -110,7 +117,7 @@ RFC 수준 명세의 핵심 10개 섹션에, 이 저장소의 관례 2개(Attrib
 | 011 Knowledge | `K` | 025 Resource Profile | `RPF` |
 | 012 Feedback | `F` | 005-A Task Graph | `TG` |
 | 013 Execution | `EXE` | 006-A Capability Taxonomy | `CT` |
-| 014 Outcome | `OUT` | | |
+| 014 Outcome | `OUT` | 000-A Entity Relationships | `REL` |
 
 **Prefix는 영구 예약이다.** Entity가 폐기되어도 Prefix는 재사용하지 않는다. 옛 문서를 참조하는 링크가 다른 의미로 해석되면 안 되기 때문이다.
 
@@ -187,6 +194,30 @@ Entity 문서 안에서 Entity 간 불변식을 새로 만들지 않는다. 참�
 
 분할 후 파일명은 `eNNN<a-z>-<subject>.md`, 원본 문서는 **정의와 목차만 남기고** 나머지를 하위 문서로 이관한다.
 
+### 7.1 부속 문서(Annex)의 형식 예외
+
+분할로 갈라져 나온 문서에는 두 갈래가 있다.
+
+| 갈래 | 성격 | 형식 |
+|---|---|---|
+| **독립 Entity** | 자기 식별자를 갖고 저장·조회된다 | 12개 섹션 **전부 준수**. Prefix를 §3에 등록한다 |
+| **부속 문서(Annex)** | 상위 Entity의 한 측면을 펼쳐 쓴 것. 자기 식별자가 없다 | 12개 섹션 **면제** |
+
+Task Graph(005-A)와 Capability Taxonomy(006-A)는 독립 Entity다. 각각 `graph_id`, `taxonomy_id`를 갖는다.
+Goal의 하위 문서 4개(001-A~001-D)는 Annex다. `goal_id` 말고 자기 식별자가 없다.
+
+**Annex는 헤더에 이를 선언한다.** 선언 없이 형식을 벗어난 문서는 검증에서 실패로 잡힌다.
+
+```markdown
+- **Version:** v2.0 Draft
+- **Status:** Core Entity
+- **Format:** Annex — e001 Goal의 부속 문서 (e000 §7.1)
+- **Last Updated:** 2026-08-04
+- **Schema:** [`goal.schema.json`](../intent-os-spec/schemas/goal.schema.json)
+```
+
+면제되는 것은 **섹션 번호 규격뿐이다.** 헤더 블록과 스키마 링크는 Annex도 지킨다. Annex가 Rule/Invariant를 정의할 때는 상위 Entity의 Prefix를 쓴다 — `Rule G-012`이지 `Rule GG-001`이 아니다.
+
 ---
 
 ## 8. 스키마 연결 규칙
@@ -209,6 +240,20 @@ Entity 문서 안에서 Entity 간 불변식을 새로 만들지 않는다. 참�
 | 예시 표기 | ✅ 올바른 예 / ❌ 잘못된 예 |
 | 강조 | **굵게**는 문단당 2회 이하 |
 | 링크 | 다른 Entity 최초 언급 시 상대 링크를 건다 |
+
+### 9.1 기호의 의미 (겹쳐 쓰지 않는다)
+
+기호 하나가 여러 뜻을 겸하면 독자가 "이건 아직 안 된 것인가, 원래 그런 것인가"를 구분하지 못한다. 각 기호는 뜻이 하나다.
+
+| 기호 | 의미 | 쓰는 곳 |
+|---|---|---|
+| ✅ | 충족 / 올바른 예 | Completion Criteria 판정, 예시 |
+| ⚠️ | **부분 충족 · 조건부 · 애매** | Completion Criteria 판정, 삼치 판정 예시, §2의 혼동 주의 |
+| ❌ | 미충족 / 잘못된 예 | Completion Criteria 판정, §2 반례 |
+| 🔬 | **연구 단계** — 검증되지 않은 설계 가설이다. 완성도가 아니라 **성격**의 표시다 | 문서 헤더, Volume 목록 |
+| 📌 | **명세 정정** — 이전 버전의 서술을 뒤집는다 | 정정 blockquote |
+
+🔬와 ⚠️의 차이가 핵심이다. **🔬는 "지금 채울 수 없는 것"**(데이터가 없어 검증 불가), **⚠️는 "채워야 하는데 안 채운 것"**이다. 4-E·4-F 전체는 🔬이고, 그 안의 개별 미정의 항목은 ⚠️다.
 
 ---
 
@@ -233,33 +278,57 @@ Entity 문서 안에서 Entity 간 불변식을 새로 만들지 않는다. 참�
 
 새 Entity 문서를 커밋하기 전에 확인한다.
 
-```
-[ ] 12개 필수 섹션이 모두 있는가
-[ ] §2에 인접 개념 3개 이상, 각각 ❌ 반례가 있는가
-[ ] Rule Prefix가 §3 표에 등록되어 있는가
-[ ] §5의 각 Invariant에 "위반 시 시스템 반응"이 있는가
-[ ] §7에 Cardinality가 표기되어 있는가
-[ ] §8의 JSON 예시가 실제 스키마를 통과하는가   → python3 tools/validate-examples.py
-[ ] 예시가 §10 고정 도메인을 쓰는가
-[ ] e000a §3 Cardinality 전체표에 행을 추가했는가
-[ ] entities/README.md 목차와 §6 준수 현황표를 갱신했는가
-[ ] 루트 README.md 목차를 갱신했는가
-[ ] 상대 링크가 깨지지 않았는가
+대부분은 기계가 대신 돈다. 세 스크립트를 순서대로 실행한다.
+
+```bash
+python3 tools/validate-format.py     # 형식: 섹션·번호·헤더·스키마 위생·상호 참조
+python3 tools/validate-examples.py   # 예시: JSON 블록 ↔ 스키마
+python3 tools/validate-links.py      # 상대 링크
 ```
 
-`tools/validate-examples.py`는 §8 예시뿐 아니라 문서 전체의 JSON 블록을 검사한다. 새 Entity를 추가하면 그 스크립트의 `DOC_TO_SCHEMA`에도 항목을 추가한다.
+| 항목 | 검사 주체 |
+|---|---|
+| 12개 필수 섹션이 번호대로 있는가 | `validate-format.py` |
+| Rule 4개 이상, INV 3개 이상인가 | `validate-format.py` |
+| Rule Prefix가 §3 표에 등록되어 있는가 | `validate-format.py` (표를 직접 파싱한다) |
+| 헤더 3필드와 허용값이 맞는가 | `validate-format.py` |
+| 스키마 링크가 실재하는 파일을 가리키는가 | `validate-format.py` |
+| `[e007 §6]` 같은 상호 참조가 실재하는 섹션인가 | `validate-format.py` |
+| 스키마에 `additionalProperties: false`와 `description`이 있는가 | `validate-format.py` |
+| §8의 JSON 예시가 실제 스키마를 통과하는가 | `validate-examples.py` |
+| 상대 링크가 깨지지 않았는가 | `validate-links.py` |
+
+**기계가 못 보는 것은 직접 확인한다.**
+
+```
+[ ] §2에 인접 개념 3개 이상, 각각 ❌ 반례가 있는가
+[ ] §5의 각 Invariant에 "위반 시 시스템 반응"이 있는가
+[ ] §7에 Cardinality가 표기되어 있는가
+[ ] 예시가 §10 고정 도메인을 쓰는가
+[ ] e000a §3 Cardinality 전체표와 §2 Entity 지도에 행을 추가했는가
+[ ] entities/README.md 목차와 §6 준수 현황표를 갱신했는가
+[ ] 루트 README.md 목차를 갱신했는가
+```
+
+`validate-examples.py`는 §8 예시뿐 아니라 문서 전체의 JSON 블록을 검사한다. 새 Entity를 추가하면 그 스크립트의 `DOC_TO_SCHEMA`에도 항목을 추가한다.
 
 ---
 
 ## 12. Open Issues (v1.0)
 
-### 기존 Entity 001~012의 형식 소급 적용
+### ~~기존 Entity 001~012의 형식 소급 적용~~ (해소)
 
-Entity 001~012는 이 형식이 정해지기 전에 작성되었다. 대부분 §5 Invariants와 §11 Edge Cases가 없다. 소급 적용 계획은 [entities/README.md](README.md) §6의 준수 현황표에서 관리한다.
+2026-08-04에 12개 문서를 일괄 재배치하고 Invariants·Examples·Edge Cases를 신설했다. 결과는 [entities/README.md](README.md) §6에 있다.
 
-### 형식 검증의 자동화
+### ~~형식 검증의 자동화~~ (해소)
 
-체크리스트(§11)는 현재 수동이다. Markdown 구조를 파싱해 필수 섹션 존재 여부를 검사하는 린터가 필요하다. → [Volume 7](../v7-reference-implementation.md)
+`tools/validate-format.py`가 §11 체크리스트를 대신 돈다. 검사 항목은 12개 섹션 순서, Rule·INV 최소 개수, Prefix 등록 일치, 헤더 3필드, 스키마 링크 실재, 상호 참조(§N) 유효성, 스키마 위생이다. `.github/workflows/validate-spec.yml`이 push마다 실행한다.
+
+**남은 것:** [e000a §5](e000a-entity-relationships.md)의 전역 불변식 16개는 문서를 읽어서는 검사할 수 없다. 실행 중인 데이터가 있어야 하므로 [Volume 7](../v7-reference-implementation.md)의 구현 과제로 남는다.
+
+### 섹션 내용의 품질은 검사하지 못한다
+
+린터는 §11 Edge Cases가 **있는지**는 보지만 거기 적힌 판정이 **옳은지**는 보지 못한다. 형식 준수와 내용 품질은 다른 문제이며, 후자를 기계가 판정할 방법은 현재 없다.
 
 ### 앞으로 보강해야 할 항목
 

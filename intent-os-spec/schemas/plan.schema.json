@@ -4,9 +4,18 @@
   "title": "Plan (Canonical Plan Representation)",
   "description": "Planner가 Goal Graph를 입력으로 생성한 실행 청사진. Planning(Process)의 산출물인 Entity이며, Resource를 확정하지 않고 Task별 Capability 요구까지만 기술한다. Entity 008 명세(entities/e008-plan.md) 참조.",
   "type": "object",
-  "required": ["plan_id", "version", "source_goal_ids", "status", "tasks"],
+  "required": [
+    "plan_id",
+    "version",
+    "source_goal_ids",
+    "status",
+    "tasks"
+  ],
   "properties": {
-    "plan_id": { "type": "string" },
+    "plan_id": {
+      "type": "string",
+      "description": "Plan의 고유 식별자."
+    },
     "version": {
       "type": "integer",
       "description": "Plan 버전. Plan은 수정하지 않고 새 버전을 만든다 (Rule: Replanning 시 이전 버전은 Superseded).",
@@ -15,22 +24,38 @@
     "source_goal_ids": {
       "type": "array",
       "description": "이 Plan이 파생된 Goal ID 목록 (Rule P-001). 기원 없는 Plan은 시스템이 관리하지 않는다.",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "minItems": 1
     },
     "status": {
       "type": "string",
       "description": "Plan Lifecycle 상태. Active는 Goal당 동시에 하나만 존재한다 (Rule P-006).",
-      "enum": ["Draft", "Approved", "Active", "Superseded", "Completed", "Aborted"]
+      "enum": [
+        "Draft",
+        "Approved",
+        "Active",
+        "Superseded",
+        "Completed",
+        "Aborted"
+      ]
     },
     "tasks": {
       "type": "array",
       "description": "실행 단위 목록. 의존 구조는 DAG여야 한다 (Rule P-002).",
       "items": {
         "type": "object",
-        "required": ["task_id", "name", "required_capabilities"],
+        "required": [
+          "task_id",
+          "name",
+          "required_capabilities"
+        ],
         "properties": {
-          "task_id": { "type": "string" },
+          "task_id": {
+            "type": "string",
+            "description": "이 Plan에 속한 Task의 id. Task 본문은 담지 않는다."
+          },
           "name": {
             "type": "string",
             "description": "Task 이름. Resource 이름을 포함하면 안 된다 (Rule P-005). 예: '광고 카피 작성'"
@@ -38,15 +63,20 @@
           "required_capabilities": {
             "type": "array",
             "description": "이 Task 수행에 필요한 Capability. Decision Engine의 Candidate Filtering 기준. 예: ['Korean Writing', 'Persuasion']",
-            "items": { "type": "string" },
+            "items": {
+              "type": "string"
+            },
             "minItems": 1
           },
           "depends_on": {
             "type": "array",
             "description": "선행 Task ID 목록. 비어 있으면 병렬 실행 후보.",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           }
-        }
+        },
+        "additionalProperties": false
       },
       "minItems": 1
     },
@@ -54,17 +84,39 @@
       "type": "object",
       "description": "예상 비용 (Rule P-003). 예: { value: 2800000, currency: 'KRW' }",
       "properties": {
-        "value": { "type": "number", "minimum": 0 },
-        "currency": { "type": "string" }
-      }
+        "value": {
+          "type": "number",
+          "minimum": 0,
+          "description": "예상 비용. 실측이 아니라 계획 시점의 추정이며, 실제와의 차이가 Prediction Model의 보정 신호가 된다."
+        },
+        "currency": {
+          "type": "string",
+          "description": "통화 코드 (ISO 4217)."
+        }
+      },
+      "additionalProperties": false
     },
     "estimated_duration": {
       "type": "object",
       "description": "예상 기간 (Rule P-003). 예: { value: 6, unit: 'week' }",
       "properties": {
-        "value": { "type": "number", "minimum": 0 },
-        "unit": { "type": "string", "enum": ["hour", "day", "week", "month"] }
-      }
+        "value": {
+          "type": "number",
+          "minimum": 0,
+          "description": "예상 소요 기간."
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "hour",
+            "day",
+            "week",
+            "month"
+          ],
+          "description": "기간의 단위."
+        }
+      },
+      "additionalProperties": false
     },
     "expected_success_probability": {
       "type": "number",
@@ -75,7 +127,11 @@
     "risk_level": {
       "type": "string",
       "description": "가정 취약성 + 실행 불확실성의 종합 리스크",
-      "enum": ["Low", "Medium", "High"]
+      "enum": [
+        "Low",
+        "Medium",
+        "High"
+      ]
     },
     "constraint_margin": {
       "type": "object",
@@ -84,15 +140,22 @@
     "assumptions": {
       "type": "array",
       "description": "이 Plan이 성립하는 전제 (Rule P-004). 가정이 깨지면 Replanning이 트리거된다. 예: '광고 예산 300만원 유지'",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "alternative_plan_ids": {
       "type": "array",
       "description": "고려된 대안 Plan ID 목록. 최종 채택은 Plan Selection Decision으로 기록된다.",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "supersedes": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "이 버전이 대체한 이전 Plan 참조 (plan_id@version 형식). 첫 버전이면 null."
     },
     "abort_reason": {
@@ -103,6 +166,11 @@
       "type": "string",
       "description": "생성 주체. 예: 'planner'"
     },
-    "created_at": { "type": "string", "format": "date-time" }
-  }
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Plan이 생성된 시각."
+    }
+  },
+  "additionalProperties": false
 }

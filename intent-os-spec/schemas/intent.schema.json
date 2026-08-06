@@ -4,9 +4,18 @@
   "title": "Intent (Canonical Intent Representation)",
   "description": "Goal에서 추론된 해결의 방향. 왜, 어느 영역에서 풀 것인가를 담되 실행 단위(Task)는 담지 않는다. 추론 결과이므로 반드시 Confidence를 가진다. Entity 002 명세(entities/e002-intent.md) 참조.",
   "type": "object",
-  "required": ["intent_id", "goal_id", "intent_type", "direction", "confidence"],
+  "required": [
+    "intent_id",
+    "goal_id",
+    "intent_type",
+    "direction",
+    "confidence"
+  ],
   "properties": {
-    "intent_id": { "type": "string" },
+    "intent_id": {
+      "type": "string",
+      "description": "Intent의 고유 식별자."
+    },
     "goal_id": {
       "type": "string",
       "description": "부모 Goal의 ID. 부모 Goal이 없는 Intent는 존재할 수 없다 (Rule I-001)."
@@ -41,12 +50,18 @@
     "priority": {
       "type": "string",
       "description": "Intent 간 우선순위. Goal의 Priority를 상속한 뒤 Intent 자체 점수로 보정한다.",
-      "enum": ["Low", "Medium", "High"]
+      "enum": [
+        "Low",
+        "Medium",
+        "High"
+      ]
     },
     "evidence": {
       "type": "array",
       "description": "추론 근거가 된 Context/데이터. Learning Engine의 입력이다.",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "expected_impact": {
       "type": "string",
@@ -64,5 +79,6 @@
         "Archived"
       ]
     }
-  }
+  },
+  "additionalProperties": false
 }

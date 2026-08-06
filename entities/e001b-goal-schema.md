@@ -1,7 +1,8 @@
 # Entity 001-B: Goal JSON Schema (Canonical Goal Representation v2)
 
 - **Version:** v2.0 Draft
-- **Status:** Core Entity — Data Structure
+- **Status:** Core Entity
+- **Format:** Annex — e001 Goal의 부속 문서 (e000 §7.1)
 - **Last Updated:** 2026-08-04
 - **Schema:** [`goal.schema.json`](../intent-os-spec/schemas/goal.schema.json)
 

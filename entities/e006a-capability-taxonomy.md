@@ -6,7 +6,7 @@
 
 ---
 
-## 0. Why a Taxonomy
+## Why a Taxonomy
 
 [Capability](e006-capability.md)는 Intent OS에서 **Task와 Resource를 잇는 유일한 통로**다.
 
@@ -429,7 +429,7 @@ Capability Taxonomy 006-A
 |---|---|---|
 | [Capability](e006-capability.md) | Taxonomy가 개별 Capability의 이름·계층을 정의 | `Taxonomy 1:N Capability` |
 | [Task](e005-task.md) | Task가 Capability를 요구 | `Task N:M Capability` |
-| [Resource](e007-resource.md) | Resource가 Capability를 제공 | `Resource N:M Capability` |
+| [Resource](e007-resource.md) | Resource가 Capability를 제공 | `Capability N:M Resource` |
 | [Tool](e024-tool.md) | Tool도 Capability를 제공 | `Tool N:M Capability` |
 | [Workflow](e022-workflow.md) | 각 step이 Capability로 표현된다 | `Workflow N:M Capability` |
 | [Agent](e023-agent.md) | 권한 범위를 Capability로 표현 | `Agent N:M Capability` |

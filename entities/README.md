@@ -24,7 +24,7 @@ Intent OS도 같은 방식을 따른다. 시스템 안에 **"존재하는 것(En
 
 > **1년 뒤에 조회해야 하는가?** 그렇다면 Entity다.
 
-### ⚠️ v1.0 분류의 정정
+### 📌 v1.0 분류의 정정
 
 v1.0에서는 **Execution을 Process, Outcome을 Runtime State**로 분류했다. **v2.0에서 이를 정정한다.**
 
@@ -190,25 +190,29 @@ graph TD
 
 ## 6. 준수 현황 (Conformance)
 
-등급 정의는 [e000 §6](e000-spec-format.md) 참조.
+등급 정의는 [e000 §6](e000-spec-format.md) 참조. 판정은 `python3 tools/validate-format.py`가 자동으로 한다.
 
-| 등급 | 조건 | 해당 문서 |
-|---|---|---|
-| **L2 — Specified** | 12개 섹션 전부 + JSON Schema | 013~025, 005-A, 006-A, 000, 000-A |
-| **L1 — Draft** | §1~§9 존재. 일부 섹션 미비 | 001~012, 001-A~D |
-| **L3 — Verified** | L2 + 검증기 + 예시 30개 이상 | 없음 |
+| 등급 | 조건 | 해당 문서 | 판정 근거 |
+|---|---|---|---|
+| **L2 — Specified** | 12개 섹션 전부 + JSON Schema | 001~025, 001-A~D, 005-A, 006-A (31개 전부) | `validate-format.py` 통과 |
+| **L3 — Verified** | L2 + 검증기 + 예시 30개 이상 | 없음 | 문서당 예시가 3~4개다. 30개 기준 미달 |
 
-### 소급 적용 대상
+001-A~D는 [e000 §7.1](e000-spec-format.md)의 **부속 문서(Annex)** 로, 12개 섹션 규격을 면제받되 헤더 블록과 스키마 링크는 지킨다.
 
-Entity 001~012는 형식이 확정되기 전에 작성되었다. 대부분 **§5 Invariants**와 **§11 Edge Cases**가 없다. 다음 순서로 보강한다.
+### 소급 적용 결과
 
-| 우선순위 | 대상 | 이유 |
-|---|---|---|
-| 1 | 009 Decision, 008 Plan | 실행 사슬의 중심. 불변식 누락의 영향이 크다 |
-| 2 | 005 Task, 007 Resource | 새 Entity(013·025)와 참조가 많다 |
-| 3 | 006 Capability | Taxonomy(006-A) 분리에 따라 본문 정리 필요 |
-| 4 | 002·003·004 | 횡단 관심사. Assumption(017)과의 경계 정리 필요 |
-| 5 | 010·011·012 | 학습 경로. Evaluation(015) 신설에 따라 입력 정의 갱신 필요 |
+Entity 001~012는 형식이 확정되기 전에 작성되어 **§5 Invariants · §10 Examples · §11 Edge Cases가 전부 없었다.** 2026-08-04에 12개 문서를 일괄 보강했다.
+
+| 항목 | 이전 | 현재 | 근거 |
+|---|---|---|---|
+| 12개 섹션 번호 준수 | 0 / 12 | 12 / 12 | `validate-format.py --only docs` |
+| Invariants (문서당 3개 이상) | 0개 | 5~7개 | 각 §5 |
+| Examples (2개 이상) | 섹션 없음 | 3~4개 | 각 §10 |
+| Edge Cases (3개 이상) | 섹션 없음 | 7~8개 | 각 §11 |
+| Relationships의 Cardinality | 미표기 | 전부 표기 | 각 §7 |
+| Rule Prefix 등록 일치 | e006이 `C`(Context) 사용 | `CP`로 정정 | [e000 §3](e000-spec-format.md) |
+
+남은 미충족 항목은 L3다. **예시 30개 기준을 채운 문서가 하나도 없다.** 각 문서 §12에 "실제 예시 30~50개"로 남아 있다.
 
 ---
 
@@ -231,7 +235,7 @@ Entity 001~012는 형식이 확정되기 전에 작성되었다. 대부분 **§5
 
 | 항목 | 내용 |
 |---|---|
-| **형식 소급 적용** | Entity 001~012를 L2로 승격 (§6 우선순위 순) |
+| **예시 보강 (L3)** | 문서당 예시 30개 기준을 채운다. 현재 3~4개 |
 | **불변식 검증기** | [e000a §5](e000a-entity-relationships.md)의 16개 전역 불변식을 검사하는 구현 → [Volume 7](../v7-reference-implementation.md) |
 | **표현식 언어** | Policy의 `condition`과 Workflow의 `condition`을 통합한 문법 정의 |
 | **Rubric 결정** | Evaluation의 평가 기준을 Entity로 둘지 Policy 하위로 둘지 확정 |
