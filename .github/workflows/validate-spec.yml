@@ -41,6 +41,9 @@ jobs:
       - name: 상대 링크 검사
         run: python3 tools/validate-links.py
 
+      - name: Thin Reference E2E + canonical schema 검사
+        run: python3 -m unittest discover -s reference/marketing_thin/tests -v
+        
       - name: 전역 불변식 검사기 테스트
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v
 
