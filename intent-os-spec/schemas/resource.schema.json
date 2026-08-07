@@ -1,78 +1,51 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/intent-os/resource.schema.json",
-  "title": "Resource",
-  "description": "Capability를 제공하는 실행 주체. AI, Tool, Human, Hybrid를 동일하게 취급한다 (Principle 03 — Resource Agnostic). Entity 007 명세(entities/e007-resource.md) 참조.",
+  "title": "Resource (Canonical Identity Representation v2)",
+  "description": "Capability를 제공하는 실행 주체의 정체성·선언 정보. 실제 관측 성능/비용/가용성의 정본은 Resource Profile이며, 이 스키마의 observed/performance 필드는 legacy read-only projection으로만 유지한다.",
   "type": "object",
-  "required": [
-    "id",
-    "name",
-    "type",
-    "capabilities"
-  ],
+  "required": ["id", "name", "type", "capabilities"],
   "properties": {
-    "id": {
-      "type": "string",
-      "description": "Registry 내 고유 식별자. 'provider:name' 네임스페이스 권장. 예: 'anthropic:claude-5', 'human:copywriter_kim'"
-    },
-    "name": {
-      "type": "string",
-      "description": "사람이 읽는 이름. 예: 'Claude 5', '김 카피라이터'"
-    },
+    "id": {"type": "string", "description": "Registry 내 Resource 고유 식별자.", "x-ownership": "AUTHORITATIVE"},
+    "name": {"type": "string", "description": "사람이 읽는 Resource 이름.", "x-ownership": "AUTHORITATIVE"},
     "type": {
       "type": "string",
-      "enum": [
-        "llm",
-        "image_model",
-        "video_model",
-        "search_engine",
-        "api",
-        "database",
-        "tool",
-        "agent",
-        "human",
-        "hybrid"
-      ],
-      "description": "Resource의 종류. AI·Tool·Human을 같은 필드로 다룬다 — 선택 로직이 종류를 구분하지 않는다는 것이 Principle 03의 실체다."
+      "enum": ["llm", "image_model", "video_model", "search_engine", "api", "database", "tool", "agent", "human", "hybrid"],
+      "description": "Resource 종류.",
+      "x-ownership": "AUTHORITATIVE"
     },
-    "provider": {
-      "type": "string",
-      "description": "제공 주체. 예: 'anthropic', 'openai', 'internal'. 장애·요금 변경의 귀속 단위다."
-    },
-    "version": {
-      "type": "string",
-      "description": "Resource의 버전. 같은 이름이라도 버전이 다르면 성능 이력을 합치지 않는다."
-    },
+    "provider": {"type": "string", "description": "Resource 제공 주체.", "x-ownership": "AUTHORITATIVE"},
+    "version": {"type": "string", "description": "Resource 버전. 다른 버전의 성능 이력을 합치지 않는다.", "x-ownership": "AUTHORITATIVE"},
     "capabilities": {
       "type": "array",
-      "description": "제공하는 Capability 목록 (Rule R-001 — 최소 하나 필요). name은 canonical capability id를 권장한다.",
+      "minItems": 1,
+      "description": "Resource가 제공한다고 선언한 Capability 목록.",
+      "x-ownership": "AUTHORITATIVE",
       "items": {
         "type": "object",
-        "required": [
-          "name"
-        ],
+        "required": ["name"],
         "properties": {
-          "name": {
-            "type": "string",
-            "description": "Capability의 canonical id. 예: 'language.generation.copywriting'. 자유 문자열을 쓰면 매칭이 깨진다 (e006a 참조)."
-          },
-          "declared_score": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 100,
-            "description": "공급자나 등록자가 **주장한** 점수 (0~100). 검증 전 값이므로 Decision의 가중치가 낮다."
-          },
+          "name": {"type": "string", "description": "Capability canonical ID.", "x-ownership": "REFERENCE"},
+          "declared_score": {"type": "number", "minimum": 0, "maximum": 100, "description": "공급자/등록자가 선언한 점수.", "x-ownership": "AUTHORITATIVE"},
           "observed_score": {
             "type": "number",
             "minimum": 0,
             "maximum": 100,
-            "description": "실행 결과로 **관측된** 점수 (0~100). 한 번도 실행되지 않았으면 0이 아니라 부재다 — 측정 안 함과 0점은 다르다."
+            "readOnly": true,
+            "deprecated": true,
+            "description": "호환용 관측 점수 projection. 실제 정본은 ResourceProfile.capability_scores.observed_score다.",
+            "x-ownership": "DERIVED",
+            "x-canonical-source": "resource-profile.schema.json#/properties/capability_scores"
           },
           "confidence": {
             "type": "number",
-            "description": "observed_score의 신뢰도 (0~1). Intent OS는 Score보다 Confidence를 더 중요하게 본다 (Volume 4-B §10).",
             "minimum": 0,
-            "maximum": 1
+            "maximum": 1,
+            "readOnly": true,
+            "deprecated": true,
+            "description": "호환용 관측 신뢰도 projection. 실제 정본은 Resource Profile이다.",
+            "x-ownership": "DERIVED",
+            "x-canonical-source": "resource-profile.schema.json#/properties/capability_scores"
           }
         },
         "additionalProperties": false
@@ -80,62 +53,41 @@
     },
     "cost_model": {
       "type": "object",
-      "description": "비용 구조. 단가·과금 단위·정액 여부를 담는다. 형태는 Resource 종류마다 다르므로 자유 객체이며, Utility 계산에 쓰이는 값은 resource-profile.schema.json이 정규화한다."
+      "description": "공급자·계약상 선언된 과금 구조. 실제 평균 비용은 Resource Profile이 정본이다.",
+      "x-ownership": "AUTHORITATIVE"
     },
     "performance": {
       "type": "object",
+      "readOnly": true,
+      "deprecated": true,
+      "description": "호환용 최신 성능 projection. 실측 성능의 정본은 Resource Profile이다.",
+      "x-ownership": "DERIVED",
+      "x-canonical-source": "resource-profile.schema.json#/properties/performance",
       "properties": {
-        "reliability": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1,
-          "description": "호출이 오류 없이 응답을 반환한 비율 (0~1). 결과의 품질이 아니라 응답 자체의 성공률이다."
-        },
-        "latency_ms": {
-          "type": "number",
-          "description": "관측된 평균 응답 지연 (밀리초). 인간 Resource는 자릿수가 다르므로 Utility의 latency 가중치가 낮은 Task에만 후보로 오른다."
-        },
-        "success_rate": {
-          "type": "number",
-          "description": "실사용 성공률 (0~1). Benchmark < Production Data.",
-          "minimum": 0,
-          "maximum": 1
-        },
-        "drift_detected": {
-          "type": "boolean",
-          "description": "Expected vs Actual 차이가 임계값을 초과한 상태 (Volume 4-B §13 Drift Detection)"
-        },
-        "last_observed_at": {
-          "type": "string",
-          "description": "마지막 관찰 시각. 오래된 관찰은 가중치가 낮아진다 (Capability Decay).",
-          "format": "date-time"
-        }
+        "reliability": {"type": "number", "minimum": 0, "maximum": 1, "description": "호환용 응답 성공률 projection."},
+        "latency_ms": {"type": "number", "minimum": 0, "description": "호환용 평균 지연 projection."},
+        "success_rate": {"type": "number", "minimum": 0, "maximum": 1, "description": "호환용 실사용 성공률 projection."},
+        "drift_detected": {"type": "boolean", "description": "호환용 Drift 상태 projection."},
+        "last_observed_at": {"type": "string", "format": "date-time", "description": "호환용 마지막 관찰 시각 projection."}
       },
-      "additionalProperties": false,
-      "description": "관측된 성능 지표. 선언값이 아니라 실측이며, Execution이 쌓일 때마다 갱신된다 (Rule R-004)."
+      "additionalProperties": false
     },
     "limitations": {
       "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "이 Resource가 못 하는 것. 후보에서 제외하는 근거가 되므로 '느림' 같은 정도가 아니라 '한국어 음성 합성 불가'처럼 판정 가능한 형태로 쓴다."
+      "items": {"type": "string"},
+      "description": "Resource 자체의 구조적/계약적 제한.",
+      "x-ownership": "AUTHORITATIVE"
     },
     "availability": {
       "type": "string",
-      "description": "가용 시간·조건. 인간 Resource의 근무 시간, API의 지역 제한 등. Decision이 실행 가능성을 판정할 때 본다."
+      "description": "계약·구성상 선언된 가용 조건. 실측 uptime/rate-limit은 Resource Profile이 정본이다.",
+      "x-ownership": "AUTHORITATIVE"
     },
     "lifecycle": {
       "type": "string",
-      "enum": [
-        "Registered",
-        "Evaluating",
-        "Active",
-        "Optimized",
-        "Deprecated",
-        "Removed"
-      ],
-      "description": "Registry 안에서의 상태. Deprecated 이후의 Resource는 새 Decision의 후보가 되지 않는다."
+      "enum": ["Registered", "Evaluating", "Active", "Optimized", "Deprecated", "Removed"],
+      "description": "Registry 안에서의 Resource 상태.",
+      "x-ownership": "AUTHORITATIVE"
     }
   },
   "additionalProperties": false
