@@ -229,7 +229,7 @@ def evaluate_success(summary: dict[str, dict[str, Any]]) -> dict[str, Any]:
             manual["rework_mean"] > 0
             and intent["rework_mean"] <= manual["rework_mean"] * 0.80
         ),
-        "time_to_accepted_20pct_better_vs_manual": false,
+        "time_to_accepted_20pct_better_vs_manual": False,
         "satisfaction_plus_0_5_vs_manual": (
             intent["satisfaction_mean"] is not None
             and manual["satisfaction_mean"] is not None
