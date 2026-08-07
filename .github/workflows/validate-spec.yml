@@ -1,7 +1,7 @@
 name: validate-spec
 
 # 명세가 깨진 채로 커밋되는 것을 막는다.
-# 문서 형식·스키마뿐 아니라 전역 Entity 관계 불변식도 실행 가능하게 검증한다.
+# 문서 형식·스키마·E2E fixture·Canonical Data Model·전역 Entity 관계 불변식을 함께 검증한다.
 
 on:
   push:
@@ -34,6 +34,9 @@ jobs:
 
       - name: End-to-End Golden Fixture 검증
         run: python3 tools/validate-e2e-fixtures.py
+
+      - name: Canonical Data Model 검증
+        run: python3 tools/validate-canonical.py
 
       - name: 상대 링크 검사
         run: python3 tools/validate-links.py

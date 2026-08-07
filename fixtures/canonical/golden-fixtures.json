@@ -1,0 +1,184 @@
+{
+  "fixtures": [
+    {
+      "fixture_id": "golden-01-llm-success",
+      "description": "LLM Resource가 단일 Task를 성공적으로 완료하는 기본 provenance chain.",
+      "entities": {
+        "goals": [{"goal_id":"goal_gold01","version":1,"title":"기본 성공","goal_type":"Outcome","objective":{"description":"검증 가능한 결과 생성","desired_state":{"metric":"done","operator":"==","target":1,"unit":"count","baseline":0}},"status":{"phase":"Executing"},"metadata":{"created_by":"system","created_at":"2026-08-07T10:00:00Z","source":"system"}}],
+        "goal_graphs": [{"graph_id":"gg_gold01","root_goal_id":"goal_gold01","nodes":["goal_gold01"],"edges":[]}],
+        "plans": [{"plan_id":"plan_gold01","version":1,"source_goal_ids":["goal_gold01"],"status":"Active","tasks":[{"task_id":"task_gold01","name":"결과 작성","required_capabilities":["language.generation.copywriting"]}]}],
+        "tasks": [{"id":"task_gold01","goal_id":"goal_gold01","objective":"결과 작성","task_type":"Creation","required_capabilities":["language.generation.copywriting"],"expected_output":"텍스트 결과","state":"Completed"}],
+        "task_graphs": [{"graph_id":"tg_gold01","plan_id":"plan_gold01","version":1,"nodes":["task_gold01"],"edges":[],"status":"Active"}],
+        "resources": [{"id":"openai:gold01","name":"Gold LLM 01","type":"llm","provider":"openai","version":"1","capabilities":[{"name":"language.generation.copywriting","declared_score":90}],"lifecycle":"Active"}],
+        "resource_profiles": [{"profile_id":"rp_gold01","resource_id":"openai:gold01","snapshot_version":"rp_gold01_2026-08-07T10:00Z","status":"Established","capability_scores":[{"capability":"language.generation.copywriting","context":{"domain":"global"},"observed_score":92,"sample_size":100,"confidence":0.94}]}],
+        "decisions": [{"decision_id":"dec_gold01","decision_type":"ResourceSelection","subject":{"goal_id":"goal_gold01","plan_id":"plan_gold01","task_id":"task_gold01"},"selection":"openai:gold01","alternatives_considered":[{"candidate":"openai:gold01","utility":0.91}],"rationale":["highest utility"],"inputs_snapshot":{"resource_profile_version":"rp_gold01_2026-08-07T10:00Z"},"confidence":0.93,"decided_by":"decision_engine","status":"Committed","decided_at":"2026-08-07T10:01:00Z"}],
+        "executions": [{"execution_id":"exec_gold01","task_id":"task_gold01","decision_id":"dec_gold01","resource_id":"openai:gold01","status":"Completed","created_at":"2026-08-07T10:02:00Z"}],
+        "outcomes": [{"outcome_id":"out_gold01","execution_id":"exec_gold01","status":"succeeded","cost":{"amount":0.12,"currency":"USD"},"measured_at":"2026-08-07T10:03:00Z"}],
+        "artifacts": [{"artifact_id":"art_gold01","outcome_id":"out_gold01","type":"text","name":"결과","produced_by":"openai:gold01","produced_at":"2026-08-07T10:03:00Z"}],
+        "evaluations": [{"evaluation_id":"eval_gold01","outcome_id":"out_gold01","evaluator":"eval_engine:v1","evaluator_type":"automatic","scores":{"quality":0.92,"goal_alignment":0.95,"efficiency":0.90},"verdict":"accept","rationale":["criteria met"],"evaluated_at":"2026-08-07T10:04:00Z"}]
+      }
+    },
+    {
+      "fixture_id": "golden-02-human-success",
+      "description": "Human Resource도 동일한 canonical chain을 사용하는 사례.",
+      "entities": {
+        "goals": [{"goal_id":"goal_gold02","version":1,"title":"인간 실행 성공","goal_type":"Creation","objective":{"description":"전문가 산출물 생성"},"status":{"phase":"Executing"},"metadata":{"created_by":"system","created_at":"2026-08-07T11:00:00Z","source":"system"}}],
+        "goal_graphs": [{"graph_id":"gg_gold02","root_goal_id":"goal_gold02","nodes":["goal_gold02"],"edges":[]}],
+        "plans": [{"plan_id":"plan_gold02","version":1,"source_goal_ids":["goal_gold02"],"status":"Active","tasks":[{"task_id":"task_gold02","name":"전문가 검토","required_capabilities":["review.brand_tone"]}]}],
+        "tasks": [{"id":"task_gold02","goal_id":"goal_gold02","objective":"브랜드 톤 검토","task_type":"Verification","required_capabilities":["review.brand_tone"],"expected_output":"검토 의견","state":"Completed"}],
+        "task_graphs": [{"graph_id":"tg_gold02","plan_id":"plan_gold02","version":1,"nodes":["task_gold02"],"edges":[],"status":"Active"}],
+        "resources": [{"id":"human:gold02","name":"Gold Reviewer","type":"human","capabilities":[{"name":"review.brand_tone"}],"availability":"평일 10:00-19:00","lifecycle":"Active"}],
+        "resource_profiles": [{"profile_id":"rp_gold02","resource_id":"human:gold02","snapshot_version":"rp_gold02_2026-08-07T11:00Z","status":"Established","capability_scores":[{"capability":"review.brand_tone","context":{"domain":"global"},"observed_score":96,"sample_size":41,"confidence":0.90}]}],
+        "decisions": [{"decision_id":"dec_gold02","decision_type":"ResourceSelection","subject":{"goal_id":"goal_gold02","plan_id":"plan_gold02","task_id":"task_gold02"},"selection":"human:gold02","alternatives_considered":[{"candidate":"human:gold02","utility":0.88}],"rationale":["expert review required"],"inputs_snapshot":{"resource_profile_version":"rp_gold02_2026-08-07T11:00Z"},"confidence":0.89,"decided_by":"decision_engine","status":"Committed","decided_at":"2026-08-07T11:01:00Z"}],
+        "executions": [{"execution_id":"exec_gold02","task_id":"task_gold02","decision_id":"dec_gold02","resource_id":"human:gold02","status":"Completed","created_at":"2026-08-07T11:02:00Z"}],
+        "outcomes": [{"outcome_id":"out_gold02","execution_id":"exec_gold02","status":"succeeded","cost":{"amount":50000,"currency":"KRW"},"measured_at":"2026-08-07T12:00:00Z"}],
+        "artifacts": [{"artifact_id":"art_gold02","outcome_id":"out_gold02","type":"document","name":"브랜드 검토서","produced_by":"human:gold02","produced_at":"2026-08-07T12:00:00Z"}],
+        "evaluations": [{"evaluation_id":"eval_gold02","outcome_id":"out_gold02","evaluator":"human:owner","evaluator_type":"human","scores":{"quality":0.97,"goal_alignment":0.96,"efficiency":0.80,"satisfaction":0.95},"verdict":"accept","rationale":["approved"],"evaluated_at":"2026-08-07T12:10:00Z"}]
+      }
+    },
+    {
+      "fixture_id": "golden-03-api-success",
+      "description": "API Resource가 외부 작업을 성공적으로 완료하는 사례.",
+      "entities": {
+        "goals": [{"goal_id":"goal_gold03","version":1,"title":"API 실행 성공","goal_type":"Automation","objective":{"description":"외부 작업 실행"},"status":{"phase":"Executing"},"metadata":{"created_by":"system","created_at":"2026-08-07T12:00:00Z","source":"trigger"}}],
+        "goal_graphs": [{"graph_id":"gg_gold03","root_goal_id":"goal_gold03","nodes":["goal_gold03"],"edges":[]}],
+        "plans": [{"plan_id":"plan_gold03","version":1,"source_goal_ids":["goal_gold03"],"status":"Active","tasks":[{"task_id":"task_gold03","name":"외부 호출","required_capabilities":["execution.external"]}]}],
+        "tasks": [{"id":"task_gold03","goal_id":"goal_gold03","objective":"외부 시스템 작업 실행","task_type":"Automation","required_capabilities":["execution.external"],"expected_output":"외부 작업 ID","state":"Completed"}],
+        "task_graphs": [{"graph_id":"tg_gold03","plan_id":"plan_gold03","version":1,"nodes":["task_gold03"],"edges":[],"status":"Active"}],
+        "resources": [{"id":"api:gold03","name":"Gold API","type":"api","provider":"internal","version":"2026-08","capabilities":[{"name":"execution.external"}],"lifecycle":"Active"}],
+        "resource_profiles": [{"profile_id":"rp_gold03","resource_id":"api:gold03","snapshot_version":"rp_gold03_2026-08-07T12:00Z","status":"Established","capability_scores":[{"capability":"execution.external","context":{"domain":"global"},"observed_score":99,"sample_size":1000,"confidence":0.99}],"performance":{"latency_ms":{"p50":100,"p95":250,"p99":500},"reliability":0.999,"success_rate":0.995}}],
+        "decisions": [{"decision_id":"dec_gold03","decision_type":"ResourceSelection","subject":{"goal_id":"goal_gold03","plan_id":"plan_gold03","task_id":"task_gold03"},"selection":"api:gold03","alternatives_considered":[{"candidate":"api:gold03","utility":0.99}],"rationale":["deterministic API"],"inputs_snapshot":{"resource_profile_version":"rp_gold03_2026-08-07T12:00Z"},"confidence":0.99,"decided_by":"decision_engine","status":"Committed","decided_at":"2026-08-07T12:01:00Z"}],
+        "executions": [{"execution_id":"exec_gold03","task_id":"task_gold03","decision_id":"dec_gold03","resource_id":"api:gold03","status":"Completed","created_at":"2026-08-07T12:02:00Z"}],
+        "outcomes": [{"outcome_id":"out_gold03","execution_id":"exec_gold03","status":"succeeded","cost":{"amount":0,"currency":"USD"},"measured_at":"2026-08-07T12:02:01Z"}],
+        "artifacts": [{"artifact_id":"art_gold03","outcome_id":"out_gold03","type":"external_ref","name":"외부 작업","produced_by":"api:gold03","produced_at":"2026-08-07T12:02:01Z"}],
+        "evaluations": [{"evaluation_id":"eval_gold03","outcome_id":"out_gold03","evaluator":"eval_engine:v1","evaluator_type":"automatic","scores":{"quality":1.0,"goal_alignment":1.0,"efficiency":1.0},"verdict":"accept","rationale":["operation completed"],"evaluated_at":"2026-08-07T12:02:02Z"}]
+      }
+    },
+    {
+      "fixture_id": "golden-04-partial-outcome",
+      "description": "산출물 일부만 생성되어 accept_with_revision으로 평가되는 사례.",
+      "entities": {
+        "goals": [{"goal_id":"goal_gold04","version":1,"title":"부분 성공","goal_type":"Creation","objective":{"description":"세 항목 생성"},"status":{"phase":"Monitoring"},"metadata":{"created_by":"system","created_at":"2026-08-07T13:00:00Z","source":"system"}}],
+        "goal_graphs": [{"graph_id":"gg_gold04","root_goal_id":"goal_gold04","nodes":["goal_gold04"],"edges":[]}],
+        "plans": [{"plan_id":"plan_gold04","version":1,"source_goal_ids":["goal_gold04"],"status":"Active","tasks":[{"task_id":"task_gold04","name":"세 항목 생성","required_capabilities":["language.generation.copywriting"]}]}],
+        "tasks": [{"id":"task_gold04","goal_id":"goal_gold04","objective":"세 항목 생성","task_type":"Creation","required_capabilities":["language.generation.copywriting"],"expected_output":"항목 3개","state":"Completed"}],
+        "task_graphs": [{"graph_id":"tg_gold04","plan_id":"plan_gold04","version":1,"nodes":["task_gold04"],"edges":[],"status":"Active"}],
+        "resources": [{"id":"openai:gold04","name":"Gold LLM 04","type":"llm","capabilities":[{"name":"language.generation.copywriting","declared_score":85}],"lifecycle":"Active"}],
+        "resource_profiles": [{"profile_id":"rp_gold04","resource_id":"openai:gold04","snapshot_version":"rp_gold04_2026-08-07T13:00Z","status":"Established","capability_scores":[{"capability":"language.generation.copywriting","context":{"domain":"global"},"observed_score":84,"sample_size":30,"confidence":0.82}]}],
+        "decisions": [{"decision_id":"dec_gold04","decision_type":"ResourceSelection","subject":{"goal_id":"goal_gold04","plan_id":"plan_gold04","task_id":"task_gold04"},"selection":"openai:gold04","alternatives_considered":[{"candidate":"openai:gold04","utility":0.81}],"rationale":["acceptable utility"],"inputs_snapshot":{"resource_profile_version":"rp_gold04_2026-08-07T13:00Z"},"confidence":0.81,"decided_by":"decision_engine","status":"Committed","decided_at":"2026-08-07T13:01:00Z"}],
+        "executions": [{"execution_id":"exec_gold04","task_id":"task_gold04","decision_id":"dec_gold04","resource_id":"openai:gold04","status":"Completed","created_at":"2026-08-07T13:02:00Z"}],
+        "outcomes": [{"outcome_id":"out_gold04","execution_id":"exec_gold04","status":"partial","cost":{"amount":0.15,"currency":"USD"},"measured_at":"2026-08-07T13:03:00Z","partial_reason":"2 of 3 items produced"}],
+        "artifacts": [{"artifact_id":"art_gold04","outcome_id":"out_gold04","type":"text","name":"부분 결과","produced_by":"openai:gold04","produced_at":"2026-08-07T13:03:00Z"}],
+        "evaluations": [{"evaluation_id":"eval_gold04","outcome_id":"out_gold04","evaluator":"eval_engine:v1","evaluator_type":"automatic","scores":{"quality":0.80,"goal_alignment":0.65,"efficiency":0.70},"verdict":"accept_with_revision","rationale":["one item missing"],"evaluated_at":"2026-08-07T13:04:00Z"}]
+      }
+    },
+    {
+      "fixture_id": "golden-05-failed-execution",
+      "description": "Execution 실패도 Outcome과 Evaluation을 남기는 사례.",
+      "entities": {
+        "goals": [{"goal_id":"goal_gold05","version":1,"title":"실패 기록","goal_type":"Outcome","objective":{"description":"실행 실패를 보존"},"status":{"phase":"Executing"},"metadata":{"created_by":"system","created_at":"2026-08-07T14:00:00Z","source":"system"}}],
+        "goal_graphs": [{"graph_id":"gg_gold05","root_goal_id":"goal_gold05","nodes":["goal_gold05"],"edges":[]}],
+        "plans": [{"plan_id":"plan_gold05","version":1,"source_goal_ids":["goal_gold05"],"status":"Active","tasks":[{"task_id":"task_gold05","name":"실패 가능 작업","required_capabilities":["analysis.metrics"]}]}],
+        "tasks": [{"id":"task_gold05","goal_id":"goal_gold05","objective":"실패 가능 작업 수행","task_type":"Analysis","required_capabilities":["analysis.metrics"],"expected_output":"분석 결과","state":"Failed"}],
+        "task_graphs": [{"graph_id":"tg_gold05","plan_id":"plan_gold05","version":1,"nodes":["task_gold05"],"edges":[],"status":"Active"}],
+        "resources": [{"id":"openai:gold05","name":"Gold LLM 05","type":"llm","capabilities":[{"name":"analysis.metrics"}],"lifecycle":"Active"}],
+        "resource_profiles": [{"profile_id":"rp_gold05","resource_id":"openai:gold05","snapshot_version":"rp_gold05_2026-08-07T14:00Z","status":"Calibrating","capability_scores":[{"capability":"analysis.metrics","context":{"domain":"global"},"observed_score":null,"sample_size":0,"confidence":0.1}]}],
+        "decisions": [{"decision_id":"dec_gold05","decision_type":"ResourceSelection","subject":{"goal_id":"goal_gold05","plan_id":"plan_gold05","task_id":"task_gold05"},"selection":"openai:gold05","alternatives_considered":[{"candidate":"openai:gold05","utility":0.55}],"rationale":["only viable candidate"],"inputs_snapshot":{"resource_profile_version":"rp_gold05_2026-08-07T14:00Z"},"confidence":0.55,"decided_by":"decision_engine","status":"Committed","decided_at":"2026-08-07T14:01:00Z"}],
+        "executions": [{"execution_id":"exec_gold05","task_id":"task_gold05","decision_id":"dec_gold05","resource_id":"openai:gold05","status":"Failed","created_at":"2026-08-07T14:02:00Z","failure_class":"internal_error"}],
+        "outcomes": [{"outcome_id":"out_gold05","execution_id":"exec_gold05","status":"failed","cost":{"amount":0.05,"currency":"USD"},"measured_at":"2026-08-07T14:02:30Z"}],
+        "artifacts": [],
+        "evaluations": [{"evaluation_id":"eval_gold05","outcome_id":"out_gold05","evaluator":"eval_engine:v1","evaluator_type":"automatic","scores":{"quality":0.0,"goal_alignment":0.0,"efficiency":0.0},"verdict":"reject","rationale":["no usable output"],"evaluated_at":"2026-08-07T14:03:00Z"}]
+      }
+    },
+    {
+      "fixture_id": "golden-06-timeout",
+      "description": "TimedOut Execution도 정확히 하나의 failed Outcome을 남기는 사례.",
+      "entities": {
+        "goals": [{"goal_id":"goal_gold06","version":1,"title":"타임아웃 기록","goal_type":"Outcome","objective":{"description":"시간 제한 내 결과 생성"},"status":{"phase":"Executing"},"metadata":{"created_by":"system","created_at":"2026-08-07T15:00:00Z","source":"system"}}],
+        "goal_graphs": [{"graph_id":"gg_gold06","root_goal_id":"goal_gold06","nodes":["goal_gold06"],"edges":[]}],
+        "plans": [{"plan_id":"plan_gold06","version":1,"source_goal_ids":["goal_gold06"],"status":"Active","tasks":[{"task_id":"task_gold06","name":"제한 시간 작업","required_capabilities":["research.web"]}]}],
+        "tasks": [{"id":"task_gold06","goal_id":"goal_gold06","objective":"제한 시간 내 조사","task_type":"Research","required_capabilities":["research.web"],"expected_output":"조사 결과","state":"Failed"}],
+        "task_graphs": [{"graph_id":"tg_gold06","plan_id":"plan_gold06","version":1,"nodes":["task_gold06"],"edges":[],"status":"Active"}],
+        "resources": [{"id":"search:gold06","name":"Gold Search","type":"search_engine","capabilities":[{"name":"research.web"}],"lifecycle":"Active"}],
+        "resource_profiles": [{"profile_id":"rp_gold06","resource_id":"search:gold06","snapshot_version":"rp_gold06_2026-08-07T15:00Z","status":"Established","capability_scores":[{"capability":"research.web","context":{"domain":"global"},"observed_score":80,"sample_size":60,"confidence":0.80}]}],
+        "decisions": [{"decision_id":"dec_gold06","decision_type":"ResourceSelection","subject":{"goal_id":"goal_gold06","plan_id":"plan_gold06","task_id":"task_gold06"},"selection":"search:gold06","alternatives_considered":[{"candidate":"search:gold06","utility":0.75}],"rationale":["best available search resource"],"inputs_snapshot":{"resource_profile_version":"rp_gold06_2026-08-07T15:00Z"},"confidence":0.78,"decided_by":"decision_engine","status":"Committed","decided_at":"2026-08-07T15:01:00Z"}],
+        "executions": [{"execution_id":"exec_gold06","task_id":"task_gold06","decision_id":"dec_gold06","resource_id":"search:gold06","status":"TimedOut","created_at":"2026-08-07T15:02:00Z","timeout_ms":30000,"failure_class":"timeout"}],
+        "outcomes": [{"outcome_id":"out_gold06","execution_id":"exec_gold06","status":"failed","cost":{"amount":0.02,"currency":"USD"},"measured_at":"2026-08-07T15:02:30Z"}],
+        "artifacts": [],
+        "evaluations": [{"evaluation_id":"eval_gold06","outcome_id":"out_gold06","evaluator":"eval_engine:v1","evaluator_type":"automatic","scores":{"quality":0.0,"goal_alignment":0.0,"efficiency":0.0},"verdict":"reject","rationale":["timeout"],"evaluated_at":"2026-08-07T15:02:31Z"}]
+      }
+    },
+    {
+      "fixture_id": "golden-07-shadow-void",
+      "description": "Shadow 실행은 비용은 기록하지만 Goal 기여에서 제외되는 사례.",
+      "entities": {
+        "goals": [{"goal_id":"goal_gold07","version":1,"title":"Shadow 비교","goal_type":"Exploration","objective":{"description":"후보 Resource 비교"},"status":{"phase":"Monitoring"},"metadata":{"created_by":"system","created_at":"2026-08-07T16:00:00Z","source":"system"}}],
+        "goal_graphs": [{"graph_id":"gg_gold07","root_goal_id":"goal_gold07","nodes":["goal_gold07"],"edges":[]}],
+        "plans": [{"plan_id":"plan_gold07","version":1,"source_goal_ids":["goal_gold07"],"status":"Active","tasks":[{"task_id":"task_gold07","name":"Shadow 비교","required_capabilities":["language.generation.copywriting"]}]}],
+        "tasks": [{"id":"task_gold07","goal_id":"goal_gold07","objective":"후보 결과 비교","task_type":"Verification","required_capabilities":["language.generation.copywriting"],"expected_output":"비교 결과","state":"Completed"}],
+        "task_graphs": [{"graph_id":"tg_gold07","plan_id":"plan_gold07","version":1,"nodes":["task_gold07"],"edges":[],"status":"Active"}],
+        "resources": [{"id":"openai:gold07","name":"Gold Shadow LLM","type":"llm","capabilities":[{"name":"language.generation.copywriting"}],"lifecycle":"Evaluating"}],
+        "resource_profiles": [{"profile_id":"rp_gold07","resource_id":"openai:gold07","snapshot_version":"rp_gold07_2026-08-07T16:00Z","status":"Calibrating","capability_scores":[{"capability":"language.generation.copywriting","context":{"domain":"global"},"observed_score":75,"sample_size":5,"confidence":0.30}]}],
+        "decisions": [{"decision_id":"dec_gold07","decision_type":"ResourceSelection","subject":{"goal_id":"goal_gold07","plan_id":"plan_gold07","task_id":"task_gold07"},"selection":"openai:gold07","alternatives_considered":[{"candidate":"openai:gold07","utility":0.50}],"rationale":["shadow calibration"],"inputs_snapshot":{"resource_profile_version":"rp_gold07_2026-08-07T16:00Z"},"confidence":0.40,"decided_by":"decision_engine","status":"Committed","decided_at":"2026-08-07T16:01:00Z"}],
+        "executions": [{"execution_id":"exec_gold07","task_id":"task_gold07","decision_id":"dec_gold07","resource_id":"openai:gold07","mode":"shadow","contributes_to_goal":false,"status":"Completed","created_at":"2026-08-07T16:02:00Z"}],
+        "outcomes": [{"outcome_id":"out_gold07","execution_id":"exec_gold07","status":"void","cost":{"amount":0.03,"currency":"USD"},"contributes_to_goal":false,"measured_at":"2026-08-07T16:03:00Z"}],
+        "artifacts": [],
+        "evaluations": [{"evaluation_id":"eval_gold07","outcome_id":"out_gold07","evaluator":"eval_engine:v1","evaluator_type":"automatic","scores":{"quality":0.75,"goal_alignment":0.0,"efficiency":0.50},"verdict":"inconclusive","adopted":false,"rationale":["shadow output not adopted"],"evaluated_at":"2026-08-07T16:04:00Z"}]
+      }
+    },
+    {
+      "fixture_id": "golden-08-resource-drift",
+      "description": "Resource Drift 상태가 Resource가 아니라 ResourceProfile에만 존재하는 사례.",
+      "entities": {
+        "goals": [{"goal_id":"goal_gold08","version":1,"title":"Drift 대응","goal_type":"Maintenance","objective":{"description":"성능 변화 상태에서 안전하게 실행"},"status":{"phase":"Executing"},"metadata":{"created_by":"system","created_at":"2026-08-07T17:00:00Z","source":"system"}}],
+        "goal_graphs": [{"graph_id":"gg_gold08","root_goal_id":"goal_gold08","nodes":["goal_gold08"],"edges":[]}],
+        "plans": [{"plan_id":"plan_gold08","version":1,"source_goal_ids":["goal_gold08"],"status":"Active","tasks":[{"task_id":"task_gold08","name":"저위험 재측정","required_capabilities":["analysis.metrics"]}]}],
+        "tasks": [{"id":"task_gold08","goal_id":"goal_gold08","objective":"저위험 Task로 성능 재측정","task_type":"Verification","required_capabilities":["analysis.metrics"],"expected_output":"재측정 결과","state":"Completed"}],
+        "task_graphs": [{"graph_id":"tg_gold08","plan_id":"plan_gold08","version":1,"nodes":["task_gold08"],"edges":[],"status":"Active"}],
+        "resources": [{"id":"openai:gold08","name":"Gold Drifting LLM","type":"llm","capabilities":[{"name":"analysis.metrics","declared_score":90}],"lifecycle":"Active"}],
+        "resource_profiles": [{"profile_id":"rp_gold08","resource_id":"openai:gold08","snapshot_version":"rp_gold08_2026-08-07T17:00Z","status":"Drifting","capability_scores":[{"capability":"analysis.metrics","context":{"domain":"global"},"declared_score":90,"observed_score":78,"sample_size":44,"confidence":0.62}],"drift":{"detected":true,"direction":"down","magnitude":0.13,"detected_at":"2026-08-07T16:30:00Z","windows_deviated":2}}],
+        "decisions": [{"decision_id":"dec_gold08","decision_type":"ResourceSelection","subject":{"goal_id":"goal_gold08","plan_id":"plan_gold08","task_id":"task_gold08"},"selection":"openai:gold08","alternatives_considered":[{"candidate":"openai:gold08","utility":0.58}],"rationale":["low-risk calibration assignment"],"inputs_snapshot":{"resource_profile_version":"rp_gold08_2026-08-07T17:00Z"},"confidence":0.60,"decided_by":"decision_engine","status":"Committed","decided_at":"2026-08-07T17:01:00Z"}],
+        "executions": [{"execution_id":"exec_gold08","task_id":"task_gold08","decision_id":"dec_gold08","resource_id":"openai:gold08","status":"Completed","created_at":"2026-08-07T17:02:00Z"}],
+        "outcomes": [{"outcome_id":"out_gold08","execution_id":"exec_gold08","status":"succeeded","cost":{"amount":0.08,"currency":"USD"},"measured_at":"2026-08-07T17:03:00Z"}],
+        "artifacts": [{"artifact_id":"art_gold08","outcome_id":"out_gold08","type":"data","name":"재측정 결과","produced_by":"openai:gold08","produced_at":"2026-08-07T17:03:00Z"}],
+        "evaluations": [{"evaluation_id":"eval_gold08","outcome_id":"out_gold08","evaluator":"eval_engine:v1","evaluator_type":"automatic","scores":{"quality":0.78,"goal_alignment":0.90,"efficiency":0.82},"verdict":"accept","rationale":["calibration sample accepted"],"evaluated_at":"2026-08-07T17:04:00Z"}]
+      }
+    },
+    {
+      "fixture_id": "golden-09-high-cost-human",
+      "description": "비용이 높은 Human Resource도 ResourceProfile의 실측 비용을 기준으로 선택하는 사례.",
+      "entities": {
+        "goals": [{"goal_id":"goal_gold09","version":1,"title":"고품질 전문가 결과","goal_type":"Optimization","objective":{"description":"품질 우선 결과 생성"},"status":{"phase":"Executing"},"metadata":{"created_by":"system","created_at":"2026-08-07T18:00:00Z","source":"system"}}],
+        "goal_graphs": [{"graph_id":"gg_gold09","root_goal_id":"goal_gold09","nodes":["goal_gold09"],"edges":[]}],
+        "plans": [{"plan_id":"plan_gold09","version":1,"source_goal_ids":["goal_gold09"],"status":"Active","tasks":[{"task_id":"task_gold09","name":"전문가 전략 작성","required_capabilities":["creative.brand_strategy"]}]}],
+        "tasks": [{"id":"task_gold09","goal_id":"goal_gold09","objective":"브랜드 전략 작성","task_type":"Creation","required_capabilities":["creative.brand_strategy"],"expected_output":"전략 문서","priority":"Critical","state":"Completed"}],
+        "task_graphs": [{"graph_id":"tg_gold09","plan_id":"plan_gold09","version":1,"nodes":["task_gold09"],"edges":[],"status":"Active"}],
+        "resources": [{"id":"human:gold09","name":"Gold Strategist","type":"human","capabilities":[{"name":"creative.brand_strategy"}],"cost_model":{"unit":"task","per_task":300000,"currency":"KRW"},"lifecycle":"Active"}],
+        "resource_profiles": [{"profile_id":"rp_gold09","resource_id":"human:gold09","snapshot_version":"rp_gold09_2026-08-07T18:00Z","status":"Established","capability_scores":[{"capability":"creative.brand_strategy","context":{"domain":"global"},"observed_score":98,"sample_size":55,"confidence":0.94}],"cost_model":{"unit":"task","rates":{"per_task":300000,"currency":"KRW"},"observed_avg_cost":{"amount":310000,"currency":"KRW","per":"execution"}}}],
+        "decisions": [{"decision_id":"dec_gold09","decision_type":"ResourceSelection","subject":{"goal_id":"goal_gold09","plan_id":"plan_gold09","task_id":"task_gold09"},"selection":"human:gold09","alternatives_considered":[{"candidate":"human:gold09","utility":0.90}],"rationale":["quality weight dominates cost"],"inputs_snapshot":{"resource_profile_version":"rp_gold09_2026-08-07T18:00Z"},"confidence":0.92,"decided_by":"decision_engine","status":"Committed","decided_at":"2026-08-07T18:01:00Z"}],
+        "executions": [{"execution_id":"exec_gold09","task_id":"task_gold09","decision_id":"dec_gold09","resource_id":"human:gold09","status":"Completed","created_at":"2026-08-07T18:02:00Z"}],
+        "outcomes": [{"outcome_id":"out_gold09","execution_id":"exec_gold09","status":"succeeded","cost":{"amount":310000,"currency":"KRW"},"measured_at":"2026-08-07T19:00:00Z"}],
+        "artifacts": [{"artifact_id":"art_gold09","outcome_id":"out_gold09","type":"document","name":"브랜드 전략","produced_by":"human:gold09","produced_at":"2026-08-07T19:00:00Z"}],
+        "evaluations": [{"evaluation_id":"eval_gold09","outcome_id":"out_gold09","evaluator":"human:owner","evaluator_type":"human","scores":{"quality":0.99,"goal_alignment":0.98,"efficiency":0.70,"satisfaction":0.98},"verdict":"accept","rationale":["quality objective satisfied"],"evaluated_at":"2026-08-07T19:10:00Z"}]
+      }
+    },
+    {
+      "fixture_id": "golden-10-deferred-evaluation",
+      "description": "장기 지표를 Deferred Evaluation으로 확정하는 사례.",
+      "entities": {
+        "goals": [{"goal_id":"goal_gold10","version":1,"title":"지연 효과 평가","goal_type":"Outcome","objective":{"description":"장기 성과 개선","desired_state":{"metric":"conversion_rate","operator":">=","target":0.1,"unit":"ratio","baseline":0.05}},"status":{"phase":"Monitoring"},"metadata":{"created_by":"system","created_at":"2026-08-07T19:00:00Z","source":"system"}}],
+        "goal_graphs": [{"graph_id":"gg_gold10","root_goal_id":"goal_gold10","nodes":["goal_gold10"],"edges":[]}],
+        "plans": [{"plan_id":"plan_gold10","version":1,"source_goal_ids":["goal_gold10"],"status":"Active","tasks":[{"task_id":"task_gold10","name":"전환 개선안 생성","required_capabilities":["analysis.metrics"]}]}],
+        "tasks": [{"id":"task_gold10","goal_id":"goal_gold10","objective":"전환 개선안 생성","task_type":"Analysis","required_capabilities":["analysis.metrics"],"expected_output":"개선안","state":"Evaluated"}],
+        "task_graphs": [{"graph_id":"tg_gold10","plan_id":"plan_gold10","version":1,"nodes":["task_gold10"],"edges":[],"status":"Completed"}],
+        "resources": [{"id":"openai:gold10","name":"Gold Analyst","type":"llm","capabilities":[{"name":"analysis.metrics","declared_score":91}],"lifecycle":"Active"}],
+        "resource_profiles": [{"profile_id":"rp_gold10","resource_id":"openai:gold10","snapshot_version":"rp_gold10_2026-08-07T19:00Z","status":"Established","capability_scores":[{"capability":"analysis.metrics","context":{"domain":"global"},"observed_score":93,"sample_size":120,"confidence":0.91}]}],
+        "decisions": [{"decision_id":"dec_gold10","decision_type":"ResourceSelection","subject":{"goal_id":"goal_gold10","plan_id":"plan_gold10","task_id":"task_gold10"},"selection":"openai:gold10","alternatives_considered":[{"candidate":"openai:gold10","utility":0.92}],"rationale":["strong historical performance"],"inputs_snapshot":{"resource_profile_version":"rp_gold10_2026-08-07T19:00Z"},"confidence":0.92,"decided_by":"decision_engine","status":"Evaluated","decided_at":"2026-08-07T19:01:00Z"}],
+        "executions": [{"execution_id":"exec_gold10","task_id":"task_gold10","decision_id":"dec_gold10","resource_id":"openai:gold10","status":"Completed","created_at":"2026-08-07T19:02:00Z"}],
+        "outcomes": [{"outcome_id":"out_gold10","execution_id":"exec_gold10","status":"succeeded","cost":{"amount":0.22,"currency":"USD"},"measured_at":"2026-08-07T19:03:00Z","goal_progress":[{"goal_id":"goal_gold10","metric":"conversion_rate","before":0.05,"after":0.11,"delta":0.06,"measurement_lag":"P14D"}]}],
+        "artifacts": [{"artifact_id":"art_gold10","outcome_id":"out_gold10","type":"document","name":"전환 개선안","produced_by":"openai:gold10","produced_at":"2026-08-07T19:03:00Z"}],
+        "evaluations": [{"evaluation_id":"eval_gold10","outcome_id":"out_gold10","evaluator":"eval_engine:v1","evaluator_type":"deferred","scores":{"quality":0.93,"goal_alignment":0.96,"efficiency":0.89},"verdict":"accept","rationale":["deferred conversion metric confirmed"],"evaluated_at":"2026-08-21T19:03:00Z"}]
+      }
+    }
+  ]
+}
