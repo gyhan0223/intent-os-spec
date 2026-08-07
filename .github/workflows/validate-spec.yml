@@ -35,5 +35,11 @@ jobs:
       - name: End-to-End Golden Fixture 검증
         run: python3 tools/validate-e2e-fixtures.py
 
+      - name: 전역 불변식 검사기 단위 테스트
+        run: python3 -m unittest tests/test_invariants.py
+
+      - name: End-to-End × 전역 불변식 통합 검증
+        run: python3 tools/validate-e2e-invariants.py
+
       - name: 상대 링크 검사
         run: python3 tools/validate-links.py
