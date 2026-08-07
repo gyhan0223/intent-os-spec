@@ -32,6 +32,9 @@ jobs:
       - name: 예시 검증 (JSON 예시 ↔ 스키마)
         run: python3 tools/validate-examples.py
 
+      - name: End-to-End Golden Fixture 검증
+        run: python3 tools/validate-e2e-fixtures.py
+
       - name: 상대 링크 검사
         run: python3 tools/validate-links.py
 
