@@ -15,7 +15,7 @@ import sys
 from jsonschema import Draft202012Validator, FormatChecker
 
 ROOT = Path(__file__).resolve().parents[1]
-FIXTURE_FILE = ROOT / "fixtures" / "e2e" / "golden-fixtures.json"
+FIXTURE_FILE = ROOT / "fixtures" / "e2e" / "golden-fixtures-v0.1.json"
 SCHEMA_DIR = ROOT / "intent-os-spec" / "schemas"
 
 
@@ -117,7 +117,7 @@ def main() -> int:
     payload = json.loads(FIXTURE_FILE.read_text(encoding="utf-8"))
     scenarios = payload.get("scenarios")
     if not isinstance(scenarios, list) or len(scenarios) != 10:
-        fail("golden-fixtures.json must contain exactly 10 scenarios for fixture_version 0.1.0")
+        fail("golden-fixtures-v0.1.json must contain exactly 10 scenarios for fixture_version 0.1.0")
         return 1
 
     seen: set[str] = set()
