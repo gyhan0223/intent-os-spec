@@ -1,7 +1,7 @@
 name: validate-spec
 
 # 명세가 깨진 채로 커밋되는 것을 막는다.
-# 검사 항목은 entities/e000-spec-format.md §11 체크리스트와 같다.
+# 문서 형식·스키마뿐 아니라 전역 Entity 관계 불변식도 실행 가능하게 검증한다.
 
 on:
   push:
@@ -32,8 +32,17 @@ jobs:
       - name: 예시 검증 (JSON 예시 ↔ 스키마)
         run: python3 tools/validate-examples.py
 
+      - name: End-to-End Golden Fixture 검증
+        run: python3 tools/validate-e2e-fixtures.py
+
       - name: 상대 링크 검사
         run: python3 tools/validate-links.py
 
       - name: Thin Reference E2E + canonical schema 검사
         run: python3 -m unittest discover -s reference/marketing_thin/tests -v
+        
+      - name: 전역 불변식 검사기 테스트
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+
+      - name: 전역 불변식 정상 체인 검증
+        run: python3 tools/validate-invariants.py tests/invariants/valid-chain.json
