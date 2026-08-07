@@ -1,0 +1,257 @@
+{
+  "fixture_version": "0.1.0",
+  "generated_for_spec": "Intent OS v0.2",
+  "scenarios": [
+    {
+      "scenario_id": "S01",
+      "title": "정상 단일 실행",
+      "covers": ["happy_path", "goal", "intent", "planning", "decision", "execution", "evaluation", "memory"],
+      "process_trace": [
+        {"step": "user_request", "input": "한국 학부모 대상 윈터스쿨 광고 카피를 만들어줘"},
+        {"step": "goal_extraction", "result": "goal_S01ABC"},
+        {"step": "capability_mapping", "task_id": "task_S01", "capabilities": ["language.generation.copywriting"]},
+        {"step": "candidate_filtering", "eligible": ["model:alpha", "model:beta"]}
+      ],
+      "records": [
+        {"schema": "goal.schema.json", "data": {"goal_id": "goal_S01ABC", "version": 1, "title": "윈터스쿨 광고 카피 제작", "goal_type": "Creation", "objective": {"description": "학부모 상담 전환을 위한 광고 카피를 확보한다", "desired_state": {"metric": "approved_copy_count", "operator": ">=", "target": 3, "unit": "copies", "baseline": 0}}, "status": {"phase": "Executing", "progress": 0.8, "entered_at": "2026-08-07T10:00:00Z"}, "metadata": {"created_by": "user", "created_at": "2026-08-07T09:50:00Z", "source": "conversation"}}},
+        {"schema": "context.schema.json", "data": {"context_id": "ctx_S01", "scope": "Goal", "goal_id": "goal_S01ABC", "current_state": {"approved_copy_count": {"value": 0, "unit": "copies"}}, "items_meta": [{"key": "current_state.approved_copy_count", "source": "user_input", "collected_at": "2026-08-07T09:50:00Z", "freshness": "Fresh"}]}},
+        {"schema": "intent.schema.json", "data": {"intent_id": "intent_S01", "goal_id": "goal_S01ABC", "intent_type": "Promotion", "direction": "학부모의 상담 행동을 유도하는 메시지 방향을 설계한다", "confidence": 0.91, "status": "Selected"}},
+        {"schema": "plan.schema.json", "data": {"plan_id": "plan_S01", "version": 1, "source_goal_ids": ["goal_S01ABC"], "status": "Active", "tasks": [{"task_id": "task_S01", "name": "광고 카피 작성", "required_capabilities": ["language.generation.copywriting"]}], "created_by": "planner", "created_at": "2026-08-07T09:52:00Z"}},
+        {"schema": "task.schema.json", "data": {"id": "task_S01", "goal_id": "goal_S01ABC", "objective": "광고 카피 3종을 작성한다", "task_type": "Creation", "required_capabilities": [{"capability_id": "language.generation.copywriting", "min_level": "L3", "weight": 1.0}], "expected_output": "광고 카피 3종", "state": "Evaluated"}},
+        {"schema": "task-graph.schema.json", "data": {"graph_id": "tg_S01", "plan_id": "plan_S01", "version": 1, "nodes": ["task_S01"], "edges": [], "entry_tasks": ["task_S01"], "status": "Completed"}},
+        {"schema": "decision.schema.json", "data": {"decision_id": "dec_S01", "decision_type": "ResourceSelection", "subject": {"goal_id": "goal_S01ABC", "plan_id": "plan_S01", "task_id": "task_S01"}, "selection": "model:alpha", "alternatives_considered": [{"candidate": "model:alpha", "utility": 0.88}, {"candidate": "model:beta", "utility": 0.81}], "rationale": ["copywriting observed score가 더 높다"], "inputs_snapshot": {"profile_version": "rp_alpha_v12"}, "confidence": 0.86, "decided_by": "decision_engine", "status": "Evaluated", "outcome_link": "out_S01", "decided_at": "2026-08-07T09:53:00Z"}},
+        {"schema": "execution.schema.json", "data": {"execution_id": "exec_S01", "task_id": "task_S01", "decision_id": "dec_S01", "resource_id": "model:alpha", "status": "Completed", "attempt": 1, "created_at": "2026-08-07T09:54:00Z", "started_at": "2026-08-07T09:54:01Z", "finished_at": "2026-08-07T09:54:05Z", "latency_ms": 4000, "cost": {"amount": 120, "currency": "KRW"}, "outcome_id": "out_S01"}},
+        {"schema": "outcome.schema.json", "data": {"outcome_id": "out_S01", "execution_id": "exec_S01", "task_id": "task_S01", "status": "succeeded", "output_summary": "학부모 대상 광고 카피 3종 생성", "output_count": 3, "cost": {"amount": 120, "currency": "KRW"}, "latency_ms": 4000, "measured_at": "2026-08-07T09:54:06Z", "goal_progress": [{"goal_id": "goal_S01ABC", "metric": "approved_copy_count", "before": 0, "after": 3, "delta": 3}]}},
+        {"schema": "evaluation.schema.json", "data": {"evaluation_id": "eval_S01", "outcome_id": "out_S01", "task_id": "task_S01", "evaluator": "eval_engine:v1", "evaluator_type": "automatic", "scores": {"quality": 0.9, "goal_alignment": 0.95, "efficiency": 0.92, "satisfaction": null, "composite": 0.92}, "decision_review": {"decision_id": "dec_S01", "decision_quality": 0.9}, "verdict": "accept", "rationale": ["요구한 3종을 모두 충족했다"], "evaluated_at": "2026-08-07T09:54:08Z"}},
+        {"schema": "memory.schema.json", "data": {"memory_id": "mem_S01", "memory_type": "Episodic", "scope": "Goal-level", "goal_ref": "goal_S01ABC", "decision_ref": "dec_S01", "content": {"situation": "한국 학부모 대상 광고 카피 작성", "action": "model:alpha를 선택해 3종 생성", "result": "자동 평가에서 accept"}, "confidence": 0.9, "source": "exec_S01", "created_at": "2026-08-07T09:55:00Z", "status": "Active"}}
+      ]
+    },
+    {
+      "scenario_id": "S02",
+      "title": "Clarification 필요",
+      "covers": ["clarification", "goal_refinement", "happy_path"],
+      "process_trace": [
+        {"step": "user_request", "input": "홍보 좀 해줘"},
+        {"step": "goal_extraction", "result": "goal_S02ABC", "completeness": "insufficient"},
+        {"step": "clarification", "question": "무엇을 홍보하고 어떤 결과를 원하나요?", "answer": "윈터스쿨 상담 신청 20건"},
+        {"step": "goal_transition", "from": "Created", "to": "Clarified"}
+      ],
+      "records": [
+        {"schema": "goal.schema.json", "data": {"goal_id": "goal_S02ABC", "version": 2, "title": "윈터스쿨 상담 신청 확보", "goal_type": "Outcome", "objective": {"description": "윈터스쿨 상담 신청을 확보한다", "desired_state": {"metric": "consultation_requests", "operator": ">=", "target": 20, "unit": "requests", "baseline": 0}}, "status": {"phase": "Executing", "progress": 0.25, "entered_at": "2026-08-07T10:10:00Z"}, "quality": {"confidence": 0.95, "completeness": 94, "completeness_level": 3}, "metadata": {"created_by": "user", "created_at": "2026-08-07T10:00:00Z", "updated_at": "2026-08-07T10:05:00Z", "source": "conversation", "history": [{"version": 2, "changed_at": "2026-08-07T10:05:00Z", "changed_by": "user", "change_type": "clarified"}]}}},
+        {"schema": "intent.schema.json", "data": {"intent_id": "intent_S02", "goal_id": "goal_S02ABC", "intent_type": "Promotion", "direction": "타깃 학부모에게 상담 유입을 만드는 프로모션 방향을 사용한다", "confidence": 0.89, "status": "Selected"}},
+        {"schema": "plan.schema.json", "data": {"plan_id": "plan_S02", "version": 1, "source_goal_ids": ["goal_S02ABC"], "status": "Active", "tasks": [{"task_id": "task_S02", "name": "상담 유입 카피 작성", "required_capabilities": ["language.generation.copywriting"]}], "created_by": "planner", "created_at": "2026-08-07T10:06:00Z"}},
+        {"schema": "task.schema.json", "data": {"id": "task_S02", "goal_id": "goal_S02ABC", "objective": "상담 신청 유도 카피를 작성한다", "required_capabilities": ["language.generation.copywriting"], "state": "Evaluated"}},
+        {"schema": "task-graph.schema.json", "data": {"graph_id": "tg_S02", "plan_id": "plan_S02", "version": 1, "nodes": ["task_S02"], "edges": [], "entry_tasks": ["task_S02"], "status": "Completed"}},
+        {"schema": "decision.schema.json", "data": {"decision_id": "dec_S02", "decision_type": "ResourceSelection", "subject": {"goal_id": "goal_S02ABC", "task_id": "task_S02"}, "selection": "model:alpha", "alternatives_considered": [{"candidate": "model:alpha", "utility": 0.86}, {"candidate": "model:beta", "utility": 0.8}], "rationale": ["한국어 설득 카피 성능 우위"], "inputs_snapshot": {"clarification_completed": true}, "confidence": 0.84, "decided_by": "decision_engine", "status": "Applied", "decided_at": "2026-08-07T10:07:00Z"}},
+        {"schema": "execution.schema.json", "data": {"execution_id": "exec_S02", "task_id": "task_S02", "decision_id": "dec_S02", "resource_id": "model:alpha", "status": "Completed", "created_at": "2026-08-07T10:08:00Z", "finished_at": "2026-08-07T10:08:04Z", "outcome_id": "out_S02"}},
+        {"schema": "outcome.schema.json", "data": {"outcome_id": "out_S02", "execution_id": "exec_S02", "status": "succeeded", "output_count": 3, "cost": {"amount": 110, "currency": "KRW"}, "measured_at": "2026-08-07T10:08:05Z"}},
+        {"schema": "evaluation.schema.json", "data": {"evaluation_id": "eval_S02", "outcome_id": "out_S02", "evaluator": "eval_engine:v1", "evaluator_type": "automatic", "scores": {"quality": 0.88, "goal_alignment": 0.9, "efficiency": 0.91}, "verdict": "accept", "rationale": ["clarified success metric과 산출물이 정렬된다"], "evaluated_at": "2026-08-07T10:08:06Z"}},
+        {"schema": "memory.schema.json", "data": {"memory_id": "mem_S02", "memory_type": "Episodic", "scope": "Goal-level", "goal_ref": "goal_S02ABC", "decision_ref": "dec_S02", "content": {"situation": "초기 요청이 모호했다", "action": "상담 신청 20건으로 clarification", "result": "실행 가능한 Goal로 전환"}, "source": "exec_S02", "created_at": "2026-08-07T10:09:00Z"}}
+      ]
+    },
+    {
+      "scenario_id": "S03",
+      "title": "낮은 Intent Confidence에서 사용자 확인",
+      "covers": ["low_confidence", "human_confirmation", "intent_selection"],
+      "process_trace": [
+        {"step": "intent_inference", "intent_id": "intent_S03", "confidence": 0.42},
+        {"step": "selection_guard", "result": "blocked_below_0.5"},
+        {"step": "user_confirmation", "result": "confirmed"},
+        {"step": "intent_transition", "to": "Selected"}
+      ],
+      "records": [
+        {"schema": "goal.schema.json", "data": {"goal_id": "goal_S03ABC", "version": 1, "title": "신규 문의 원인 분석", "goal_type": "Exploration", "objective": {"description": "문의 감소의 주요 원인을 파악한다"}, "status": {"phase": "Executing", "entered_at": "2026-08-07T10:20:00Z"}, "metadata": {"created_by": "user", "created_at": "2026-08-07T10:15:00Z", "source": "conversation"}}},
+        {"schema": "intent.schema.json", "data": {"intent_id": "intent_S03", "goal_id": "goal_S03ABC", "intent_type": "Process", "direction": "유입부터 상담까지의 퍼널 병목을 우선 점검한다", "rationale": "데이터가 제한되어 다른 원인도 가능하다", "confidence": 0.42, "status": "Selected"}},
+        {"schema": "plan.schema.json", "data": {"plan_id": "plan_S03", "version": 1, "source_goal_ids": ["goal_S03ABC"], "status": "Active", "tasks": [{"task_id": "task_S03", "name": "퍼널 데이터 분석", "required_capabilities": ["data.analysis.funnel"]}], "created_by": "planner", "created_at": "2026-08-07T10:21:00Z"}},
+        {"schema": "task.schema.json", "data": {"id": "task_S03", "goal_id": "goal_S03ABC", "objective": "퍼널 단계별 병목을 분석한다", "task_type": "Analysis", "required_capabilities": ["data.analysis.funnel"], "state": "Evaluated"}},
+        {"schema": "task-graph.schema.json", "data": {"graph_id": "tg_S03", "plan_id": "plan_S03", "version": 1, "nodes": ["task_S03"], "edges": [], "entry_tasks": ["task_S03"], "status": "Completed"}},
+        {"schema": "decision.schema.json", "data": {"decision_id": "dec_S03", "decision_type": "ResourceSelection", "subject": {"goal_id": "goal_S03ABC", "task_id": "task_S03"}, "selection": "model:analytics", "alternatives_considered": [{"candidate": "model:analytics", "utility": 0.79}, {"candidate": "model:general", "utility": 0.72}], "rationale": ["사용자가 낮은 confidence의 Intent를 명시적으로 승인했다"], "inputs_snapshot": {"intent_confidence": 0.42, "user_confirmed": true}, "confidence": 0.78, "decided_by": "decision_engine", "status": "Applied", "decided_at": "2026-08-07T10:22:00Z"}},
+        {"schema": "execution.schema.json", "data": {"execution_id": "exec_S03", "task_id": "task_S03", "decision_id": "dec_S03", "resource_id": "model:analytics", "status": "Completed", "created_at": "2026-08-07T10:23:00Z", "finished_at": "2026-08-07T10:23:06Z", "outcome_id": "out_S03"}},
+        {"schema": "outcome.schema.json", "data": {"outcome_id": "out_S03", "execution_id": "exec_S03", "status": "succeeded", "output_count": 1, "cost": {"amount": 150, "currency": "KRW"}, "measured_at": "2026-08-07T10:23:07Z"}},
+        {"schema": "evaluation.schema.json", "data": {"evaluation_id": "eval_S03", "outcome_id": "out_S03", "evaluator": "human:owner", "evaluator_type": "human", "scores": {"quality": 0.84, "goal_alignment": 0.81, "efficiency": 0.9, "satisfaction": 0.8}, "verdict": "accept", "rationale": ["사용자가 선택한 분석 방향에 유용한 근거를 제공했다"], "evaluated_at": "2026-08-07T10:24:00Z"}},
+        {"schema": "memory.schema.json", "data": {"memory_id": "mem_S03", "memory_type": "Episodic", "scope": "Goal-level", "goal_ref": "goal_S03ABC", "decision_ref": "dec_S03", "content": {"situation": "Intent confidence가 0.42였다", "action": "자동 선택을 멈추고 사용자 확인을 받았다", "result": "승인된 방향으로 분석 완료"}, "source": "exec_S03", "created_at": "2026-08-07T10:25:00Z"}}
+      ]
+    },
+    {
+      "scenario_id": "S04",
+      "title": "Resource 실패 후 Fallback",
+      "covers": ["resource_failure", "fallback", "immutable_history"],
+      "process_trace": [
+        {"step": "first_resource_selection", "decision_id": "dec_S04a"},
+        {"step": "execution_failure", "execution_id": "exec_S04a", "failure_class": "resource_unavailable"},
+        {"step": "fallback_policy", "action": "reassign"},
+        {"step": "second_resource_selection", "decision_id": "dec_S04b"}
+      ],
+      "records": [
+        {"schema": "goal.schema.json", "data": {"goal_id": "goal_S04ABC", "version": 1, "title": "제품 소개문 생성", "goal_type": "Creation", "objective": {"description": "제품 소개문을 완성한다"}, "status": {"phase": "Executing", "entered_at": "2026-08-07T10:30:00Z"}, "metadata": {"created_by": "user", "created_at": "2026-08-07T10:29:00Z", "source": "conversation"}}},
+        {"schema": "intent.schema.json", "data": {"intent_id": "intent_S04", "goal_id": "goal_S04ABC", "intent_type": "Product", "direction": "제품 가치와 차별점을 명확히 전달한다", "confidence": 0.9, "status": "Selected"}},
+        {"schema": "plan.schema.json", "data": {"plan_id": "plan_S04", "version": 1, "source_goal_ids": ["goal_S04ABC"], "status": "Active", "tasks": [{"task_id": "task_S04", "name": "제품 소개문 작성", "required_capabilities": ["language.generation.copywriting"]}], "created_by": "planner", "created_at": "2026-08-07T10:30:00Z"}},
+        {"schema": "task.schema.json", "data": {"id": "task_S04", "goal_id": "goal_S04ABC", "objective": "제품 소개문을 작성한다", "required_capabilities": ["language.generation.copywriting"], "retry_policy": {"max_retries": 2, "on_failure": "reassign"}, "attempts": 2, "state": "Evaluated"}},
+        {"schema": "task-graph.schema.json", "data": {"graph_id": "tg_S04", "plan_id": "plan_S04", "version": 1, "nodes": ["task_S04"], "edges": [], "entry_tasks": ["task_S04"], "status": "Completed"}},
+        {"schema": "decision.schema.json", "data": {"decision_id": "dec_S04a", "decision_type": "ResourceSelection", "subject": {"goal_id": "goal_S04ABC", "task_id": "task_S04"}, "selection": "model:alpha", "alternatives_considered": [{"candidate": "model:alpha", "utility": 0.87}, {"candidate": "model:beta", "utility": 0.82}], "rationale": ["초기 utility 1위"], "inputs_snapshot": {"attempt": 1}, "confidence": 0.88, "decided_by": "decision_engine", "status": "Evaluated", "outcome_link": "out_S04a", "decided_at": "2026-08-07T10:31:00Z"}},
+        {"schema": "execution.schema.json", "data": {"execution_id": "exec_S04a", "task_id": "task_S04", "decision_id": "dec_S04a", "resource_id": "model:alpha", "status": "Failed", "attempt": 1, "created_at": "2026-08-07T10:31:10Z", "finished_at": "2026-08-07T10:31:11Z", "error": {"code": "503", "message": "resource unavailable", "retryable": true}, "failure_class": "resource_unavailable", "outcome_id": "out_S04a"}},
+        {"schema": "outcome.schema.json", "data": {"outcome_id": "out_S04a", "execution_id": "exec_S04a", "status": "failed", "output_count": 0, "cost": {"amount": 0, "currency": "KRW"}, "measured_at": "2026-08-07T10:31:12Z", "errors": [{"code": "503", "message": "resource unavailable", "retryable": true}]}},
+        {"schema": "evaluation.schema.json", "data": {"evaluation_id": "eval_S04a", "outcome_id": "out_S04a", "evaluator": "eval_engine:v1", "evaluator_type": "automatic", "scores": {"quality": 0, "goal_alignment": 0, "efficiency": 0}, "verdict": "reject", "rationale": ["산출물이 생성되지 않았다"], "evaluated_at": "2026-08-07T10:31:13Z"}},
+        {"schema": "decision.schema.json", "data": {"decision_id": "dec_S04b", "decision_type": "ResourceSelection", "subject": {"goal_id": "goal_S04ABC", "task_id": "task_S04"}, "selection": "model:beta", "alternatives_considered": [{"candidate": "model:beta", "utility": 0.82}, {"candidate": "model:gamma", "utility": 0.77}], "rationale": ["직전 Resource가 unavailable로 실패했다"], "inputs_snapshot": {"previous_execution": "exec_S04a"}, "confidence": 0.84, "decided_by": "decision_engine", "status": "Evaluated", "outcome_link": "out_S04b", "decided_at": "2026-08-07T10:31:20Z"}},
+        {"schema": "execution.schema.json", "data": {"execution_id": "exec_S04b", "task_id": "task_S04", "decision_id": "dec_S04b", "resource_id": "model:beta", "status": "Completed", "attempt": 2, "previous_execution_id": "exec_S04a", "created_at": "2026-08-07T10:31:21Z", "finished_at": "2026-08-07T10:31:26Z", "outcome_id": "out_S04b"}},
+        {"schema": "outcome.schema.json", "data": {"outcome_id": "out_S04b", "execution_id": "exec_S04b", "status": "succeeded", "output_count": 1, "cost": {"amount": 130, "currency": "KRW"}, "measured_at": "2026-08-07T10:31:27Z"}},
+        {"schema": "evaluation.schema.json", "data": {"evaluation_id": "eval_S04b", "outcome_id": "out_S04b", "evaluator": "eval_engine:v1", "evaluator_type": "automatic", "scores": {"quality": 0.89, "goal_alignment": 0.92, "efficiency": 0.82}, "verdict": "accept", "rationale": ["fallback 실행이 기대 산출물을 충족했다"], "evaluated_at": "2026-08-07T10:31:28Z"}},
+        {"schema": "memory.schema.json", "data": {"memory_id": "mem_S04", "memory_type": "Episodic", "scope": "Goal-level", "goal_ref": "goal_S04ABC", "decision_ref": "dec_S04b", "content": {"situation": "1순위 Resource가 503으로 실패", "action": "model:beta로 reassign", "result": "2차 실행 성공"}, "source": "exec_S04b", "created_at": "2026-08-07T10:32:00Z"}}
+      ]
+    },
+    {
+      "scenario_id": "S05",
+      "title": "Timeout 후 Reassign",
+      "covers": ["timeout", "retry_chain", "reassign"],
+      "process_trace": [
+        {"step": "execution_timeout", "execution_id": "exec_S05a", "timeout_ms": 5000},
+        {"step": "retry_policy", "action": "reassign"},
+        {"step": "new_decision", "decision_id": "dec_S05b"}
+      ],
+      "records": [
+        {"schema": "goal.schema.json", "data": {"goal_id": "goal_S05ABC", "version": 1, "title": "시장 조사 요약", "goal_type": "Exploration", "objective": {"description": "시장 조사 결과를 요약한다"}, "status": {"phase": "Executing", "entered_at": "2026-08-07T10:40:00Z"}, "metadata": {"created_by": "user", "created_at": "2026-08-07T10:39:00Z", "source": "conversation"}}},
+        {"schema": "intent.schema.json", "data": {"intent_id": "intent_S05", "goal_id": "goal_S05ABC", "intent_type": "Product", "direction": "시장 구조와 주요 경쟁 포인트를 우선 정리한다", "confidence": 0.86, "status": "Selected"}},
+        {"schema": "plan.schema.json", "data": {"plan_id": "plan_S05", "version": 1, "source_goal_ids": ["goal_S05ABC"], "status": "Active", "tasks": [{"task_id": "task_S05", "name": "시장 조사 요약", "required_capabilities": ["language.summarization"]}], "created_by": "planner", "created_at": "2026-08-07T10:40:00Z"}},
+        {"schema": "task.schema.json", "data": {"id": "task_S05", "goal_id": "goal_S05ABC", "objective": "시장 조사 자료를 요약한다", "required_capabilities": ["language.summarization"], "retry_policy": {"max_retries": 1, "on_failure": "reassign"}, "attempts": 2, "state": "Evaluated"}},
+        {"schema": "task-graph.schema.json", "data": {"graph_id": "tg_S05", "plan_id": "plan_S05", "version": 1, "nodes": ["task_S05"], "edges": [], "entry_tasks": ["task_S05"], "status": "Completed"}},
+        {"schema": "decision.schema.json", "data": {"decision_id": "dec_S05a", "decision_type": "ResourceSelection", "subject": {"goal_id": "goal_S05ABC", "task_id": "task_S05"}, "selection": "model:slow", "alternatives_considered": [{"candidate": "model:slow", "utility": 0.85}, {"candidate": "model:fast", "utility": 0.8}], "rationale": ["품질 기대값 우위"], "inputs_snapshot": {"timeout_ms": 5000}, "confidence": 0.83, "decided_by": "decision_engine", "status": "Evaluated", "outcome_link": "out_S05a", "decided_at": "2026-08-07T10:41:00Z"}},
+        {"schema": "execution.schema.json", "data": {"execution_id": "exec_S05a", "task_id": "task_S05", "decision_id": "dec_S05a", "resource_id": "model:slow", "status": "TimedOut", "attempt": 1, "created_at": "2026-08-07T10:41:01Z", "started_at": "2026-08-07T10:41:02Z", "finished_at": "2026-08-07T10:41:07Z", "timeout_ms": 5000, "latency_ms": 5000, "failure_class": "timeout", "outcome_id": "out_S05a"}},
+        {"schema": "outcome.schema.json", "data": {"outcome_id": "out_S05a", "execution_id": "exec_S05a", "status": "failed", "output_count": 0, "cost": {"amount": 70, "currency": "KRW"}, "latency_ms": 5000, "measured_at": "2026-08-07T10:41:08Z"}},
+        {"schema": "evaluation.schema.json", "data": {"evaluation_id": "eval_S05a", "outcome_id": "out_S05a", "evaluator": "eval_engine:v1", "evaluator_type": "automatic", "scores": {"quality": 0, "goal_alignment": 0, "efficiency": 0.1}, "verdict": "reject", "rationale": ["timeout으로 기대 산출물이 없다"], "evaluated_at": "2026-08-07T10:41:09Z"}},
+        {"schema": "decision.schema.json", "data": {"decision_id": "dec_S05b", "decision_type": "ResourceSelection", "subject": {"goal_id": "goal_S05ABC", "task_id": "task_S05"}, "selection": "model:fast", "alternatives_considered": [{"candidate": "model:fast", "utility": 0.8}, {"candidate": "model:backup", "utility": 0.7}], "rationale": ["latency 제한을 충족하는 Resource로 재할당"], "inputs_snapshot": {"previous_execution": "exec_S05a", "failure_class": "timeout"}, "confidence": 0.87, "decided_by": "decision_engine", "status": "Applied", "decided_at": "2026-08-07T10:41:10Z"}},
+        {"schema": "execution.schema.json", "data": {"execution_id": "exec_S05b", "task_id": "task_S05", "decision_id": "dec_S05b", "resource_id": "model:fast", "status": "Completed", "attempt": 2, "previous_execution_id": "exec_S05a", "created_at": "2026-08-07T10:41:11Z", "started_at": "2026-08-07T10:41:12Z", "finished_at": "2026-08-07T10:41:14Z", "latency_ms": 2000, "outcome_id": "out_S05b"}},
+        {"schema": "outcome.schema.json", "data": {"outcome_id": "out_S05b", "execution_id": "exec_S05b", "status": "succeeded", "output_count": 1, "cost": {"amount": 90, "currency": "KRW"}, "latency_ms": 2000, "measured_at": "2026-08-07T10:41:15Z"}},
+        {"schema": "evaluation.schema.json", "data": {"evaluation_id": "eval_S05b", "outcome_id": "out_S05b", "evaluator": "eval_engine:v1", "evaluator_type": "automatic", "scores": {"quality": 0.81, "goal_alignment": 0.88, "efficiency": 0.94}, "verdict": "accept", "rationale": ["시간 제약 내에 요약을 완료했다"], "evaluated_at": "2026-08-07T10:41:16Z"}},
+        {"schema": "memory.schema.json", "data": {"memory_id": "mem_S05", "memory_type": "Episodic", "scope": "Goal-level", "goal_ref": "goal_S05ABC", "decision_ref": "dec_S05b", "content": {"situation": "첫 Resource가 5초 제한을 초과", "action": "저지연 Resource로 reassign", "result": "2초 내 성공"}, "source": "exec_S05b", "created_at": "2026-08-07T10:42:00Z"}}
+      ]
+    },
+    {
+      "scenario_id": "S06",
+      "title": "Hard Constraint가 후보를 Decision 전에 필터",
+      "covers": ["hard_constraint", "candidate_filtering", "budget"],
+      "process_trace": [
+        {"step": "constraint_evaluation", "constraint_id": "cn_S06", "hardness": "Hard"},
+        {"step": "candidate_filtering", "rejected": [{"resource": "model:premium", "reason": "cost_per_task > 500"}], "eligible": ["model:value", "model:local"]},
+        {"step": "decision", "decision_id": "dec_S06"}
+      ],
+      "records": [
+        {"schema": "goal.schema.json", "data": {"goal_id": "goal_S06ABC", "version": 1, "title": "저비용 번역", "goal_type": "Optimization", "objective": {"description": "예산 내에서 문서를 번역한다"}, "status": {"phase": "Executing", "entered_at": "2026-08-07T10:50:00Z"}, "metadata": {"created_by": "user", "created_at": "2026-08-07T10:49:00Z", "source": "conversation"}}},
+        {"schema": "constraint.schema.json", "data": {"constraint_id": "cn_S06", "constraint_type": "Budget", "hardness": "Hard", "expression": "cost_per_task <= 500", "unit": "KRW", "scope": "Goal", "goal_id": "goal_S06ABC", "origin": "user_declared", "status": "Active"}},
+        {"schema": "intent.schema.json", "data": {"intent_id": "intent_S06", "goal_id": "goal_S06ABC", "intent_type": "Efficiency", "direction": "품질 하한을 유지하면서 비용 효율을 우선한다", "confidence": 0.92, "status": "Selected"}},
+        {"schema": "plan.schema.json", "data": {"plan_id": "plan_S06", "version": 1, "source_goal_ids": ["goal_S06ABC"], "status": "Active", "tasks": [{"task_id": "task_S06", "name": "문서 번역", "required_capabilities": ["language.translation"]}], "created_by": "planner", "created_at": "2026-08-07T10:50:00Z"}},
+        {"schema": "task.schema.json", "data": {"id": "task_S06", "goal_id": "goal_S06ABC", "objective": "문서를 한국어로 번역한다", "required_capabilities": ["language.translation"], "constraints": ["cost_per_task <= 500 KRW"], "state": "Evaluated"}},
+        {"schema": "task-graph.schema.json", "data": {"graph_id": "tg_S06", "plan_id": "plan_S06", "version": 1, "nodes": ["task_S06"], "edges": [], "entry_tasks": ["task_S06"], "status": "Completed"}},
+        {"schema": "decision.schema.json", "data": {"decision_id": "dec_S06", "decision_type": "ResourceSelection", "subject": {"goal_id": "goal_S06ABC", "task_id": "task_S06"}, "selection": "model:value", "alternatives_considered": [{"candidate": "model:value", "utility": 0.84}, {"candidate": "model:local", "utility": 0.76}], "rationale": ["Hard Budget Constraint를 통과한 후보 중 utility 1위"], "inputs_snapshot": {"filtered_out": ["model:premium"], "constraint_id": "cn_S06"}, "confidence": 0.9, "decided_by": "decision_engine", "status": "Applied", "decided_at": "2026-08-07T10:51:00Z"}},
+        {"schema": "execution.schema.json", "data": {"execution_id": "exec_S06", "task_id": "task_S06", "decision_id": "dec_S06", "resource_id": "model:value", "status": "Completed", "created_at": "2026-08-07T10:51:01Z", "finished_at": "2026-08-07T10:51:05Z", "cost": {"amount": 240, "currency": "KRW"}, "outcome_id": "out_S06"}},
+        {"schema": "outcome.schema.json", "data": {"outcome_id": "out_S06", "execution_id": "exec_S06", "status": "succeeded", "output_count": 1, "cost": {"amount": 240, "currency": "KRW"}, "measured_at": "2026-08-07T10:51:06Z"}},
+        {"schema": "evaluation.schema.json", "data": {"evaluation_id": "eval_S06", "outcome_id": "out_S06", "evaluator": "eval_engine:v1", "evaluator_type": "automatic", "scores": {"quality": 0.85, "goal_alignment": 0.93, "efficiency": 0.97}, "verdict": "accept", "rationale": ["Hard Budget Constraint를 지키면서 품질 기준을 충족했다"], "evaluated_at": "2026-08-07T10:51:07Z"}},
+        {"schema": "memory.schema.json", "data": {"memory_id": "mem_S06", "memory_type": "Procedural", "scope": "Goal-level", "goal_ref": "goal_S06ABC", "decision_ref": "dec_S06", "content": {"situation": "작업당 500원 Hard Budget Constraint", "action": "고비용 후보를 Decision 전에 제거", "result": "240원에 성공"}, "source": "exec_S06", "created_at": "2026-08-07T10:52:00Z"}}
+      ]
+    },
+    {
+      "scenario_id": "S07",
+      "title": "고위험 작업의 Human Escalation",
+      "covers": ["risk_gate", "human_escalation", "approval"],
+      "process_trace": [
+        {"step": "risk_gate", "risk": 0.82, "threshold": 0.7, "result": "auto_execute_blocked"},
+        {"step": "escalation", "decision_id": "dec_S07a", "selection": "human_review"},
+        {"step": "human_approval", "result": "approved"},
+        {"step": "resource_selection", "decision_id": "dec_S07b"}
+      ],
+      "records": [
+        {"schema": "goal.schema.json", "data": {"goal_id": "goal_S07ABC", "version": 1, "title": "중요 고객 공지 초안", "goal_type": "Creation", "objective": {"description": "중요 고객에게 보낼 공지 초안을 준비한다"}, "status": {"phase": "Executing", "entered_at": "2026-08-07T11:00:00Z"}, "metadata": {"created_by": "user", "created_at": "2026-08-07T10:59:00Z", "source": "conversation"}}},
+        {"schema": "intent.schema.json", "data": {"intent_id": "intent_S07", "goal_id": "goal_S07ABC", "intent_type": "Experience", "direction": "사실관계와 고객 영향도를 명확히 전달한다", "confidence": 0.74, "status": "Selected"}},
+        {"schema": "plan.schema.json", "data": {"plan_id": "plan_S07", "version": 1, "source_goal_ids": ["goal_S07ABC"], "status": "Active", "tasks": [{"task_id": "task_S07", "name": "고객 공지 초안 작성", "required_capabilities": ["language.generation.business_writing"]}], "created_by": "planner", "created_at": "2026-08-07T11:00:00Z"}},
+        {"schema": "task.schema.json", "data": {"id": "task_S07", "goal_id": "goal_S07ABC", "objective": "고객 공지 초안을 작성한다", "required_capabilities": ["language.generation.business_writing"], "state": "Evaluated"}},
+        {"schema": "task-graph.schema.json", "data": {"graph_id": "tg_S07", "plan_id": "plan_S07", "version": 1, "nodes": ["task_S07"], "edges": [], "entry_tasks": ["task_S07"], "status": "Completed"}},
+        {"schema": "decision.schema.json", "data": {"decision_id": "dec_S07a", "decision_type": "EscalationToHuman", "subject": {"goal_id": "goal_S07ABC", "task_id": "task_S07"}, "selection": "human_review", "alternatives_considered": [{"candidate": "auto_execute", "utility": 0.72}, {"candidate": "human_review", "utility": 0.91}], "rationale": ["risk 0.82가 자동 실행 임계값 0.70을 초과"], "inputs_snapshot": {"risk": 0.82, "risk_threshold": 0.7}, "confidence": 0.93, "decided_by": "decision_engine", "status": "Applied", "decided_at": "2026-08-07T11:01:00Z"}},
+        {"schema": "decision.schema.json", "data": {"decision_id": "dec_S07b", "decision_type": "ResourceSelection", "subject": {"goal_id": "goal_S07ABC", "task_id": "task_S07"}, "selection": "model:careful", "alternatives_considered": [{"candidate": "model:careful", "utility": 0.9}, {"candidate": "model:fast", "utility": 0.75}], "rationale": ["human approval 이후 사실성 우선 Resource 선택"], "inputs_snapshot": {"approval": "approved", "escalation_decision": "dec_S07a"}, "confidence": 0.91, "decided_by": "decision_engine", "status": "Applied", "decided_at": "2026-08-07T11:02:00Z"}},
+        {"schema": "execution.schema.json", "data": {"execution_id": "exec_S07", "task_id": "task_S07", "decision_id": "dec_S07b", "resource_id": "model:careful", "status": "Completed", "created_at": "2026-08-07T11:02:01Z", "finished_at": "2026-08-07T11:02:08Z", "outcome_id": "out_S07"}},
+        {"schema": "outcome.schema.json", "data": {"outcome_id": "out_S07", "execution_id": "exec_S07", "status": "succeeded", "output_count": 1, "cost": {"amount": 180, "currency": "KRW"}, "measured_at": "2026-08-07T11:02:09Z"}},
+        {"schema": "evaluation.schema.json", "data": {"evaluation_id": "eval_S07", "outcome_id": "out_S07", "evaluator": "human:approver", "evaluator_type": "human", "scores": {"quality": 0.92, "goal_alignment": 0.95, "efficiency": 0.78, "satisfaction": 0.94}, "verdict": "accept", "rationale": ["중요 공지에 필요한 사실성과 톤을 충족했다"], "evaluated_at": "2026-08-07T11:03:00Z"}},
+        {"schema": "memory.schema.json", "data": {"memory_id": "mem_S07", "memory_type": "Procedural", "scope": "Goal-level", "goal_ref": "goal_S07ABC", "decision_ref": "dec_S07b", "content": {"situation": "고위험 고객 공지", "action": "자동 실행을 차단하고 인간 승인을 선행", "result": "승인 가능한 초안 생성"}, "source": "exec_S07", "created_at": "2026-08-07T11:04:00Z"}}
+      ]
+    },
+    {
+      "scenario_id": "S08",
+      "title": "병렬 Task Graph 후 Synthesis",
+      "covers": ["parallelism", "task_graph", "join"],
+      "process_trace": [
+        {"step": "task_graph_analysis", "parallel": ["task_S08a", "task_S08b"], "join": "task_S08c"},
+        {"step": "parallel_execution", "executions": ["exec_S08a", "exec_S08b"]},
+        {"step": "join_ready", "when": "both predecessors completed"},
+        {"step": "synthesis_execution", "execution": "exec_S08c"}
+      ],
+      "records": [
+        {"schema": "goal.schema.json", "data": {"goal_id": "goal_S08ABC", "version": 1, "title": "경쟁사 비교 보고서", "goal_type": "Creation", "objective": {"description": "두 경쟁사를 조사해 비교 보고서를 만든다"}, "status": {"phase": "Executing", "entered_at": "2026-08-07T11:10:00Z"}, "metadata": {"created_by": "user", "created_at": "2026-08-07T11:09:00Z", "source": "conversation"}}},
+        {"schema": "intent.schema.json", "data": {"intent_id": "intent_S08", "goal_id": "goal_S08ABC", "intent_type": "Product", "direction": "경쟁사별 강점과 약점을 독립 조사한 뒤 공통 기준으로 비교한다", "confidence": 0.94, "status": "Selected"}},
+        {"schema": "plan.schema.json", "data": {"plan_id": "plan_S08", "version": 1, "source_goal_ids": ["goal_S08ABC"], "status": "Active", "tasks": [{"task_id": "task_S08a", "name": "경쟁사 A 조사", "required_capabilities": ["research.web"]}, {"task_id": "task_S08b", "name": "경쟁사 B 조사", "required_capabilities": ["research.web"]}, {"task_id": "task_S08c", "name": "비교 보고서 합성", "required_capabilities": ["analysis.comparison"], "depends_on": ["task_S08a", "task_S08b"]}], "created_by": "planner", "created_at": "2026-08-07T11:10:00Z"}},
+        {"schema": "task.schema.json", "data": {"id": "task_S08a", "goal_id": "goal_S08ABC", "objective": "경쟁사 A를 조사한다", "task_type": "Research", "required_capabilities": ["research.web"], "execution_mode": "parallel", "state": "Evaluated"}},
+        {"schema": "task.schema.json", "data": {"id": "task_S08b", "goal_id": "goal_S08ABC", "objective": "경쟁사 B를 조사한다", "task_type": "Research", "required_capabilities": ["research.web"], "execution_mode": "parallel", "state": "Evaluated"}},
+        {"schema": "task.schema.json", "data": {"id": "task_S08c", "goal_id": "goal_S08ABC", "objective": "두 조사 결과를 비교 보고서로 합성한다", "task_type": "Analysis", "required_capabilities": ["analysis.comparison"], "dependencies": ["task_S08a", "task_S08b"], "execution_mode": "sequential", "state": "Evaluated"}},
+        {"schema": "task-graph.schema.json", "data": {"graph_id": "tg_S08", "plan_id": "plan_S08", "version": 1, "nodes": ["task_S08a", "task_S08b", "task_S08c"], "edges": [{"from": "task_S08a", "to": "task_S08c"}, {"from": "task_S08b", "to": "task_S08c"}], "entry_tasks": ["task_S08a", "task_S08b"], "analysis": {"critical_path": ["task_S08a", "task_S08c"], "max_parallelism": 2}, "status": "Completed"}},
+        {"schema": "decision.schema.json", "data": {"decision_id": "dec_S08a", "decision_type": "ResourceSelection", "subject": {"goal_id": "goal_S08ABC", "task_id": "task_S08a"}, "selection": "tool:web-a", "alternatives_considered": [{"candidate": "tool:web-a", "utility": 0.9}, {"candidate": "tool:web-b", "utility": 0.84}], "rationale": ["검색 신뢰도 우위"], "inputs_snapshot": {}, "confidence": 0.91, "decided_by": "decision_engine", "status": "Applied", "decided_at": "2026-08-07T11:11:00Z"}},
+        {"schema": "decision.schema.json", "data": {"decision_id": "dec_S08b", "decision_type": "ResourceSelection", "subject": {"goal_id": "goal_S08ABC", "task_id": "task_S08b"}, "selection": "tool:web-b", "alternatives_considered": [{"candidate": "tool:web-b", "utility": 0.89}, {"candidate": "tool:web-a", "utility": 0.85}], "rationale": ["병렬 처리 가용성 우위"], "inputs_snapshot": {}, "confidence": 0.9, "decided_by": "decision_engine", "status": "Applied", "decided_at": "2026-08-07T11:11:00Z"}},
+        {"schema": "execution.schema.json", "data": {"execution_id": "exec_S08a", "task_id": "task_S08a", "decision_id": "dec_S08a", "resource_id": "tool:web-a", "status": "Completed", "created_at": "2026-08-07T11:11:01Z", "finished_at": "2026-08-07T11:11:06Z", "outcome_id": "out_S08a"}},
+        {"schema": "execution.schema.json", "data": {"execution_id": "exec_S08b", "task_id": "task_S08b", "decision_id": "dec_S08b", "resource_id": "tool:web-b", "status": "Completed", "created_at": "2026-08-07T11:11:01Z", "finished_at": "2026-08-07T11:11:05Z", "outcome_id": "out_S08b"}},
+        {"schema": "outcome.schema.json", "data": {"outcome_id": "out_S08a", "execution_id": "exec_S08a", "status": "succeeded", "output_count": 1, "cost": {"amount": 50, "currency": "KRW"}, "measured_at": "2026-08-07T11:11:07Z"}},
+        {"schema": "outcome.schema.json", "data": {"outcome_id": "out_S08b", "execution_id": "exec_S08b", "status": "succeeded", "output_count": 1, "cost": {"amount": 50, "currency": "KRW"}, "measured_at": "2026-08-07T11:11:07Z"}},
+        {"schema": "evaluation.schema.json", "data": {"evaluation_id": "eval_S08a", "outcome_id": "out_S08a", "evaluator": "eval_engine:v1", "evaluator_type": "automatic", "scores": {"quality": 0.86, "goal_alignment": 0.83, "efficiency": 0.91}, "verdict": "accept", "rationale": ["경쟁사 A 조사 완료"], "evaluated_at": "2026-08-07T11:11:08Z"}},
+        {"schema": "evaluation.schema.json", "data": {"evaluation_id": "eval_S08b", "outcome_id": "out_S08b", "evaluator": "eval_engine:v1", "evaluator_type": "automatic", "scores": {"quality": 0.88, "goal_alignment": 0.85, "efficiency": 0.93}, "verdict": "accept", "rationale": ["경쟁사 B 조사 완료"], "evaluated_at": "2026-08-07T11:11:08Z"}},
+        {"schema": "decision.schema.json", "data": {"decision_id": "dec_S08c", "decision_type": "ResourceSelection", "subject": {"goal_id": "goal_S08ABC", "task_id": "task_S08c"}, "selection": "model:synth", "alternatives_considered": [{"candidate": "model:synth", "utility": 0.92}, {"candidate": "model:general", "utility": 0.83}], "rationale": ["비교 분석 Capability 우위"], "inputs_snapshot": {"predecessors": ["out_S08a", "out_S08b"]}, "confidence": 0.93, "decided_by": "decision_engine", "status": "Applied", "decided_at": "2026-08-07T11:11:09Z"}},
+        {"schema": "execution.schema.json", "data": {"execution_id": "exec_S08c", "task_id": "task_S08c", "decision_id": "dec_S08c", "resource_id": "model:synth", "status": "Completed", "created_at": "2026-08-07T11:11:10Z", "finished_at": "2026-08-07T11:11:16Z", "outcome_id": "out_S08c"}},
+        {"schema": "outcome.schema.json", "data": {"outcome_id": "out_S08c", "execution_id": "exec_S08c", "status": "succeeded", "output_count": 1, "cost": {"amount": 140, "currency": "KRW"}, "measured_at": "2026-08-07T11:11:17Z"}},
+        {"schema": "evaluation.schema.json", "data": {"evaluation_id": "eval_S08c", "outcome_id": "out_S08c", "evaluator": "eval_engine:v1", "evaluator_type": "automatic", "scores": {"quality": 0.93, "goal_alignment": 0.95, "efficiency": 0.89}, "verdict": "accept", "rationale": ["두 선행 조사 결과를 일관된 기준으로 합성했다"], "evaluated_at": "2026-08-07T11:11:18Z"}},
+        {"schema": "memory.schema.json", "data": {"memory_id": "mem_S08", "memory_type": "Procedural", "scope": "Goal-level", "goal_ref": "goal_S08ABC", "decision_ref": "dec_S08c", "content": {"situation": "독립 조사 2개와 합성 1개", "action": "조사를 병렬 실행하고 완료 후 합성", "result": "전체 지연을 줄이며 보고서 완성"}, "source": "exec_S08c", "created_at": "2026-08-07T11:12:00Z"}}
+      ]
+    },
+    {
+      "scenario_id": "S09",
+      "title": "Deferred Evaluation으로 Goal Alignment 확정",
+      "covers": ["measurement_lag", "proxy_evaluation", "deferred_evaluation"],
+      "process_trace": [
+        {"step": "immediate_evaluation", "evaluation_id": "eval_S09a", "alignment_proxy": true},
+        {"step": "measurement_wait", "duration": "P7D"},
+        {"step": "deferred_evaluation", "evaluation_id": "eval_S09b", "alignment_proxy": false}
+      ],
+      "records": [
+        {"schema": "goal.schema.json", "data": {"goal_id": "goal_S09ABC", "version": 1, "title": "랜딩페이지 상담 전환 개선", "goal_type": "Optimization", "objective": {"description": "랜딩페이지 상담 전환율을 개선한다", "desired_state": {"metric": "conversion_rate", "operator": ">=", "target": 0.08, "unit": "ratio", "baseline": 0.05}}, "status": {"phase": "Monitoring", "progress": 0.66, "entered_at": "2026-08-07T11:20:00Z"}, "metadata": {"created_by": "user", "created_at": "2026-08-07T11:19:00Z", "source": "conversation"}}},
+        {"schema": "intent.schema.json", "data": {"intent_id": "intent_S09", "goal_id": "goal_S09ABC", "intent_type": "Experience", "direction": "상담 CTA의 명확성과 신뢰 신호를 개선한다", "confidence": 0.88, "status": "Selected"}},
+        {"schema": "plan.schema.json", "data": {"plan_id": "plan_S09", "version": 1, "source_goal_ids": ["goal_S09ABC"], "status": "Active", "tasks": [{"task_id": "task_S09", "name": "랜딩페이지 카피 개선", "required_capabilities": ["language.generation.copywriting"]}], "created_by": "planner", "created_at": "2026-08-07T11:20:00Z"}},
+        {"schema": "task.schema.json", "data": {"id": "task_S09", "goal_id": "goal_S09ABC", "objective": "상담 CTA와 핵심 카피를 개선한다", "required_capabilities": ["language.generation.copywriting"], "state": "Evaluated"}},
+        {"schema": "task-graph.schema.json", "data": {"graph_id": "tg_S09", "plan_id": "plan_S09", "version": 1, "nodes": ["task_S09"], "edges": [], "entry_tasks": ["task_S09"], "status": "Completed"}},
+        {"schema": "decision.schema.json", "data": {"decision_id": "dec_S09", "decision_type": "ResourceSelection", "subject": {"goal_id": "goal_S09ABC", "task_id": "task_S09"}, "selection": "model:conversion", "alternatives_considered": [{"candidate": "model:conversion", "utility": 0.91}, {"candidate": "model:general", "utility": 0.8}], "rationale": ["conversion copy 성과 우위"], "inputs_snapshot": {}, "confidence": 0.9, "decided_by": "decision_engine", "status": "Evaluated", "outcome_link": "out_S09", "decided_at": "2026-08-07T11:21:00Z"}},
+        {"schema": "execution.schema.json", "data": {"execution_id": "exec_S09", "task_id": "task_S09", "decision_id": "dec_S09", "resource_id": "model:conversion", "status": "Completed", "created_at": "2026-08-07T11:21:01Z", "finished_at": "2026-08-07T11:21:06Z", "outcome_id": "out_S09"}},
+        {"schema": "outcome.schema.json", "data": {"outcome_id": "out_S09", "execution_id": "exec_S09", "status": "succeeded", "output_count": 1, "cost": {"amount": 160, "currency": "KRW"}, "measured_at": "2026-08-07T11:21:07Z", "goal_progress": [{"goal_id": "goal_S09ABC", "metric": "conversion_rate", "before": 0.05, "after": 0.05, "delta": 0, "measurement_lag": "P7D"}], "evaluation_ids": ["eval_S09a", "eval_S09b"]}},
+        {"schema": "evaluation.schema.json", "data": {"evaluation_id": "eval_S09a", "outcome_id": "out_S09", "evaluator": "eval_engine:v1", "evaluator_type": "automatic", "scores": {"quality": 0.92, "goal_alignment": 0.84, "efficiency": 0.9, "alignment_proxy": true}, "verdict": "accept", "rationale": ["즉시 시점에는 산출물 충족도를 Goal Alignment proxy로 사용"], "evaluated_at": "2026-08-07T11:21:08Z"}},
+        {"schema": "evaluation.schema.json", "data": {"evaluation_id": "eval_S09b", "outcome_id": "out_S09", "evaluator": "measurement_engine", "evaluator_type": "deferred", "scores": {"quality": 0.92, "goal_alignment": 0.96, "efficiency": 0.9, "alignment_proxy": false}, "decision_review": {"decision_id": "dec_S09", "decision_quality": 0.91, "prediction_error": {"utility": -0.03}}, "verdict": "accept", "rationale": ["7일 후 실제 전환율이 0.08을 넘었다"], "supersedes": "eval_S09a", "evaluated_at": "2026-08-14T11:21:08Z"}},
+        {"schema": "memory.schema.json", "data": {"memory_id": "mem_S09", "memory_type": "Semantic", "scope": "Goal-level", "goal_ref": "goal_S09ABC", "decision_ref": "dec_S09", "content": {"situation": "실제 전환 성과는 7일 후 측정 가능", "action": "즉시 proxy 평가 후 deferred 평가", "result": "실제 Goal Alignment 0.96 확정"}, "source": "exec_S09", "created_at": "2026-08-14T11:22:00Z"}}
+      ]
+    },
+    {
+      "scenario_id": "S10",
+      "title": "Evaluation → Memory → Resource Profile Update",
+      "covers": ["learning", "memory", "resource_profile", "snapshot_update"],
+      "process_trace": [
+        {"step": "profile_read", "snapshot": "rp_writer_41"},
+        {"step": "execution_and_evaluation", "evaluation_id": "eval_S10"},
+        {"step": "memory_write", "memory_id": "mem_S10"},
+        {"step": "profile_update", "from": "rp_writer_41", "to": "rp_writer_42", "sample_size_delta": 1}
+      ],
+      "records": [
+        {"schema": "goal.schema.json", "data": {"goal_id": "goal_S10ABC", "version": 1, "title": "이메일 제목 생성", "goal_type": "Creation", "objective": {"description": "이메일 오픈을 유도할 제목 후보를 만든다"}, "status": {"phase": "Executing", "entered_at": "2026-08-07T11:30:00Z"}, "metadata": {"created_by": "user", "created_at": "2026-08-07T11:29:00Z", "source": "conversation"}}},
+        {"schema": "intent.schema.json", "data": {"intent_id": "intent_S10", "goal_id": "goal_S10ABC", "intent_type": "Promotion", "direction": "과장 없이 호기심과 명확성을 높인다", "confidence": 0.93, "status": "Selected"}},
+        {"schema": "plan.schema.json", "data": {"plan_id": "plan_S10", "version": 1, "source_goal_ids": ["goal_S10ABC"], "status": "Active", "tasks": [{"task_id": "task_S10", "name": "이메일 제목 생성", "required_capabilities": ["language.generation.copywriting"]}], "created_by": "planner", "created_at": "2026-08-07T11:30:00Z"}},
+        {"schema": "task.schema.json", "data": {"id": "task_S10", "goal_id": "goal_S10ABC", "objective": "이메일 제목 후보 5개를 생성한다", "required_capabilities": ["language.generation.copywriting"], "state": "Evaluated"}},
+        {"schema": "task-graph.schema.json", "data": {"graph_id": "tg_S10", "plan_id": "plan_S10", "version": 1, "nodes": ["task_S10"], "edges": [], "entry_tasks": ["task_S10"], "status": "Completed"}},
+        {"schema": "resource-profile.schema.json", "data": {"profile_id": "profile_writer", "resource_id": "model:writer", "snapshot_version": "rp_writer_41", "status": "Established", "capability_scores": [{"capability": "language.generation.copywriting", "context": {"domain": "email_marketing", "language": "ko", "task_type": "Creation"}, "observed_score": 86, "sample_size": 41, "confidence": 0.88}]}},
+        {"schema": "decision.schema.json", "data": {"decision_id": "dec_S10", "decision_type": "ResourceSelection", "subject": {"goal_id": "goal_S10ABC", "task_id": "task_S10"}, "selection": "model:writer", "alternatives_considered": [{"candidate": "model:writer", "utility": 0.89}, {"candidate": "model:general", "utility": 0.81}], "rationale": ["email_marketing context observed score 86"], "inputs_snapshot": {"resource_profile_snapshot": "rp_writer_41"}, "confidence": 0.9, "decided_by": "decision_engine", "status": "Evaluated", "outcome_link": "out_S10", "decided_at": "2026-08-07T11:31:00Z"}},
+        {"schema": "execution.schema.json", "data": {"execution_id": "exec_S10", "task_id": "task_S10", "decision_id": "dec_S10", "resource_id": "model:writer", "status": "Completed", "created_at": "2026-08-07T11:31:01Z", "finished_at": "2026-08-07T11:31:04Z", "outcome_id": "out_S10"}},
+        {"schema": "outcome.schema.json", "data": {"outcome_id": "out_S10", "execution_id": "exec_S10", "status": "succeeded", "output_count": 5, "cost": {"amount": 100, "currency": "KRW"}, "measured_at": "2026-08-07T11:31:05Z"}},
+        {"schema": "evaluation.schema.json", "data": {"evaluation_id": "eval_S10", "outcome_id": "out_S10", "task_id": "task_S10", "evaluator": "human:marketer", "evaluator_type": "human", "scores": {"quality": 0.94, "goal_alignment": 0.92, "efficiency": 0.95, "satisfaction": 0.96, "composite": 0.94}, "decision_review": {"decision_id": "dec_S10", "decision_quality": 0.93}, "verdict": "accept", "rationale": ["5개 모두 사용 가능하고 브랜드 톤을 유지했다"], "evaluated_at": "2026-08-07T11:32:00Z"}},
+        {"schema": "memory.schema.json", "data": {"memory_id": "mem_S10", "memory_type": "Episodic", "scope": "User-level", "goal_ref": "goal_S10ABC", "decision_ref": "dec_S10", "content": {"situation": "한국어 이메일 마케팅 제목 생성", "action": "model:writer 사용", "result": "human composite 0.94"}, "confidence": 0.94, "source": "exec_S10", "created_at": "2026-08-07T11:32:10Z", "status": "Active"}},
+        {"schema": "resource-profile.schema.json", "data": {"profile_id": "profile_writer", "resource_id": "model:writer", "snapshot_version": "rp_writer_42", "updated_at": "2026-08-07T11:32:20Z", "status": "Established", "capability_scores": [{"capability": "language.generation.copywriting", "context": {"domain": "email_marketing", "language": "ko", "task_type": "Creation"}, "observed_score": 86.8, "sample_size": 42, "confidence": 0.89, "last_observed_at": "2026-08-07T11:32:00Z"}], "evidence": {"execution_count": 42, "window": "P30D", "decay_lambda": 0.02}}}
+      ]
+    }
+  ]
+}
