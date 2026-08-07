@@ -18,6 +18,7 @@
     "resource_pool_snapshot",
     "judge_configuration",
     "evaluation_cost_usd",
+    "provenance",
     "trials"
   ],
   "properties": {
@@ -60,6 +61,38 @@
       }
     },
     "evaluation_cost_usd": {"type": "number", "minimum": 0},
+    "provenance": {
+      "type": "object",
+      "description": "이 기록이 어떻게 만들어졌는지. 합성 실행과 실측을 구분하는 유일한 장치다. 이 필드가 없으면 두 기록은 형태가 같아 구별할 수 없다.",
+      "additionalProperties": false,
+      "required": ["evidence", "adapter_kinds", "human_measurements"],
+      "properties": {
+        "evidence": {
+          "type": "boolean",
+          "description": "벤치마크 근거로 인용 가능한가. 합성 어댑터가 하나라도 쓰였거나 사람 측정이 빠졌으면 false다."
+        },
+        "adapter_kinds": {
+          "type": "array",
+          "description": "이 실행에 쓰인 어댑터 종류. synthetic이 하나라도 있으면 evidence는 false여야 한다.",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"enum": ["live_api", "human", "synthetic"]}
+        },
+        "human_measurements": {
+          "type": "object",
+          "description": "사람에게서만 나오는 측정이 실제로 수집되었는가. §8 M2·M5·M6과 M1의 Judge에 대응한다.",
+          "additionalProperties": false,
+          "required": ["selection_time", "rework", "satisfaction", "quality_judges"],
+          "properties": {
+            "selection_time": {"type": "boolean", "description": "M2. Manual arm에서 실제 타이머로 측정했는가."},
+            "rework": {"type": "boolean", "description": "M5. 사용자가 실제로 재작업을 요청/수락했는가."},
+            "satisfaction": {"type": "boolean", "description": "M6. 사용자가 실제로 1~7을 입력했는가."},
+            "quality_judges": {"type": "boolean", "description": "M1. 독립 Judge가 실제로 blind 채점했는가."}
+          }
+        },
+        "notes": {"type": "string", "description": "evidence가 false인 이유 등 보충 설명."}
+      }
+    },
     "notes": {"type": "string"},
     "trials": {
       "type": "array",
@@ -119,5 +152,46 @@
         }
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "title": "합성 어댑터가 쓰였으면 근거를 주장할 수 없다",
+      "if": {
+        "properties": {
+          "provenance": {
+            "properties": {"adapter_kinds": {"contains": {"const": "synthetic"}}},
+            "required": ["adapter_kinds"]
+          }
+        },
+        "required": ["provenance"]
+      },
+      "then": {
+        "properties": {"provenance": {"properties": {"evidence": {"const": false}}}}
+      }
+    },
+    {
+      "title": "사람 측정이 하나라도 빠지면 근거를 주장할 수 없다",
+      "if": {
+        "properties": {
+          "provenance": {
+            "properties": {
+              "human_measurements": {
+                "anyOf": [
+                  {"properties": {"selection_time": {"const": false}}, "required": ["selection_time"]},
+                  {"properties": {"rework": {"const": false}}, "required": ["rework"]},
+                  {"properties": {"satisfaction": {"const": false}}, "required": ["satisfaction"]},
+                  {"properties": {"quality_judges": {"const": false}}, "required": ["quality_judges"]}
+                ]
+              }
+            },
+            "required": ["human_measurements"]
+          }
+        },
+        "required": ["provenance"]
+      },
+      "then": {
+        "properties": {"provenance": {"properties": {"evidence": {"const": false}}}}
+      }
+    }
+  ]
 }

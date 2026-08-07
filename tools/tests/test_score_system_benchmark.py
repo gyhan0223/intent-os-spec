@@ -34,7 +34,8 @@ class ScoreSystemBenchmarkSmokeTest(unittest.TestCase):
     def test_scorer_runs_on_synthetic_example(self):
         self.assertTrue(EXAMPLE.exists(), f"합성 예시가 없다: {EXAMPLE}")
         proc = subprocess.run(
-            [sys.executable, str(SCORER), str(EXAMPLE), "--json"],
+            # 이 예시는 합성이라 근거가 아니다. 배관 확인이므로 플래그를 준다.
+            [sys.executable, str(SCORER), str(EXAMPLE), "--json", "--allow-non-evidence"],
             cwd=ROOT, capture_output=True, text=True,
         )
         self.assertEqual(proc.returncode, 0, proc.stderr)
@@ -43,6 +44,19 @@ class ScoreSystemBenchmarkSmokeTest(unittest.TestCase):
             json.loads(proc.stdout)
         except json.JSONDecodeError as exc:
             self.fail(f"--json 출력이 JSON이 아니다: {exc}")
+
+    def test_scorer_refuses_non_evidence_by_default(self):
+        """근거 아닌 실행이 §10 판정으로 새어나가지 않아야 한다.
+
+        채점기 출력은 그대로 벤치마크 결과처럼 보인다. 플래그 없이도 점수가
+        나오면 배관 점검용 실행이 결론으로 인용될 수 있다.
+        """
+        proc = subprocess.run(
+            [sys.executable, str(SCORER), str(EXAMPLE), "--json"],
+            cwd=ROOT, capture_output=True, text=True,
+        )
+        self.assertNotEqual(proc.returncode, 0, "합성 실행인데 채점이 통과했다")
+        self.assertIn("근거가 아니다", proc.stderr)
 
 
 if __name__ == "__main__":

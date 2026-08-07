@@ -11,7 +11,6 @@ e000 §11 체크리스트의 "상대 링크가 깨지지 않았는가"를 자동
 # tools/validate-all.py 가 읽는 CI 선언.
 CI_LABEL = "상대 링크 검사"
 
-import glob
 import os
 import re
 import sys
@@ -19,7 +18,19 @@ import sys
 RE_LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
 RE_CODE_FENCE = re.compile(r"```.*?```", re.S)
 
-TARGETS = ["*.md", "entities/*.md", "tools/*.py", ".github/workflows/*.yml"]
+# 검사 대상을 목록으로 적지 않는다. 하드코딩하면 새로 생긴 디렉터리의 문서가
+# 조용히 검사 밖에 남는다 — benchmarks/, architecture/, fixtures/가 그랬다.
+SKIP_DIRS = {".git", "__pycache__", "node_modules"}
+
+
+def discover():
+    """저장소의 모든 Markdown을 찾는다."""
+    found = []
+    for dirpath, dirnames, filenames in os.walk("."):
+        dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
+        found.extend(os.path.normpath(os.path.join(dirpath, f))
+                     for f in filenames if f.endswith(".md"))
+    return sorted(found)
 
 
 def strip_code(text):
@@ -28,8 +39,7 @@ def strip_code(text):
 
 
 def main():
-    docs = sorted({p for pattern in TARGETS for p in glob.glob(pattern)
-                   if p.endswith(".md")})
+    docs = discover()
     broken = 0
     checked = 0
 

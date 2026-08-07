@@ -15,32 +15,61 @@
       "kind": "model",
       "provider": "example",
       "version": "1",
-      "pricing_snapshot": {"unit": "example"},
-      "capabilities": ["writing"]
+      "pricing_snapshot": {
+        "unit": "example"
+      },
+      "capabilities": [
+        "writing"
+      ]
     },
     {
       "resource_id": "model-balanced",
       "kind": "model",
       "provider": "example",
       "version": "1",
-      "pricing_snapshot": {"unit": "example"},
-      "capabilities": ["writing", "reasoning"]
+      "pricing_snapshot": {
+        "unit": "example"
+      },
+      "capabilities": [
+        "writing",
+        "reasoning"
+      ]
     },
     {
       "resource_id": "model-reasoning",
       "kind": "model",
       "provider": "example",
       "version": "1",
-      "pricing_snapshot": {"unit": "example"},
-      "capabilities": ["reasoning"]
+      "pricing_snapshot": {
+        "unit": "example"
+      },
+      "capabilities": [
+        "reasoning"
+      ]
     }
   ],
   "judge_configuration": {
     "blind": true,
-    "judge_ids": ["judge-a", "judge-b"],
+    "judge_ids": [
+      "judge-a",
+      "judge-b"
+    ],
     "human_tiebreak_threshold": 15
   },
   "evaluation_cost_usd": 0.01,
+  "provenance": {
+    "evidence": false,
+    "adapter_kinds": [
+      "synthetic"
+    ],
+    "human_measurements": {
+      "selection_time": false,
+      "rework": false,
+      "satisfaction": false,
+      "quality_judges": false
+    },
+    "notes": "스키마·채점기 예시 전용. 값은 전부 합성이며 어떤 실행도 하지 않았다. 벤치마크 근거가 아니다."
+  },
   "notes": "Schema and scorer example only. These are synthetic values, not benchmark evidence.",
   "trials": [
     {
@@ -49,7 +78,9 @@
       "repetition": 1,
       "arm": "manual",
       "status": "completed",
-      "selected_resource_ids": ["model-balanced"],
+      "selected_resource_ids": [
+        "model-balanced"
+      ],
       "decision_id": null,
       "selection_time_ms": 12000,
       "router_overhead_ms": 0,
@@ -72,7 +103,9 @@
       "repetition": 1,
       "arm": "fixed",
       "status": "completed",
-      "selected_resource_ids": ["model-balanced"],
+      "selected_resource_ids": [
+        "model-balanced"
+      ],
       "decision_id": null,
       "selection_time_ms": 0,
       "router_overhead_ms": 0,
@@ -95,7 +128,9 @@
       "repetition": 1,
       "arm": "intent_os",
       "status": "completed",
-      "selected_resource_ids": ["model-reasoning"],
+      "selected_resource_ids": [
+        "model-reasoning"
+      ],
       "decision_id": "dec-example",
       "selection_time_ms": 0,
       "router_overhead_ms": 180,

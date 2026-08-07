@@ -371,11 +371,30 @@ def main() -> int:
         action="store_true",
         help="Print machine-readable JSON instead of Markdown.",
     )
+    parser.add_argument(
+        "--allow-non-evidence",
+        action="store_true",
+        help="근거가 아닌 실행도 채점한다. 배관 확인 전용이며 결과를 인용할 수 없다.",
+    )
     args = parser.parse_args()
 
     run = json.loads(args.run_json.read_text(encoding="utf-8"))
     if run.get("benchmark_id") != "system-routing-v0.1":
         raise ValueError("Unsupported benchmark_id.")
+
+    # 근거가 아닌 실행(합성 어댑터, 사람 측정 누락)으로 §10 판정을 내지 않는다.
+    # 채점기 출력은 그대로 벤치마크 결과처럼 보이므로 여기서 막지 않으면
+    # 배관 점검용 실행이 결론으로 인용될 수 있다.
+    provenance = run.get("provenance", {})
+    if not provenance.get("evidence", False):
+        reason = provenance.get("notes") or "provenance.evidence가 false다"
+        if not args.allow_non_evidence:
+            raise ValueError(
+                f"이 실행은 벤치마크 근거가 아니다 ({reason}). "
+                f"배관 확인용으로 점수를 보려면 --allow-non-evidence를 쓴다."
+            )
+        print(f"경고: 근거 아님 — {reason}. 아래 점수는 §10 판정에 쓸 수 없다.\n",
+              file=sys.stderr)
 
     trials = [t for t in run["trials"] if not t.get("excluded", False)]
     warnings = check_completeness(trials)
@@ -422,4 +441,9 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except ValueError as exc:
+        # 사용자 입력 문제는 traceback이 아니라 한 줄로 알린다.
+        print(f"FAIL {exc}", file=sys.stderr)
+        sys.exit(2)

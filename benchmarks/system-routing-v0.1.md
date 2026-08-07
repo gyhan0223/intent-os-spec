@@ -601,14 +601,81 @@ Benchmark 전용 Run/Trial JSON은 **실험 데이터 포맷**이지 새로운 �
 | Pass/Fail 기준 정의 | ✅ |
 | Run JSON Schema | [`schemas/system-benchmark-run.schema.json`](schemas/system-benchmark-run.schema.json) |
 | Score calculator | [`../tools/score-system-benchmark.py`](../tools/score-system-benchmark.py) |
-| 실제 90-Trial 최초 실행 | ⬜ 구현체 준비 후 실행 |
+| 실행 하네스 (어댑터 · 러너 · 라우터) | ✅ [`harness/`](harness/), [`../tools/run-system-benchmark.py`](../tools/run-system-benchmark.py) |
+| 실제 90-Trial 최초 실행 | ❌ §21 참조. 자격 증명과 피험자가 없다 |
 
 ---
 
-## 21. Next Step
+## 21. 실행 하네스
 
-이 문서가 확정되면 다음 순서는 하나다.
+§7 Trial Procedure를 실행 가능하게 만든 코드가 [`harness/`](harness/)에 있다.
 
-> **Thin Reference Implementation을 연결해 첫 90-Trial Run을 실행한다.**
+```bash
+# 실측
+export ANTHROPIC_API_KEY=...
+python3 tools/run-system-benchmark.py \
+    --pool benchmarks/pools/<pool>.json \
+    --operator-expertise intermediate \
+    --split development \
+    --out runs/<name>.json
+
+python3 tools/score-system-benchmark.py runs/<name>.json
+```
+
+| 파일 | 역할 |
+|---|---|
+| [`harness/adapters.py`](harness/adapters.py) | Resource 실행. `live_api` / `human` / `synthetic` |
+| [`harness/router.py`](harness/router.py) | Arm C. 참조 구현의 `RuleRouter`를 그대로 쓴다 |
+| [`harness/runner.py`](harness/runner.py) | 세 Arm의 Trial 절차, 사람 측정 수집 |
+
+### 21.1 무엇이 자동이고 무엇이 사람인가
+
+지연·비용·출력은 기계가 잰다. 나머지는 사람에게서만 나온다.
+
+| 측정 | 출처 | 사람 없이 가능한가 |
+|---|---|---|
+| M3 Cost | provider `usage` × 가격표 | ✅ |
+| M4 Latency | 벽시계 | ✅ |
+| Arm C 라우팅 | `RuleRouter` | ✅ |
+| **Arm A 전체** | §7 "사용자가 Resource를 선택" | ❌ |
+| **M2 Selection Time** | §8 "Manual Choice: 실제 측정" | ❌ |
+| **M5 Rework** | §8 "사용자가 추가 수정을 요청한 횟수" | ❌ |
+| **M6 Satisfaction** | §8 Likert 1~7 | ❌ |
+| **M1 Quality** | §8 독립 Judge 2인 + 15점 초과 시 Human Review | ❌ |
+
+§10.1의 두 조건이 `Rework(Intent OS) <= Rework(Manual)`과
+`Satisfaction(Intent OS) >= Satisfaction(Manual) - 0.2`이다. **판정에 필요한
+값의 절반이 사람에게서만 나온다.** 하네스는 이 값들을 만들어내지 않고 묻는다.
+조작자가 없으면(`--no-human`) 비워두고, Manual arm은 임의 선택으로 때우는 대신
+`excluded`로 남긴다.
+
+### 21.2 근거와 배관 점검의 구분
+
+합성 실행과 실측은 기록 형태가 완전히 같다. 구분 장치는
+`provenance` 하나뿐이며, 다음이 하나라도 참이면 `evidence: false`다.
+
+- 합성 어댑터가 한 번이라도 쓰였다
+- 사람 측정(M2·M5·M6·M1 Judge) 중 하나라도 비었다
+
+이 규칙은 세 곳에서 강제된다.
+
+1. **스키마** — `evidence: true`인데 `adapter_kinds`에 `synthetic`이 있으면 검증 실패
+2. **러너** — `evidence`를 조작자가 주장하지 못하고 실행 사실에서 유도한다
+3. **채점기** — 근거 아닌 실행은 §10 판정을 거부한다 (`--allow-non-evidence` 필요)
+
+자격 증명이 없을 때 조용히 합성으로 대체하지 않는 것도 같은 이유다.
+그렇게 하면 실측인 줄 알고 돌린 실행이 합성 데이터를 낳는다.
+
+---
+
+## 22. Next Step
+
+> **자격 증명과 피험자를 확보해 첫 90-Trial Run을 실행한다.**
+
+필요한 것은 셋이다.
+
+1. Resource pool의 API 키 — §4에 따라 실행 전 pool을 고정한다
+2. 피험자 — Arm A 30회 선택 + 90 Trial의 재작업·만족도 응답
+3. Blind Judge 2인 — §8 M1, 15점 초과 시 Human Review
 
 그 결과부터는 Decision Engine의 threshold와 weight를 추측으로 고치지 않고 실제 benchmark delta를 근거로 조정한다.
