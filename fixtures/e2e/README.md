@@ -20,7 +20,7 @@ Golden Fixture는 다음 질문에 답해야 한다.
 
 ## Fixture Envelope
 
-`golden-fixtures.json`은 10개의 독립 시나리오를 가진다.
+`golden-fixtures-v0.1.json`은 10개의 독립 시나리오를 가진다. 파일명을 버전으로 고정해 스키마와 Fixture의 호환성 변화를 추적한다.
 
 ```json
 {
@@ -51,9 +51,9 @@ Golden Fixture는 다음 질문에 답해야 한다.
 | S02 | Clarification 필요 | 모호한 Goal이 사용자 응답으로 Clarified 된 뒤 실행 가능해지는 경로 |
 | S03 | 낮은 Intent Confidence | 자동 선택을 멈추고 사용자 확인 후 Selected 되는 경로 |
 | S04 | Resource 실패 후 Fallback | 첫 Execution 실패 → Outcome/Evaluation 기록 → 새 Decision → 대체 Resource 성공 |
-| S05 | Timeout 후 Reassign | TimedOut Execution과 late/failure 기록을 보존한 채 다른 Resource로 재할당 |
-| S06 | Hard Constraint 필터 | Budget/Policy Hard Constraint가 후보를 Decision 이전에 제거 |
-| S07 | Human Escalation | 고위험/저확신 상황에서 자동 실행 대신 인간 승인 Decision을 선행 |
+| S05 | Timeout 후 Reassign | TimedOut Execution을 보존한 채 다른 Resource로 재할당 |
+| S06 | Hard Constraint 필터 | Budget Hard Constraint가 후보를 Decision 이전에 제거 |
+| S07 | Human Escalation | 고위험 상황에서 자동 실행 대신 인간 승인 Decision을 선행 |
 | S08 | 병렬 Task Graph | 독립 Task 2개를 병렬 수행한 후 후행 Synthesis Task가 합류 |
 | S09 | Deferred Evaluation | 즉시 proxy 평가 후 measurement lag 경과 뒤 실제 Goal Alignment로 재평가 |
 | S10 | Learning/Profile Update | Evaluation 결과가 Memory로 저장되고 Resource Profile snapshot이 갱신 |
