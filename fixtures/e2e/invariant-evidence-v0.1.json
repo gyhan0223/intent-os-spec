@@ -1,0 +1,171 @@
+{
+  "evidence_version": "0.1.0",
+  "base_fixture": "golden-fixtures-v0.1.json",
+  "supplements": {
+    "S01": {
+      "records": [
+        {
+          "schema": "artifact.schema.json",
+          "data": {
+            "artifact_id": "art_S01",
+            "outcome_id": "out_S01",
+            "type": "text",
+            "name": "학부모 대상 광고 카피 3종",
+            "produced_by": "model:alpha",
+            "produced_at": "2026-08-07T09:54:05Z",
+            "status": "Adopted"
+          }
+        },
+        {
+          "schema": "session.schema.json",
+          "data": {
+            "session_id": "ses_S01",
+            "type": "interactive",
+            "actor": "human:user",
+            "goal_ids": ["goal_S01ABC"],
+            "budget": {},
+            "started_at": "2026-08-07T09:49:00Z",
+            "ended_at": "2026-08-07T09:55:10Z",
+            "execution_ids": ["exec_S01"],
+            "decision_ids": ["dec_S01"],
+            "artifact_ids": ["art_S01"],
+            "memory_ids": ["mem_S01"],
+            "summary": "광고 카피 생성과 평가를 완료했다.",
+            "status": "Completed",
+            "end_reason": "goal_task_completed"
+          }
+        }
+      ],
+      "assignments": [
+        {
+          "task_id": "task_S01",
+          "resource_id": "model:alpha",
+          "decision_id": "dec_S01"
+        }
+      ],
+      "mutations": [
+        {
+          "entity_type": "Decision",
+          "entity_id": "dec_S01",
+          "before": {"decision_id": "dec_S01", "status": "Committed"},
+          "after": {"decision_id": "dec_S01", "status": "Applied"}
+        }
+      ]
+    },
+    "S02": {
+      "records": [
+        {
+          "schema": "event.schema.json",
+          "data": {
+            "event_id": "evt_S02_goal_clarified",
+            "type": "goal.clarified",
+            "category": "lifecycle",
+            "sequence": 1,
+            "subject": {"entity_type": "Goal", "entity_id": "goal_S02ABC"},
+            "previous_state": "Created",
+            "new_state": "Clarified",
+            "emitted_by": "goal_runtime",
+            "emitted_at": "2026-08-07T10:05:00Z"
+          }
+        }
+      ],
+      "state_transitions": [
+        {
+          "entity_type": "Goal",
+          "entity_id": "goal_S02ABC",
+          "previous_state": "Created",
+          "new_state": "Clarified"
+        }
+      ]
+    },
+    "S07": {
+      "records": [
+        {
+          "schema": "assumption.schema.json",
+          "data": {
+            "assumption_id": "asm_S07_risk_threshold",
+            "scope": {"goal_id": "goal_S07ABC", "plan_id": "plan_S07"},
+            "type": "technical",
+            "statement": "자동 실행 위험 점수가 0.70 이하일 것이다.",
+            "confidence": 0.75,
+            "impact": "high",
+            "validation": {
+              "method": "metric_threshold",
+              "source": "risk_gate",
+              "interval": "PT5M",
+              "last_checked_at": "2026-08-07T11:00:30Z",
+              "invalidation_criteria": "risk_score > 0.70"
+            },
+            "dependents": ["plan_S07"],
+            "on_invalidation": "accept",
+            "accepted_by": "human:approver",
+            "accepted_at": "2026-08-07T11:01:30Z",
+            "status": "Invalidated",
+            "invalidated_at": "2026-08-07T11:00:30Z",
+            "created_at": "2026-08-07T11:00:00Z",
+            "created_by": "planner"
+          }
+        },
+        {
+          "schema": "policy.schema.json",
+          "data": {
+            "policy_id": "pol_S07_human_approval",
+            "name": "고위험 고객 공지 인간 승인",
+            "type": "human_oversight",
+            "version": "1.0",
+            "authority": "organization",
+            "owner": "customer_notice_owner",
+            "applies_to": ["Decision"],
+            "condition": {
+              "all": [
+                {"field": "decision.risk", "op": "gte", "value": 0.7}
+              ]
+            },
+            "effect": "require_approval",
+            "approval": {
+              "approver_role": "customer_notice_approver",
+              "timeout": "PT24H",
+              "on_timeout": "deny"
+            },
+            "enforcement_points": ["pre_decision"],
+            "on_violation": "block_and_alert",
+            "status": "Active",
+            "effective_from": "2026-08-01"
+          }
+        }
+      ],
+      "policy_evaluations": [
+        {
+          "policy_id": "pol_S07_human_approval",
+          "decision_id": "dec_S07a",
+          "result": "allow"
+        },
+        {
+          "policy_id": "pol_S07_human_approval",
+          "decision_id": "dec_S07b",
+          "result": "require_approval",
+          "approved": true,
+          "approved_by": "human:approver"
+        }
+      ]
+    },
+    "S10": {
+      "records": [
+        {
+          "schema": "resource.schema.json",
+          "data": {
+            "id": "model:writer",
+            "name": "Writer Model",
+            "type": "llm",
+            "provider": "internal",
+            "version": "1",
+            "capabilities": [
+              {"name": "language.generation.copywriting"}
+            ],
+            "lifecycle": "Active"
+          }
+        }
+      ]
+    }
+  }
+}
