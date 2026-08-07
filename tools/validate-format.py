@@ -39,6 +39,9 @@ C. 문서 예외
     python3 tools/validate-format.py --only schemas
 """
 
+# tools/validate-all.py 가 읽는 CI 선언.
+CI_LABEL = "형식 검증 (섹션 · 번호 · 스키마 위생)"
+
 import glob
 import json
 import os

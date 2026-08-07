@@ -3,6 +3,9 @@
 
 from __future__ import annotations
 
+# tools/validate-all.py 가 읽는 CI 선언.
+CI_LABEL = "System Routing Benchmark 검증"
+
 import json
 import sys
 from collections import Counter

@@ -145,15 +145,36 @@ Answer                      Resource → Execution → Outcome
 
 ## 검증
 
-명세가 스스로를 검사한다. 세 스크립트가 있고 [GitHub Actions](.github/workflows/validate-spec.yml)가 push마다 실행한다.
+명세가 스스로를 검사한다. 명령 하나로 전부 돌고, [GitHub Actions](.github/workflows/validate-spec.yml)가 push마다 같은 것을 실행한다.
 
 ```bash
 pip install jsonschema referencing
 
-python3 tools/validate-format.py     # 12개 섹션 순서, Rule·INV 최소 개수, Prefix 등록,
-                                     # 헤더 3필드, 스키마 위생, 상호 참조(§N) 유효성
-python3 tools/validate-examples.py   # 문서의 JSON 예시 ↔ 스키마
-python3 tools/validate-links.py      # 상대 링크
+python3 tools/validate-all.py            # 전부 실행
+python3 tools/validate-all.py --list     # 실행할 검사 목록만 출력
+python3 tools/validate-all.py canonical  # 이름에 부분일치하는 것만
+```
+
+| 검사 | 내용 |
+|---|---|
+| `validate-format.py` | 12개 섹션 순서, Rule·INV 최소 개수, Prefix 등록, 헤더 3필드, 스키마 위생, 상호 참조(§N) |
+| `validate-examples.py` | 문서의 JSON 예시 ↔ 스키마 |
+| `validate-canonical.py` | 정본 규칙, 파생 필드 직접 쓰기, 그래프 순환, FK, provenance |
+| `validate-e2e-fixtures.py` | E2E Golden Fixture 10종 |
+| `validate-e2e-invariants.py` | 전역 불변식 INV-01~16의 구체적 E2E 증거 |
+| `validate-invariants.py` | 스냅샷 대상 전역 불변식 검사 |
+| `validate-system-benchmark.py` | 벤치마크 스위트·스키마·예시 |
+| `validate-links.py` | 상대 링크 |
+| `tests/`, `tools/tests/`, `reference/**/tests/` | unittest 스위트 |
+
+**검사 목록은 워크플로에 적혀 있지 않다.** `validate-all.py`가 `tools/validate-*.py`와 `test_*.py`를 담은 `tests/` 디렉터리를 파일 시스템에서 발견한다. 새 검사를 추가할 때 워크플로를 고칠 필요가 없다 — 그래야 여러 작업이 병렬로 진행돼도 그 파일에서 충돌하지 않는다.
+
+인자가 필요하거나 이름을 붙이려면 **그 검사 파일 안에서** 선언한다.
+
+```python
+CI_ARGS  = ["--require-all-covered"]              # 넘길 인자
+CI_LABEL = "End-to-End × 전역 불변식 16/16 검증"   # 출력용 이름
+CI_SKIP  = True                                   # CI에서 제외
 ```
 
 형식 규격 자체는 [entities/e000-spec-format.md](entities/e000-spec-format.md)가 정의하며, `validate-format.py`는 Rule Prefix 표를 그 문서에서 **직접 파싱한다.** 표를 고치면 검사도 따라 바뀐다.

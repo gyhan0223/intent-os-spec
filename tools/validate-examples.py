@@ -28,6 +28,9 @@
 의존성: jsonschema, referencing (pip install jsonschema referencing)
 """
 
+# tools/validate-all.py 가 읽는 CI 선언.
+CI_LABEL = "예시 검증 (JSON 예시 ↔ 스키마)"
+
 import glob
 import json
 import os

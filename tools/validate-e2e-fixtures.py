@@ -8,6 +8,9 @@ validator described by entities/e000a-entity-relationships.md.
 
 from __future__ import annotations
 
+# tools/validate-all.py 가 읽는 CI 선언.
+CI_LABEL = "End-to-End Golden Fixture 검증"
+
 import json
 from pathlib import Path
 import sys

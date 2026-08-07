@@ -32,6 +32,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
+# tools/validate-all.py 가 읽는 CI 선언. 이 검사는 스냅샷 인자를 요구한다.
+CI_ARGS = ["tests/invariants/valid-chain.json"]
+CI_LABEL = "전역 불변식 정상 체인 검증"
+
 TERMINAL_EXECUTION_STATUSES = {"Completed", "Failed", "TimedOut", "Aborted"}
 TERMINAL_SESSION_STATUSES = {"Completed", "Expired", "Aborted"}
 IMPLEMENTED_INVARIANTS = tuple(f"INV-{i:02d}" for i in range(1, 17))

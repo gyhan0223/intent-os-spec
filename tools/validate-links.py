@@ -8,6 +8,9 @@ e000 §11 체크리스트의 "상대 링크가 깨지지 않았는가"를 자동
     python3 tools/validate-links.py
 """
 
+# tools/validate-all.py 가 읽는 CI 선언.
+CI_LABEL = "상대 링크 검사"
+
 import glob
 import os
 import re

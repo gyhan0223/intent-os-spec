@@ -17,6 +17,11 @@ from typing import Any
 
 from jsonschema import Draft202012Validator, FormatChecker
 
+# tools/validate-all.py 가 읽는 CI 선언.
+# 플래그가 없으면 증거 없는 불변식도 통과하므로 CI에서는 반드시 붙인다.
+CI_ARGS = ["--require-all-covered"]
+CI_LABEL = "End-to-End × 전역 불변식 16/16 검증"
+
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_FILE = ROOT / "fixtures" / "e2e" / "golden-fixtures-v0.1.json"
 EVIDENCE_FILE = ROOT / "fixtures" / "e2e" / "invariant-evidence-v0.1.json"

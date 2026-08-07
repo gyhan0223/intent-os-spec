@@ -16,6 +16,9 @@ Dependencies:
 
 from __future__ import annotations
 
+# tools/validate-all.py 가 읽는 CI 선언.
+CI_LABEL = "Canonical Data Model 검증"
+
 import glob
 import json
 import os

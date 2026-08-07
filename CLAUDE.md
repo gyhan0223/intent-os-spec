@@ -80,15 +80,27 @@ Entity 간 관계와 전역 불변식 16개는 `entities/e000a-entity-relationsh
 
 ## 변경 후 확인
 
-**세 스크립트를 돌린다. 전부 통과해야 커밋한다.** GitHub Actions가 push마다 같은 것을 실행한다.
+**이것 하나를 돌린다. 전부 통과해야 커밋한다.** GitHub Actions가 push마다 같은 것을 실행한다.
 
 ```bash
-python3 tools/validate-format.py     # 형식: 섹션 순서, Rule 4개·INV 3개, Prefix 등록,
-                                     #       헤더 3필드, 스키마 위생, 상호 참조(§N)
-python3 tools/validate-examples.py   # 문서의 JSON 예시 ↔ 스키마
-python3 tools/validate-links.py      # 상대 링크
+python3 tools/validate-all.py            # 전부 실행 (첫 실패에서 멈추지 않는다)
+python3 tools/validate-all.py --list     # 실행할 검사 목록만 출력
+python3 tools/validate-all.py canonical  # 이름에 부분일치하는 것만
 ```
 
+`validate-all.py`는 `tools/validate-*.py`와 `test_*.py`를 담은 `tests/` 디렉터리를 **파일 시스템에서 발견한다.** 검사 목록이 어디에도 적혀 있지 않다.
+
+- **새 검사를 추가할 때 워크플로를 고치지 않는다.** `tools/validate-*.py`를 하나 더 놓으면 그만이다. 인자나 표시 이름이 필요하면 **그 파일 안에서** 선언한다.
+
+  ```python
+  CI_ARGS  = ["--require-all-covered"]              # 넘길 인자
+  CI_LABEL = "End-to-End × 전역 불변식 16/16 검증"   # 출력용 이름
+  CI_SKIP  = True                                   # CI에서 제외
+  ```
+
+  `.github/workflows/validate-spec.yml`에 검사 스텝을 직접 추가하지 않는다. 병렬 작업이 같은 자리에 스텝을 덧붙이면 매번 충돌하고, 그 충돌을 한쪽 선택으로 풀면 이미 머지된 검사가 조용히 사라진다.
+
+- `from __future__ import annotations`를 쓰는 파일에서는 CI 선언을 **그 import 뒤에** 놓는다. 앞에 놓으면 `SyntaxError`다.
 - 새 Entity를 추가했으면 `validate-examples.py`의 `DOC_TO_SCHEMA`에도 항목을 추가한다.
 - **스키마는 모든 객체에 `additionalProperties: false`, 모든 property에 `description`이 있어야 한다.** `validate-format.py`가 강제한다.
   단 `contains` / `if` / `anyOf` 같은 **술어** 자리는 닫지 않는다. 닫으면 "이 항목이 하나 있는가"를 묻던 조건이 "이것 말고 아무것도 없는가"로 바뀐다.
